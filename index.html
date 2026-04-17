@@ -7,210 +7,201 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #f7f6f2; --surface: #ffffff; --border: #e4e2dc; --border-strong: #c8c5bc;
-    --text: #1a1a18; --text-muted: #6b6a65;
+    --bg: #f7f6f2; --surface: #fff; --border: #e4e2dc; --border-strong: #c8c5bc;
+    --text: #1a1a18; --muted: #6b6a65; --faint: #9e9c97;
     --accent: #2563eb; --accent-bg: #eff4ff; --accent-border: #bfcffd;
     --green: #16a34a; --green-bg: #f0fdf4; --green-border: #bbf7d0;
     --amber: #b45309; --amber-bg: #fffbeb;
-    --radius: 10px; --radius-sm: 6px;
+    --r: 10px; --rs: 6px;
   }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.5; }
 
-  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1.25rem 1.5rem; position: sticky; top: 0; z-index: 10; }
-  .header-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  /* HEADER */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 20; }
+  .header-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
   .brand { display: flex; align-items: center; gap: 10px; }
-  .brand-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-  .brand-icon svg { width: 17px; height: 17px; }
-  .brand-name { font-size: 16px; font-weight: 600; }
-  .brand-sub { font-size: 12px; color: var(--text-muted); }
-  .profile-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-  .ptag { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); font-weight: 500; }
+  .brand-icon { width: 30px; height: 30px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .brand-icon svg { width: 16px; height: 16px; }
+  .brand-name { font-size: 15px; font-weight: 600; }
+  .brand-sub { font-size: 11px; color: var(--muted); }
+  .ptags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .ptag { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); font-weight: 500; }
 
-  main { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+  /* MAIN */
+  main { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.5rem; display: grid; grid-template-columns: 260px 1fr; gap: 1.25rem; align-items: start; }
 
-  .controls { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
-  .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
-  .ctrl-group { display: flex; flex-direction: column; gap: 6px; }
-  .ctrl-label { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 2px; }
+  /* SIDEBAR CONTROLS */
+  .sidebar { position: sticky; top: 68px; display: flex; flex-direction: column; gap: 10px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1rem; }
+  .panel-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
 
-  /* Checkbox group */
-  .checkbox-group { display: flex; flex-direction: column; gap: 5px; }
-  .cb-item { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 5px 8px; border-radius: var(--radius-sm); border: 1px solid transparent; transition: background 0.1s; }
+  .cb-list { display: flex; flex-direction: column; gap: 3px; }
+  .cb-item { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: var(--rs); border: 1px solid transparent; cursor: pointer; transition: background 0.1s; }
   .cb-item:hover { background: var(--bg); }
-  .cb-item input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
-  .cb-item label { font-size: 13px; cursor: pointer; line-height: 1.3; }
   .cb-item.checked { background: var(--accent-bg); border-color: var(--accent-border); }
-  .cb-item.checked label { color: var(--accent); }
+  .cb-item input { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
+  .cb-item label { font-size: 13px; cursor: pointer; line-height: 1.3; }
+  .cb-item.checked label { color: var(--accent); font-weight: 500; }
 
-  /* Simple selects for location + salary */
-  .selects-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 14px; }
-  select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--surface); color: var(--text); appearance: none; -webkit-appearance: none; cursor: pointer; }
+  select { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--rs); font-size: 13px; background: var(--surface); color: var(--text); appearance: none; cursor: pointer; }
   select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .select-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+  .select-group:last-child { margin-bottom: 0; }
+  .select-label { font-size: 11px; color: var(--muted); font-weight: 500; }
 
-  .search-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--border); margin-top: 4px; }
-  .btn-search { padding: 9px 24px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+  .btn-search { width: 100%; padding: 9px; border-radius: var(--rs); background: var(--accent); color: #fff; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
   .btn-search:hover { opacity: 0.88; }
   .btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-clear { padding: 9px 16px; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); border: 1px solid var(--border); font-size: 13px; cursor: pointer; }
+  .btn-clear { width: 100%; padding: 7px; border-radius: var(--rs); background: transparent; color: var(--muted); border: 1px solid var(--border); font-size: 13px; cursor: pointer; }
   .btn-clear:hover { background: var(--bg); }
-  .btn-debug { padding: 9px 14px; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); border: 1px solid var(--border); font-size: 12px; cursor: pointer; margin-left: auto; }
-  .status-bar { font-size: 13px; color: var(--text-muted); }
+  .btn-debug { width: 100%; padding: 6px; border-radius: var(--rs); background: transparent; color: var(--faint); border: 1px solid var(--border); font-size: 11px; cursor: pointer; }
 
-  .debug-panel { background: #0f1117; border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1rem; display: none; font-family: 'SF Mono', monospace; font-size: 12px; line-height: 1.8; max-height: 300px; overflow-y: auto; }
-  .debug-panel.visible { display: block; }
-  .dl { padding: 0; }
-  .dl.info  { color: #60a5fa; }
-  .dl.ok    { color: #4ade80; }
-  .dl.warn  { color: #fbbf24; }
-  .dl.error { color: #f87171; }
-
-  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  /* RESULTS AREA */
+  .results-col { min-width: 0; }
+  .results-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
   .results-count { font-size: 14px; font-weight: 500; }
-  .sort-row { display: flex; gap: 6px; }
-  .sort-btn { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; }
-  .sort-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+  .status-bar { font-size: 12px; color: var(--muted); }
+  .toolbar-right { display: flex; align-items: center; gap: 8px; }
+  .sort-select { padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--rs); font-size: 12px; background: var(--surface); color: var(--text); appearance: none; cursor: pointer; }
 
-  .job-list { display: flex; flex-direction: column; gap: 10px; }
-  .job-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.12s; }
+  /* GROUP JUMP NAV */
+  .group-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .group-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.1s; text-decoration: none; }
+  .group-pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+
+  /* GROUP SECTIONS */
+  .group-section { margin-bottom: 24px; }
+  .group-heading { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .group-count { font-weight: 400; }
+
+  /* JOB CARDS */
+  .job-list { display: flex; flex-direction: column; gap: 8px; }
+  .job-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; transition: border-color 0.12s; }
   .job-card:hover { border-color: var(--border-strong); }
-  .job-card.best-match { border-color: var(--accent-border); }
-  .card-main { padding: 1rem 1.25rem; cursor: pointer; }
-  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  .card-title { font-size: 15px; font-weight: 600; line-height: 1.35; margin-bottom: 3px; }
-  .card-org { font-size: 13px; color: var(--text-muted); }
-  .source-badge { font-size: 10px; padding: 3px 7px; border-radius: 4px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; flex-shrink: 0; }
+  .job-card.best-match { border-left: 3px solid var(--accent); }
+  .card-main { padding: .875rem 1rem; cursor: pointer; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .card-title { font-size: 14px; font-weight: 600; line-height: 1.35; margin-bottom: 2px; }
+  .card-org { font-size: 12px; color: var(--muted); }
+  .source-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; flex-shrink: 0; }
   .source-adzuna { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
   .source-reed   { background: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8; }
   .source-jooble { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-  .card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-  .meta-chip { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-muted); }
-  .meta-chip svg { width: 12px; height: 12px; }
+  .card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .meta-chip { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); }
+  .meta-chip svg { width: 11px; height: 11px; }
   .chip-remote { color: var(--green); font-weight: 500; }
   .chip-salary { color: var(--text); font-weight: 500; }
-  .match-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-  .match-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .match-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+  .match-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
   .badge-strong { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
   .badge-good { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); }
   .badge-new { background: var(--amber-bg); color: var(--amber); border: 1px solid #fde68a; }
-  .card-expand-btn { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--accent); margin-top: 10px; cursor: pointer; background: none; border: none; padding: 0; }
-  .card-expand-btn svg { width: 13px; height: 13px; transition: transform 0.2s; }
+  .card-expand-btn { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--accent); margin-top: 8px; cursor: pointer; background: none; border: none; padding: 0; }
+  .card-expand-btn svg { width: 12px; height: 12px; transition: transform 0.2s; }
   .job-card.expanded .card-expand-btn svg { transform: rotate(180deg); }
-  .card-detail { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); display: none; }
+  .card-detail { padding: 0 1rem 1rem; border-top: 1px solid var(--border); display: none; }
   .job-card.expanded .card-detail { display: block; }
-  .detail-snippet { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-top: 12px; }
-  .apply-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 14px; padding: 7px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 500; color: var(--accent); text-decoration: none; transition: background 0.12s; }
+  .detail-snippet { font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 10px; }
+  .apply-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 12px; padding: 6px 14px; border-radius: var(--rs); border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; color: var(--accent); text-decoration: none; }
   .apply-link:hover { background: var(--accent-bg); border-color: var(--accent-border); }
-  .apply-link svg { width: 13px; height: 13px; }
-  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
-  .empty-state .big { font-size: 32px; margin-bottom: 10px; }
-  .empty-state p { font-size: 14px; line-height: 1.7; }
-  .loading-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 3rem; color: var(--text-muted); font-size: 14px; }
-  .loading-state .sub { font-size: 12px; opacity: 0.7; }
-  .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; }
+  .apply-link svg { width: 11px; height: 11px; }
+
+  /* STATES */
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+  .empty-state .big { font-size: 28px; margin-bottom: 8px; }
+  .empty-state p { font-size: 13px; line-height: 1.7; }
+  .loading-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 3rem; color: var(--muted); font-size: 13px; }
+  .spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  @media (max-width: 600px) { .controls-grid { grid-template-columns: 1fr; } .selects-row { grid-template-columns: 1fr; } .profile-tags { display: none; } }
+
+  /* DEBUG */
+  .debug-panel { background: #0f1117; border-radius: var(--r); padding: .875rem 1rem; display: none; font-family: 'SF Mono', monospace; font-size: 11px; line-height: 1.8; max-height: 220px; overflow-y: auto; }
+  .debug-panel.visible { display: block; }
+  .dl { padding: 0; }
+  .dl.info { color: #60a5fa; } .dl.ok { color: #4ade80; } .dl.warn { color: #fbbf24; } .dl.error { color: #f87171; }
+
+  @media (max-width: 700px) {
+    main { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+    .ptags { display: none; }
+  }
 </style>
 </head>
 <body>
-
 <header>
   <div class="header-inner">
     <div class="brand">
-      <div class="brand-icon">
-        <svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="6.5" stroke="white" stroke-width="1.5"/><path d="M5.5 8.8L7.5 10.8L11.5 6.2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
+      <div class="brand-icon"><svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="6.5" stroke="white" stroke-width="1.5"/><path d="M5.5 8.8L7.5 10.8L11.5 6.2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div><div class="brand-name">Bubs jobs</div><div class="brand-sub">Jobs matched for a bubs</div></div>
     </div>
-    <div class="profile-tags">
+    <div class="ptags">
       <span class="ptag">SENCO</span><span class="ptag">Asst. Headteacher</span><span class="ptag">Edinburgh + Remote</span>
     </div>
   </div>
 </header>
 
 <main>
-  <div class="controls">
-
-    <div class="controls-grid">
-      <div class="ctrl-group">
-        <div class="ctrl-label">Role types (select all that apply)</div>
-        <div class="checkbox-group" id="role-checkboxes">
-          <div class="cb-item" onclick="toggleCb(this)">
-            <input type="checkbox" value="senco" id="cb-senco">
-            <label for="cb-senco">SENCO / Inclusion / SEN</label>
-          </div>
-          <div class="cb-item" onclick="toggleCb(this)">
-            <input type="checkbox" value="safeguarding" id="cb-safeguarding">
-            <label for="cb-safeguarding">Safeguarding</label>
-          </div>
-          <div class="cb-item" onclick="toggleCb(this)">
-            <input type="checkbox" value="project" id="cb-project">
-            <label for="cb-project">Junior / Trainee project manager</label>
-          </div>
-          <div class="cb-item" onclick="toggleCb(this)">
-            <input type="checkbox" value="leadership" id="cb-leadership">
-            <label for="cb-leadership">Leadership / Management</label>
-          </div>
-          <div class="cb-item" onclick="toggleCb(this)">
-            <input type="checkbox" value="education" id="cb-education">
-            <label for="cb-education">Education consulting / EdTech</label>
-          </div>
-          <div class="cb-item" onclick="toggleCb(this)">
-            <input type="checkbox" value="charity" id="cb-charity">
-            <label for="cb-charity">Charity / Third sector</label>
-          </div>
-        </div>
-      </div>
-
-      <div class="ctrl-group">
-        <div class="ctrl-label">Location &amp; salary</div>
-        <div class="selects-row" style="margin-bottom:0; grid-template-columns: 1fr;">
-          <div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Location</div>
-            <select id="location-type">
-              <option value="both">Edinburgh + Remote</option>
-              <option value="edinburgh">Edinburgh only</option>
-              <option value="remote">Remote / WFH only</option>
-            </select>
-          </div>
-          <div style="margin-top:10px;">
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Minimum salary</div>
-            <select id="salary-min">
-              <option value="25000">£25,000+</option>
-              <option value="30000">£30,000+</option>
-              <option value="35000" selected>£35,000+</option>
-              <option value="40000">£40,000+</option>
-              <option value="45000">£45,000+</option>
-              <option value="50000">£50,000+</option>
-              <option value="55000">£55,000+</option>
-            </select>
-          </div>
-        </div>
+  <aside class="sidebar">
+    <div class="panel">
+      <div class="panel-title">Role types</div>
+      <div class="cb-list" id="role-checkboxes">
+        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="senco" checked><label>SENCO / Inclusion / SEN</label></div>
+        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="safeguarding" checked><label>Safeguarding</label></div>
+        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="project" checked><label>Junior project manager</label></div>
+        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="leadership" checked><label>Leadership / Management</label></div>
+        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="education" checked><label>Education consulting / EdTech</label></div>
+        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="charity" checked><label>Charity / Third sector</label></div>
       </div>
     </div>
 
-    <div class="search-row">
+    <div class="panel">
+      <div class="panel-title">Filters</div>
+      <div class="select-group">
+        <div class="select-label">Location</div>
+        <select id="location-type">
+          <option value="both">Edinburgh + Remote</option>
+          <option value="edinburgh">Edinburgh only</option>
+          <option value="remote">Remote / WFH only</option>
+        </select>
+      </div>
+      <div class="select-group">
+        <div class="select-label">Minimum salary</div>
+        <select id="salary-min">
+          <option value="25000">£25,000+</option>
+          <option value="30000">£30,000+</option>
+          <option value="35000" selected>£35,000+</option>
+          <option value="40000">£40,000+</option>
+          <option value="45000">£45,000+</option>
+          <option value="50000">£50,000+</option>
+          <option value="55000">£55,000+</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panel" style="display:flex;flex-direction:column;gap:7px;">
       <button class="btn-search" id="search-btn" onclick="runSearch()">Search jobs</button>
-      <button class="btn-clear" onclick="clearResults()">Clear</button>
-      <span class="status-bar" id="status-bar"></span>
+      <button class="btn-clear" onclick="clearResults()">Clear results</button>
       <button class="btn-debug" onclick="toggleDebug()">🛠 Debug</button>
     </div>
-  </div>
 
-  <div class="debug-panel" id="debug-panel"></div>
+    <div class="debug-panel" id="debug-panel"></div>
+  </aside>
 
-  <div id="results-area">
-    <div class="empty-state">
-      <div class="big">🔍</div>
-      <p>Pick one or more role types and hit <strong>Search jobs</strong>.<br>Searches Adzuna, Reed, and Jooble simultaneously.</p>
+  <div class="results-col">
+    <div id="results-area">
+      <div class="empty-state">
+        <div class="big">🔍</div>
+        <p>All role types are pre-selected.<br>Hit <strong>Search jobs</strong> to find matches.</p>
+      </div>
     </div>
   </div>
 </main>
 
 <script>
-const ADZUNA_APP_ID  = '48908c3e';
-const ADZUNA_APP_KEY = 'f486e192fc75b1200048886c266fce28';
-const REED_PROXY     = '/.netlify/functions/reed';
-const JOOBLE_PROXY   = '/.netlify/functions/jooble';
+const ADZUNA_PROXY = '/.netlify/functions/adzuna';
+const REED_PROXY   = '/.netlify/functions/reed';
+const JOOBLE_PROXY = '/.netlify/functions/jooble';
 
 const SEARCH_QUERIES = {
   senco:        ['SENCO', 'SEN coordinator', 'SEND coordinator', 'inclusion manager', 'SEN officer', 'learning support'],
@@ -219,6 +210,15 @@ const SEARCH_QUERIES = {
   leadership:   ['head of education', 'service manager children', 'team leader education', 'operations manager charity', 'education manager'],
   education:    ['education consultant', 'learning coordinator', 'training manager education', 'curriculum coordinator', 'EdTech'],
   charity:      ['charity coordinator children', 'youth charity', 'children charity manager', 'voluntary sector education'],
+};
+
+const ROLE_LABELS = {
+  senco: 'SENCO / Inclusion',
+  safeguarding: 'Safeguarding',
+  project: 'Junior PM',
+  leadership: 'Leadership',
+  education: 'Education / EdTech',
+  charity: 'Charity / Third sector',
 };
 
 const EXCLUDE_TITLE = [
@@ -237,53 +237,26 @@ const EXCLUDE_TITLE = [
   'warehouse manager','logistics','supply chain','haulage',
   'dental','dentist','pharmacy','pharmacist','optician','radiographer',
   'electrician','plumber','hvac','gas engineer',
+  'modern workplace','cybersecurity','cyber security','penetration test',
   'technology project manager','it project manager','technical project manager',
-  'senior project manager','principal project manager','project manager',
+  'senior project manager','principal project manager',
   'programme manager','delivery manager',
 ];
-
-const EXCLUDE_DESC = [
-  'machine learning','kubernetes','terraform','aws lambda','azure devops',
-  'react.js','node.js','python developer','java developer','typescript',
-];
-
-const INCLUDE_TITLE = [
-  'senco','send','safeguarding','inclusion','sen coordinator','special educational needs',
-  'education','school','academy','children','young people','youth worker',
-  'pastoral','wellbeing','learning support','family support',
-  'early years','nursery','teaching assistant','support worker',
-  'charity coordinator','voluntary','community manager',
-];
-
-const INCLUDE_ANY = [
-  'senco','safeguarding','inclusion coordinator','special educational needs',
-  "children's services",'young people','youth service','early years',
-  'looked after children','family support','social care','education coordinator',
-  'learning disability','disability support','pastoral support',
-  'charity sector','third sector','voluntary sector','community interest',
-  'local authority education','school improvement','ofsted',
-];
-
-const MATCH_TAGS = {
-  'safeguarding':              {label:'Safeguarding',   type:'strong'},
-  'senco':                     {label:'SENCO match',    type:'strong'},
-  'send':                      {label:'SEND',           type:'strong'},
-  'inclusion':                 {label:'Inclusion',      type:'strong'},
-  'special educational needs': {label:'SEN relevant',   type:'strong'},
-  'designated safeguarding':   {label:'DSL role',       type:'strong'},
-  'project manager':           {label:'PM role',        type:'good'},
-  'junior':                    {label:'Junior level',   type:'good'},
-  'charity':                   {label:'Third sector',   type:'good'},
-  'education':                 {label:'Education',      type:'good'},
-  'leadership':                {label:'Leadership',     type:'good'},
-  'coordinator':               {label:'Coordinator',    type:'good'},
-  'young people':              {label:'Young people',   type:'good'},
-  'remote':                    {label:'Remote/WFH',     type:'new'},
-  'work from home':            {label:'Work from home', type:'new'},
+const EXCLUDE_DESC = ['machine learning','kubernetes','terraform','aws lambda','azure devops','react.js','node.js','python developer','java developer','typescript'];
+const INCLUDE_TITLE = ['senco','send','safeguarding','inclusion','sen coordinator','special educational needs','education','school','academy','children','young people','youth worker','pastoral','wellbeing','learning support','family support','early years','nursery','teaching assistant','support worker','charity coordinator','voluntary','community manager'];
+const INCLUDE_ANY   = ['senco','safeguarding','inclusion coordinator','special educational needs',"children's services",'young people','youth service','early years','looked after children','family support','social care','education coordinator','learning disability','disability support','pastoral support','charity sector','third sector','voluntary sector','community interest','local authority education','school improvement','ofsted'];
+const MATCH_TAGS    = {
+  'safeguarding':{label:'Safeguarding',type:'strong'},'senco':{label:'SENCO',type:'strong'},
+  'send':{label:'SEND',type:'strong'},'inclusion':{label:'Inclusion',type:'strong'},
+  'special educational needs':{label:'SEN',type:'strong'},'designated safeguarding':{label:'DSL',type:'strong'},
+  'project manager':{label:'PM role',type:'good'},'junior':{label:'Junior',type:'good'},
+  'charity':{label:'Third sector',type:'good'},'education':{label:'Education',type:'good'},
+  'leadership':{label:'Leadership',type:'good'},'coordinator':{label:'Coordinator',type:'good'},
+  'young people':{label:'Young people',type:'good'},
+  'remote':{label:'Remote/WFH',type:'new'},'work from home':{label:'WFH',type:'new'},
 };
-
-const SCOTLAND_TERMS = ['edinburgh','scotland','scottish','lothian','fife','glasgow','dundee','aberdeen','stirling','falkirk','livingston','kirkcaldy'];
-const REMOTE_TERMS   = ['remote','work from home','wfh','home based','home-based','anywhere in the uk','uk wide','nationwide'];
+const SCOTLAND = ['edinburgh','scotland','scottish','lothian','fife','glasgow','dundee','aberdeen','stirling','falkirk','livingston'];
+const REMOTE_T = ['remote','work from home','wfh','home based','home-based','anywhere in the uk','uk wide','nationwide'];
 
 let allJobs = [], sortMode = 'relevance', debugVisible = false;
 
@@ -292,255 +265,273 @@ function toggleCb(item) {
   cb.checked = !cb.checked;
   item.classList.toggle('checked', cb.checked);
 }
-
 function getSelectedRoles() {
-  const checked = [...document.querySelectorAll('#role-checkboxes input:checked')].map(cb => cb.value);
-  return checked.length ? checked : Object.keys(SEARCH_QUERIES); // if none selected, search all
+  const checked = [...document.querySelectorAll('#role-checkboxes input:checked')].map(c => c.value);
+  return checked.length ? checked : Object.keys(SEARCH_QUERIES);
 }
-
 function log(msg, type='info') {
-  const panel = document.getElementById('debug-panel');
+  const p = document.getElementById('debug-panel');
   const d = document.createElement('div');
-  d.className = 'dl ' + type;
-  d.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
-  panel.appendChild(d);
-  panel.scrollTop = panel.scrollHeight;
+  d.className='dl '+type;
+  d.textContent='['+new Date().toLocaleTimeString()+'] '+msg;
+  p.appendChild(d); p.scrollTop=p.scrollHeight;
 }
-
-function toggleDebug() {
-  debugVisible = !debugVisible;
-  document.getElementById('debug-panel').classList.toggle('visible', debugVisible);
-}
+function toggleDebug() { debugVisible=!debugVisible; document.getElementById('debug-panel').classList.toggle('visible',debugVisible); }
 
 function isRelevantJob(job) {
   const title = (job.title||'').toLowerCase();
-  const full  = (title + ' ' + (job.description||'')).toLowerCase();
-
-  // Junior/trainee PM always allowed through before any exclusion check
-  const isJuniorPM = ['junior project','trainee project','assistant project','project support'].some(t => title.includes(t));
-
-  if (!isJuniorPM) {
-    if (EXCLUDE_TITLE.some(ex => title.includes(ex))) return false;
-  }
-  const titlePass = INCLUDE_TITLE.some(inc => title.includes(inc));
-  if (!titlePass && EXCLUDE_DESC.some(ex => full.includes(ex))) return false;
-  if (INCLUDE_TITLE.some(inc => title.includes(inc))) return true;
-  if (INCLUDE_ANY.some(inc => full.includes(inc))) return true;
+  const full  = title+' '+(job.description||'').toLowerCase();
+  const isJuniorPM = ['junior project','trainee project','assistant project','project support'].some(t=>title.includes(t));
+  if (!isJuniorPM && EXCLUDE_TITLE.some(ex=>title.includes(ex))) return false;
+  const titlePass = INCLUDE_TITLE.some(i=>title.includes(i));
+  if (!titlePass && EXCLUDE_DESC.some(ex=>full.includes(ex))) return false;
+  if (INCLUDE_TITLE.some(i=>title.includes(i))) return true;
+  if (INCLUDE_ANY.some(i=>full.includes(i))) return true;
   if (isJuniorPM) return true;
   return false;
 }
-
-function jobIsEdinburgh(job) {
-  return SCOTLAND_TERMS.some(t => (job.location||'').toLowerCase().includes(t));
-}
-
-function jobIsRemote(job) {
-  const t = ((job.title||'')+' '+(job.description||'')+' '+(job.location||'')).toLowerCase();
-  return REMOTE_TERMS.some(r => t.includes(r));
-}
-
+function jobIsEdinburgh(j) { return SCOTLAND.some(t=>(j.location||'').toLowerCase().includes(t)); }
+function jobIsRemote(j) { const t=((j.title||'')+' '+(j.description||'')+' '+(j.location||'')).toLowerCase(); return REMOTE_T.some(r=>t.includes(r)); }
 function detectTags(job) {
-  const t = ((job.title||'')+' '+(job.description||'')+' '+(job.location||'')).toLowerCase();
-  const found = new Map();
-  for (const [kw, tag] of Object.entries(MATCH_TAGS)) {
-    if (t.includes(kw) && !found.has(tag.label)) found.set(tag.label, tag);
-  }
+  const t=((job.title||'')+' '+(job.description||'')+' '+(job.location||'')).toLowerCase();
+  const found=new Map();
+  for(const [kw,tag] of Object.entries(MATCH_TAGS)) if(t.includes(kw)&&!found.has(tag.label)) found.set(tag.label,tag);
   return Array.from(found.values()).slice(0,5);
 }
-
-function score(job) {
-  const t = ((job.title||'')+' '+(job.description||'')).toLowerCase();
-  let s = 0;
-  ['project','safeguarding','senco','sen','inclusion','special educational needs','education',
-   'leadership','manager','coordinator','consultant','charity','third sector','programme',
-   'training','learning','wellbeing','pastoral','policy'].forEach(kw => { if (t.includes(kw)) s++; });
-  if (t.includes('safeguarding')||t.includes('senco')||t.includes('inclusion')) s+=3;
-  if (t.includes('junior')||t.includes('entry level')) s+=1;
+function scoreJob(job) {
+  const t=((job.title||'')+' '+(job.description||'')).toLowerCase();
+  let s=0;
+  ['project','safeguarding','senco','sen','inclusion','education','leadership','manager','coordinator','consultant','charity','third sector','wellbeing','pastoral'].forEach(k=>{if(t.includes(k))s++;});
+  if(t.includes('safeguarding')||t.includes('senco')||t.includes('inclusion'))s+=3;
+  if(t.includes('junior')||t.includes('entry level'))s+=1;
   return s;
 }
-
+function salaryNum(job) { return job.salaryMin || (job.salary ? parseInt((job.salary||'').replace(/[^0-9]/g,'')) : 0) || 0; }
 function salaryStr(job) {
-  if (job.salaryMin && job.salaryMax) return `£${Math.round(job.salaryMin/1000)}k–£${Math.round(job.salaryMax/1000)}k`;
-  if (job.salaryMin) return `From £${Math.round(job.salaryMin/1000)}k`;
-  if (job.salary) return job.salary;
+  if(job.salaryMin&&job.salaryMax) return `£${Math.round(job.salaryMin/1000)}k–£${Math.round(job.salaryMax/1000)}k`;
+  if(job.salaryMin) return `From £${Math.round(job.salaryMin/1000)}k`;
+  if(job.salary) return job.salary;
   return null;
+}
+function guessRole(job) {
+  const t=(job.title||'').toLowerCase();
+  if(t.includes('safeguard')||t.includes('dsl')) return 'safeguarding';
+  if(t.includes('senco')||t.includes('sen ')||t.includes('inclusion')||t.includes('send')) return 'senco';
+  if(t.includes('project')||t.includes('programme')) return 'project';
+  if(t.includes('charity')||t.includes('voluntary')||t.includes('third sector')) return 'charity';
+  if(t.includes('education')||t.includes('learning')||t.includes('edtech')||t.includes('curriculum')) return 'education';
+  return 'leadership';
 }
 
 async function adzunaOne(what, where, sal) {
-  const url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=10&what=${encodeURIComponent(what)}&where=${encodeURIComponent(where)}&salary_min=${sal}&distance=20&content-type=application/json`;
   try {
-    const r = await fetch(url);
-    if (!r.ok) { log(`Adzuna "${what}" → ${r.status}`, 'error'); return []; }
-    const d = await r.json();
-    log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0}`, d.results?.length?'ok':'warn');
-    return (d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',title:j.title,org:j.company?.display_name||'Not specified',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));
-  } catch(e) { log(`Adzuna "${what}" error: ${e.message}`, 'error'); return []; }
+    const p=new URLSearchParams({what,where,salary:sal});
+    const r=await fetch(`${ADZUNA_PROXY}?${p}`);
+    if(!r.ok){log(`Adzuna "${what}" → ${r.status}`,'error');return[];}
+    const d=await r.json();
+    if(d.error){log(`Adzuna "${what}" error: ${d.error||d.exception}`,'error');return[];}
+    log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');
+    return (d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',title:j.title,org:j.company?.display_name||'',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));
+  } catch(e){log(`Adzuna "${what}" error: ${e.message}`,'error');return[];}
 }
-
-async function reedOne(what, loc, sal, remote) {
+async function reedOne(what,loc,sal,remote) {
   try {
-    const p = new URLSearchParams({keywords:what,minimumSalary:sal,...(remote?{remote:'true'}:{location:loc,distance:'20'})});
-    const r = await fetch(`${REED_PROXY}?${p}`);
-    if (!r.ok) { log(`Reed "${what}" → ${r.status}`, 'error'); return []; }
-    const d = await r.json();
-    if (d.error) { log(`Reed "${what}" error: ${d.error}`, 'error'); return []; }
-    log(`Reed "${what}" → ${d.results?.length??0}`, d.results?.length?'ok':'warn');
-    return (d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',title:j.jobTitle,org:j.employerName||'Not specified',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,url:j.jobUrl,created:j.date}));
-  } catch(e) { log(`Reed "${what}" error: ${e.message}`, 'error'); return []; }
+    const p=new URLSearchParams({keywords:what,minimumSalary:sal,...(remote?{remote:'true'}:{location:loc,distance:'20'})});
+    const r=await fetch(`${REED_PROXY}?${p}`);
+    if(!r.ok){log(`Reed "${what}" → ${r.status}`,'error');return[];}
+    const d=await r.json();
+    if(d.error){log(`Reed "${what}" error: ${d.error}`,'error');return[];}
+    log(`Reed "${what}" → ${d.results?.length??0}`,d.results?.length?'ok':'warn');
+    return (d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',title:j.jobTitle,org:j.employerName||'',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,salaryMin:j.minimumSalary,url:j.jobUrl,created:j.date}));
+  } catch(e){log(`Reed "${what}" error: ${e.message}`,'error');return[];}
 }
-
-async function joobleOne(what, loc, sal) {
+async function joobleOne(what,loc,sal) {
   try {
-    const remote = loc === 'remote';
-    const p = new URLSearchParams({keywords:what,location:remote?'':loc,minimumSalary:sal||35000,remote:remote?'true':'false'});
-    const r = await fetch(`${JOOBLE_PROXY}?${p}`);
-    if (!r.ok) { log(`Jooble "${what}" → ${r.status}`, 'error'); return []; }
-    const d = await r.json();
-    if (d.error) { log(`Jooble "${what}" error: ${d.error}`, 'error'); return []; }
-    const jobs = d.jobs||[];
-    log(`Jooble "${what}" → ${jobs.length}`, jobs.length?'ok':'warn');
-    return jobs.map(j=>({id:'jooble-'+(j.id||Math.random()),source:'jooble',title:j.title||'',org:j.company||'Not specified',location:j.location||'',description:j.snippet||'',salary:j.salary||null,url:j.link||'#',created:j.updated||null}));
-  } catch(e) { log(`Jooble "${what}" error: ${e.message}`, 'error'); return []; }
+    const remote=loc==='remote';
+    const p=new URLSearchParams({keywords:what,location:remote?'':loc,minimumSalary:sal||35000,remote:remote?'true':'false'});
+    const r=await fetch(`${JOOBLE_PROXY}?${p}`);
+    if(!r.ok){log(`Jooble "${what}" → ${r.status}`,'error');return[];}
+    const d=await r.json();
+    if(d.error){log(`Jooble "${what}" error: ${d.error}`,'error');return[];}
+    const jobs=d.jobs||[];
+    log(`Jooble "${what}" → ${jobs.length}`,jobs.length?'ok':'warn');
+    return jobs.map(j=>({id:'jooble-'+(j.id||Math.random()),source:'jooble',title:j.title||'',org:j.company||'',location:j.location||'',description:j.snippet||'',salary:j.salary||null,url:j.link||'#',created:j.updated||null}));
+  } catch(e){log(`Jooble "${what}" error: ${e.message}`,'error');return[];}
 }
 
 async function runSearch() {
-  const btn      = document.getElementById('search-btn');
-  const locMode  = document.getElementById('location-type').value;
-  const salMin   = document.getElementById('salary-min').value;
-  const salLabel = document.getElementById('salary-min').selectedOptions[0].text;
-  const roles    = getSelectedRoles();
+  const btn     = document.getElementById('search-btn');
+  const locMode = document.getElementById('location-type').value;
+  const salMin  = document.getElementById('salary-min').value;
+  const salLabel= document.getElementById('salary-min').selectedOptions[0].text;
+  const roles   = getSelectedRoles();
 
-  document.getElementById('debug-panel').innerHTML = '';
-  btn.disabled = true; btn.textContent = 'Searching…';
-  setStatus(''); showLoading();
+  document.getElementById('debug-panel').innerHTML='';
+  btn.disabled=true; btn.textContent='Searching…';
+  document.getElementById('results-area').innerHTML='<div class="loading-state"><div class="spinner"></div><span>Searching Adzuna, Reed and Jooble…</span></div>';
 
-  log(`Roles: ${roles.join(', ')} | Location: ${locMode} | Salary: ${salLabel}`, 'info');
+  log(`Roles: ${roles.join(', ')} | ${locMode} | ${salLabel}`,'info');
 
-  // Collect all unique queries across selected roles
-  const querySet = new Set();
-  roles.forEach(r => (SEARCH_QUERIES[r]||[]).forEach(q => querySet.add(q)));
+  const querySet=new Set();
+  roles.forEach(r=>(SEARCH_QUERIES[r]||[]).forEach(q=>querySet.add(q)));
+  const extraRemote=(roles.includes('senco')||roles.length===Object.keys(SEARCH_QUERIES).length)
+    ?['SENCO remote','SEND coordinator remote','remote learning support']:[];
 
-  // Always add remote SENCO queries if senco is selected or no roles selected
-  const extraRemote = (roles.includes('senco') || roles.length === Object.keys(SEARCH_QUERIES).length)
-    ? ['SENCO remote', 'SEND coordinator remote', 'remote learning support'] : [];
-
-  log(`Running ${querySet.size} unique queries × 3 sources`, 'info');
-
-  const promises = [];
-  querySet.forEach(q => {
-    if (locMode === 'both' || locMode === 'edinburgh') {
-      promises.push(adzunaOne(q, 'edinburgh', salMin));
-      promises.push(reedOne(q, 'Edinburgh', salMin, false));
-      promises.push(joobleOne(q, 'Edinburgh', salMin));
+  const promises=[];
+  querySet.forEach(q=>{
+    if(locMode==='both'||locMode==='edinburgh'){
+      promises.push(adzunaOne(q,'edinburgh',salMin));
+      promises.push(reedOne(q,'Edinburgh',salMin,false));
+      promises.push(joobleOne(q,'Edinburgh',salMin));
     }
-    if (locMode === 'both' || locMode === 'remote') {
-      promises.push(adzunaOne(q + ' remote', 'uk', salMin));
-      promises.push(reedOne(q, 'Edinburgh', salMin, true));
-      promises.push(joobleOne(q, 'remote', salMin));
+    if(locMode==='both'||locMode==='remote'){
+      promises.push(adzunaOne(q+' remote','uk',salMin));
+      promises.push(reedOne(q,'Edinburgh',salMin,true));
+      promises.push(joobleOne(q,'remote',salMin));
     }
   });
-
-  extraRemote.forEach(q => {
-    promises.push(adzunaOne(q, 'uk', salMin));
-    promises.push(reedOne(q, '', salMin, true));
-    promises.push(joobleOne(q, 'remote', salMin));
+  extraRemote.forEach(q=>{
+    promises.push(adzunaOne(q,'uk',salMin));
+    promises.push(reedOne(q,'',salMin,true));
+    promises.push(joobleOne(q,'remote',salMin));
   });
 
-  const results = await Promise.allSettled(promises);
-  const allRaw  = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+  const results=await Promise.allSettled(promises);
+  const allRaw=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
 
-  // Dedupe
-  const seenId = new Set(), seenKey = new Set();
-  const deduped = allRaw.filter(j => {
-    if (seenId.has(j.id)) return false; seenId.add(j.id);
-    const k = (j.title+j.org).toLowerCase().replace(/\s/g,'');
-    if (seenKey.has(k)) return false; seenKey.add(k);
+  const seenId=new Set(),seenKey=new Set();
+  const deduped=allRaw.filter(j=>{
+    if(seenId.has(j.id))return false;seenId.add(j.id);
+    const k=(j.title+j.org).toLowerCase().replace(/\s/g,'');
+    if(seenKey.has(k))return false;seenKey.add(k);
     return true;
   });
 
-  // Sector filter
-  allJobs = deduped.filter(j => isRelevantJob(j));
-  log(`Sector filter: ${deduped.length} → ${allJobs.length} (removed ${deduped.length-allJobs.length})`, 'info');
+  allJobs=deduped.filter(j=>isRelevantJob(j));
+  log(`Sector filter: ${deduped.length} → ${allJobs.length}`,'info');
 
-  // Location filter
-  const before = allJobs.length;
-  if (locMode === 'edinburgh') allJobs = allJobs.filter(j => jobIsEdinburgh(j));
-  else if (locMode === 'remote') allJobs = allJobs.filter(j => jobIsRemote(j));
-  else allJobs = allJobs.filter(j => jobIsEdinburgh(j) || jobIsRemote(j));
-  log(`Location filter (${locMode}): ${before} → ${allJobs.length}`, 'info');
+  const before=allJobs.length;
+  if(locMode==='edinburgh') allJobs=allJobs.filter(j=>jobIsEdinburgh(j));
+  else if(locMode==='remote') allJobs=allJobs.filter(j=>jobIsRemote(j));
+  else allJobs=allJobs.filter(j=>jobIsEdinburgh(j)||jobIsRemote(j));
+  log(`Location filter: ${before} → ${allJobs.length}`,'info');
 
-  allJobs.forEach(j => j._score = score(j));
-  allJobs.sort((a,b) => b._score - a._score);
+  allJobs.forEach(j=>{j._score=scoreJob(j);j._role=guessRole(j);});
 
-  const azCount = allJobs.filter(j=>j.source==='adzuna').length;
-  const rdCount = allJobs.filter(j=>j.source==='reed').length;
-  const jbCount = allJobs.filter(j=>j.source==='jooble').length;
-  log(`Done: ${allJobs.length} jobs — Adzuna ${azCount} · Reed ${rdCount} · Jooble ${jbCount}`, allJobs.length?'ok':'warn');
+  const az=allJobs.filter(j=>j.source==='adzuna').length;
+  const rd=allJobs.filter(j=>j.source==='reed').length;
+  const jb=allJobs.filter(j=>j.source==='jooble').length;
+  log(`Done: ${allJobs.length} jobs — Adzuna ${az} · Reed ${rd} · Jooble ${jb}`,allJobs.length?'ok':'warn');
 
-  setStatus(`${allJobs.length} results · ${salLabel} · Adzuna ${azCount} · Reed ${rdCount} · Jooble ${jbCount}`);
-  renderResults();
-  btn.disabled = false; btn.textContent = 'Search jobs';
+  renderResults(salLabel,az,rd,jb);
+  btn.disabled=false; btn.textContent='Search jobs';
 }
 
-function renderResults() {
-  const area = document.getElementById('results-area');
-  if (!allJobs.length) {
-    area.innerHTML = `<div class="empty-state"><div class="big">😕</div><p>No results — try more role types, a lower salary, or Edinburgh + Remote.<br>Open <strong>🛠 Debug</strong> to see what the APIs returned.</p></div>`;
+function getSortedJobs() {
+  const sort=document.getElementById('sort-select')?.value||'relevance';
+  const jobs=[...allJobs];
+  if(sort==='salary-high') jobs.sort((a,b)=>(salaryNum(b)||0)-(salaryNum(a)||0));
+  else if(sort==='salary-low') jobs.sort((a,b)=>(salaryNum(a)||999999)-(salaryNum(b)||999999));
+  else if(sort==='recent') jobs.sort((a,b)=>new Date(b.created||0)-new Date(a.created||0));
+  else if(sort==='group') jobs.sort((a,b)=>a._role.localeCompare(b._role));
+  else jobs.sort((a,b)=>b._score-a._score);
+  return jobs;
+}
+
+function renderResults(salLabel,az,rd,jb) {
+  const area=document.getElementById('results-area');
+  if(!allJobs.length){
+    area.innerHTML='<div class="empty-state"><div class="big">😕</div><p>No results — try more role types, lower salary, or Edinburgh + Remote.<br>Open <strong>🛠 Debug</strong> to diagnose.</p></div>';
     return;
   }
-  let jobs = [...allJobs];
-  if (sortMode==='recent') jobs.sort((a,b)=>new Date(b.created||0)-new Date(a.created||0));
-  else jobs.sort((a,b)=>b._score-a._score);
 
-  let html = `<div class="results-header"><div class="results-count">${jobs.length} roles found</div><div class="sort-row"><button class="sort-btn ${sortMode==='relevance'?'active':''}" onclick="setSort('relevance')">Best match</button><button class="sort-btn ${sortMode==='recent'?'active':''}" onclick="setSort('recent')">Most recent</button></div></div><div class="job-list">`;
+  const salLbl = salLabel || document.getElementById('salary-min')?.selectedOptions[0]?.text || '';
+  const countLine = `${allJobs.length} results · ${salLbl} · Adzuna ${az??allJobs.filter(j=>j.source==='adzuna').length} · Reed ${rd??allJobs.filter(j=>j.source==='reed').length} · Jooble ${jb??allJobs.filter(j=>j.source==='jooble').length}`;
 
-  jobs.forEach((j,i) => {
-    const tags   = detectTags(j);
-    const sal    = salaryStr(j);
-    const remote = jobIsRemote(j);
-    const best   = j._score >= 4;
-    const snip   = (j.description||'').replace(/<[^>]+>/g,'').slice(0,300)+'…';
-    const srcLabel = j.source==='adzuna'?'Adzuna':j.source==='reed'?'Reed':'Jooble';
+  const jobs=getSortedJobs();
+  const sort=document.getElementById('sort-select')?.value||'relevance';
+  const grouped = sort==='group';
 
-    html += `<div class="job-card${best?' best-match':''}" id="jcard-${i}">
-      <div class="card-main" onclick="toggleCard(${i})">
-        <div class="card-top">
-          <div><div class="card-title">${j.title}</div><div class="card-org">${j.org}</div></div>
-          <span class="source-badge source-${j.source}">${srcLabel}</span>
-        </div>
-        <div class="card-meta">
-          <span class="meta-chip ${remote?'chip-remote':''}">
-            <svg viewBox="0 0 12 12" fill="none"><path d="M6 1C3.24 1 1 3.24 1 6s2.24 5 5 5 5-2.24 5-5S8.76 1 6 1z" stroke="currentColor" stroke-width="1"/><path d="M1 6h10M6 1c-1.1 1.4-1.7 3-1.7 5s.6 3.6 1.7 5M6 1c1.1 1.4 1.7 3 1.7 5S7.1 9.6 6 11" stroke="currentColor" stroke-width="1"/></svg>
-            ${remote?'Remote / WFH':j.location}
-          </span>
-          ${sal?`<span class="meta-chip chip-salary"><svg viewBox="0 0 12 12" fill="none"><rect x="1" y="2.5" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M1 5h10" stroke="currentColor" stroke-width="1"/></svg>${sal}</span>`:''}
-        </div>
-        ${tags.length?`<div class="match-badges">${tags.map(t=>`<span class="match-badge badge-${t.type}">${t.label}</span>`).join('')}</div>`:''}
-        <button class="card-expand-btn">View details <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 4.5L6.5 8.5L10.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  // Build group nav if grouping
+  let groupNav='';
+  let sections='';
+
+  if(grouped){
+    const byRole=new Map();
+    jobs.forEach(j=>{ if(!byRole.has(j._role))byRole.set(j._role,[]); byRole.get(j._role).push(j); });
+    const roleOrder=['senco','safeguarding','project','leadership','education','charity'];
+    const sorted=[...byRole.entries()].sort((a,b)=>roleOrder.indexOf(a[0])-roleOrder.indexOf(b[0]));
+
+    groupNav='<div class="group-nav">'+sorted.map(([role,rjobs])=>
+      `<a class="group-pill" href="#group-${role}">${ROLE_LABELS[role]||role} <strong>(${rjobs.length})</strong></a>`
+    ).join('')+'</div>';
+
+    sections=sorted.map(([role,rjobs])=>
+      `<div class="group-section" id="group-${role}">
+        <div class="group-heading">${ROLE_LABELS[role]||role} <span class="group-count">${rjobs.length} roles</span></div>
+        <div class="job-list">${rjobs.map((j,i)=>cardHTML(j,'g-'+role+'-'+i)).join('')}</div>
+      </div>`
+    ).join('');
+  } else {
+    sections=`<div class="job-list">${jobs.map((j,i)=>cardHTML(j,'j'+i)).join('')}</div>`;
+  }
+
+  area.innerHTML=`
+    <div class="results-toolbar">
+      <div>
+        <div class="results-count">${allJobs.length} roles found</div>
+        <div class="status-bar">${countLine}</div>
       </div>
-      <div class="card-detail">
-        <p class="detail-snippet">${snip}</p>
-        <a class="apply-link" href="${j.url}" target="_blank" rel="noopener">View full listing <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <div class="toolbar-right">
+        <select class="sort-select" id="sort-select" onchange="renderResults()">
+          <option value="relevance">Best match</option>
+          <option value="recent">Most recent</option>
+          <option value="salary-high">Salary: high → low</option>
+          <option value="salary-low">Salary: low → high</option>
+          <option value="group">Group by role type</option>
+        </select>
       </div>
-    </div>`;
-  });
-
-  html += '</div>';
-  area.innerHTML = html;
+    </div>
+    ${groupNav}
+    ${sections}`;
 }
 
-function toggleCard(i) { document.getElementById(`jcard-${i}`).classList.toggle('expanded'); }
-function setSort(m) { sortMode=m; renderResults(); }
-function setStatus(m) { document.getElementById('status-bar').textContent=m; }
-function showLoading() {
-  document.getElementById('results-area').innerHTML=`<div class="loading-state"><div class="spinner"></div><span>Searching Adzuna, Reed and Jooble…</span><span class="sub">Running queries in parallel</span></div>`;
+function cardHTML(j, idx) {
+  const tags=detectTags(j);
+  const sal=salaryStr(j);
+  const remote=jobIsRemote(j);
+  const best=j._score>=4;
+  const snip=(j.description||'').replace(/<[^>]+>/g,'').slice(0,280)+'…';
+  const src=j.source==='adzuna'?'Adzuna':j.source==='reed'?'Reed':'Jooble';
+  return `<div class="job-card${best?' best-match':''}" id="card-${idx}">
+    <div class="card-main" onclick="toggleCard('${idx}')">
+      <div class="card-top">
+        <div><div class="card-title">${j.title}</div><div class="card-org">${j.org}</div></div>
+        <span class="source-badge source-${j.source}">${src}</span>
+      </div>
+      <div class="card-meta">
+        <span class="meta-chip ${remote?'chip-remote':''}">
+          <svg viewBox="0 0 12 12" fill="none"><path d="M6 1C3.24 1 1 3.24 1 6s2.24 5 5 5 5-2.24 5-5S8.76 1 6 1z" stroke="currentColor" stroke-width="1"/><path d="M1 6h10M6 1c-1.1 1.4-1.7 3-1.7 5s.6 3.6 1.7 5M6 1c1.1 1.4 1.7 3 1.7 5S7.1 9.6 6 11" stroke="currentColor" stroke-width="1"/></svg>
+          ${remote?'Remote / WFH':j.location}
+        </span>
+        ${sal?`<span class="meta-chip chip-salary"><svg viewBox="0 0 12 12" fill="none"><rect x="1" y="2.5" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M1 5h10" stroke="currentColor" stroke-width="1"/></svg>${sal}</span>`:''}
+      </div>
+      ${tags.length?`<div class="match-badges">${tags.map(t=>`<span class="match-badge badge-${t.type}">${t.label}</span>`).join('')}</div>`:''}
+      <button class="card-expand-btn">View details <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 4.5L6.5 8.5L10.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+    <div class="card-detail">
+      <p class="detail-snippet">${snip}</p>
+      <a class="apply-link" href="${j.url}" target="_blank" rel="noopener">View full listing <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+  </div>`;
 }
+
+function toggleCard(idx) { document.getElementById(`card-${idx}`)?.classList.toggle('expanded'); }
 function clearResults() {
   allJobs=[];
-  // Uncheck all
-  document.querySelectorAll('#role-checkboxes input').forEach(cb => { cb.checked=false; cb.closest('.cb-item').classList.remove('checked'); });
-  document.getElementById('results-area').innerHTML=`<div class="empty-state"><div class="big">🔍</div><p>Pick one or more role types and hit <strong>Search jobs</strong>.</p></div>`;
-  setStatus(''); document.getElementById('debug-panel').innerHTML='';
+  document.querySelectorAll('#role-checkboxes input').forEach(cb=>{cb.checked=true;cb.closest('.cb-item').classList.add('checked');});
+  document.getElementById('results-area').innerHTML='<div class="empty-state"><div class="big">🔍</div><p>Pick role types and hit <strong>Search jobs</strong>.</p></div>';
+  document.getElementById('debug-panel').innerHTML='';
 }
 </script>
 </body>
