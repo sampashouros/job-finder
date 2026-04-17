@@ -85,9 +85,10 @@
   .empty-state .big { font-size: 32px; margin-bottom: 10px; }
   .empty-state p { font-size: 14px; line-height: 1.7; }
   .loading-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 3rem; color: var(--text-muted); font-size: 14px; }
+  .loading-state .sub { font-size: 12px; opacity: 0.7; }
   .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  @media (max-width: 640px) { .controls-grid { grid-template-columns: 1fr 1fr; } .header-inner { flex-direction: column; align-items: flex-start; } .profile-tags { display: none; } }
+  @media (max-width: 640px) { .controls-grid { grid-template-columns: 1fr 1fr; } .profile-tags { display: none; } }
   @media (max-width: 420px) { .controls-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -111,13 +112,13 @@
       <div class="ctrl-group">
         <label class="ctrl-label">Role type</label>
         <select id="role-type">
-          <option value="">All suitable roles</option>
-          <option value="junior project manager">Junior project manager</option>
+          <option value="all">All suitable roles</option>
+          <option value="project">Project manager</option>
           <option value="safeguarding">Safeguarding</option>
-          <option value="SENCO inclusion SEN">SENCO / Inclusion / SEN</option>
-          <option value="leadership manager">Leadership / Management</option>
-          <option value="education consultant">Education consulting</option>
-          <option value="charity coordinator">Charity / Third sector</option>
+          <option value="senco">SENCO / Inclusion / SEN</option>
+          <option value="leadership">Leadership / Management</option>
+          <option value="education">Education consulting</option>
+          <option value="charity">Charity / Third sector</option>
         </select>
       </div>
       <div class="ctrl-group">
@@ -152,7 +153,7 @@
   <div id="results-area">
     <div class="empty-state">
       <div class="big">🔍</div>
-      <p>Choose a role type and hit <strong>Search jobs</strong>.<br>Start with <strong>All suitable roles</strong> + <strong>£30,000+</strong> to verify results are loading.</p>
+      <p>Choose a role type and hit <strong>Search jobs</strong>.<br>Searches Adzuna and Reed simultaneously across Edinburgh and remote roles.</p>
     </div>
   </div>
 </main>
@@ -161,7 +162,19 @@ const ADZUNA_APP_ID  = '48908c3e';
 const ADZUNA_APP_KEY = 'f486e192fc75b1200048886c266fce28';
 const REED_PROXY     = '/.netlify/functions/reed';
 
-const PROFILE_KW = ['project manager','project management','safeguarding','senco','sen','inclusion','special educational needs','education','leadership','manager','coordinator','consultant','charity','third sector','programme manager','operations','compliance','policy','training','learning','development','support','wellbeing','pastoral'];
+// Short, focused search terms per role type — long strings return 0 results
+const SEARCH_QUERIES = {
+  all:          ['manager', 'coordinator', 'safeguarding', 'inclusion', 'education'],
+  project:      ['project manager', 'project coordinator', 'programme manager'],
+  safeguarding: ['safeguarding', 'safeguarding manager', 'safeguarding officer'],
+  senco:        ['SENCO', 'SEN coordinator', 'inclusion manager', 'SEN officer'],
+  leadership:   ['manager', 'team leader', 'operations manager', 'service manager'],
+  education:    ['education consultant', 'learning coordinator', 'training manager'],
+  charity:      ['charity manager', 'third sector', 'charity coordinator', 'voluntary sector'],
+};
+
+const PROFILE_KW = ['project','safeguarding','senco','sen','inclusion','special educational needs','education','leadership','manager','coordinator','consultant','charity','third sector','programme','training','learning','wellbeing','pastoral','policy','compliance'];
+
 const MATCH_TAGS = {
   'safeguarding':              {label:'Safeguarding',  type:'strong'},
   'senco':                     {label:'SENCO match',   type:'strong'},
@@ -223,39 +236,46 @@ function isRemote(job) {
   return t.includes('remote')||t.includes('work from home')||t.includes('wfh')||t.includes('home based')||t.includes('home-based');
 }
 
-async function fetchAdzuna(kw, loc, sal) {
-  const where = loc === 'remote' ? 'uk' : 'edinburgh';
-  let what = kw || 'manager education charity';
-  if (loc === 'remote') what += ' remote';
-  const url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=20&what=${encodeURIComponent(what)}&where=${encodeURIComponent(where)}&salary_min=${sal}&distance=20&content-type=application/json`;
-  log(`Adzuna → what="${what}" where="${where}" salary_min=${sal}`,'info');
+// Single Adzuna fetch with one short keyword
+async function adzunaOne(what, where, sal) {
+  const url = `https://api.adzuna.com/v1/api/jobs/gb/search/1`
+    + `?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}`
+    + `&results_per_page=10&what=${encodeURIComponent(what)}`
+    + `&where=${encodeURIComponent(where)}&salary_min=${sal}&distance=20`
+    + `&content-type=application/json`;
   const r = await fetch(url);
-  log(`Adzuna ← ${r.status}`, r.ok?'ok':'error');
-  if (!r.ok) { const b=await r.text(); log(`Adzuna body: ${b.slice(0,150)}`,'error'); throw new Error('Adzuna '+r.status); }
+  if (!r.ok) { log(`Adzuna "${what}" → ${r.status}`, 'error'); return []; }
   const d = await r.json();
-  log(`Adzuna: ${d.results?.length??0} results (total count: ${d.count??'?'})`,'ok');
-  if (!d.results?.length) log('Adzuna zero results — try lower salary or broader role type','warn');
-  return (d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',title:j.title,org:j.company?.display_name||'Not specified',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));
+  log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0} results`, d.results?.length ? 'ok' : 'warn');
+  return (d.results||[]).map(j=>({
+    id:'az-'+j.id, source:'adzuna', title:j.title,
+    org:j.company?.display_name||'Not specified',
+    location:j.location?.display_name||'',
+    description:j.description, salaryMin:j.salary_min, salaryMax:j.salary_max,
+    url:j.redirect_url, created:j.created
+  }));
 }
 
-async function fetchReed(kw, loc, sal) {
-  const remote = loc === 'remote';
-  const p = new URLSearchParams({keywords:kw||'manager education',minimumSalary:sal,...(remote?{remote:'true'}:{location:'Edinburgh',distance:'20'})});
-  const proxyUrl = `${REED_PROXY}?${p}`;
-  log(`Reed proxy → ${proxyUrl}`,'info');
-  const r = await fetch(proxyUrl);
-  log(`Reed proxy ← ${r.status}`, r.ok?'ok':'error');
-  if (!r.ok) { const b=await r.text(); log(`Reed error: ${b.slice(0,200)}`,'error'); throw new Error('Reed '+r.status); }
+// Single Reed fetch via proxy
+async function reedOne(what, loc, sal, remote) {
+  const p = new URLSearchParams({keywords:what, minimumSalary:sal, ...(remote?{remote:'true'}:{location:loc, distance:'20'})});
+  const r = await fetch(`${REED_PROXY}?${p}`);
+  if (!r.ok) { log(`Reed "${what}" → proxy ${r.status}`, 'error'); return []; }
   const d = await r.json();
-  if (d.error) { log(`Reed API error: ${d.error} — ${d.detail||''}`,'error'); throw new Error(d.error); }
-  log(`Reed: ${d.results?.length??0} results`,'ok');
-  if (!d.results?.length) log('Reed zero results — try lower salary or broader role type','warn');
-  return (d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',title:j.jobTitle,org:j.employerName||'Not specified',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,url:j.jobUrl,created:j.date}));
+  if (d.error) { log(`Reed "${what}" → API error: ${d.error}`, 'error'); return []; }
+  log(`Reed "${what}" → ${d.results?.length??0} results`, d.results?.length ? 'ok' : 'warn');
+  return (d.results||[]).map(j=>({
+    id:'reed-'+j.jobId, source:'reed', title:j.jobTitle,
+    org:j.employerName||'Not specified', location:j.locationName||'',
+    description:j.jobDescription,
+    salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,
+    url:j.jobUrl, created:j.date
+  }));
 }
 
 async function runSearch() {
-  const btn = document.getElementById('search-btn');
-  const roleType = document.getElementById('role-type').value;
+  const btn      = document.getElementById('search-btn');
+  const roleKey  = document.getElementById('role-type').value;
   const locMode  = document.getElementById('location-type').value;
   const salMin   = document.getElementById('salary-min').value;
   const salLabel = document.getElementById('salary-min').selectedOptions[0].text;
@@ -264,31 +284,50 @@ async function runSearch() {
   btn.disabled = true; btn.textContent = 'Searching…';
   setStatus(''); showLoading();
 
-  let kw = roleType || 'manager education safeguarding charity coordinator';
-  if (locMode === 'remote' || locMode === 'both') kw += ' remote';
+  const queries  = SEARCH_QUERIES[roleKey] || SEARCH_QUERIES.all;
+  const edinLoc  = 'edinburgh';
+  const remote   = locMode === 'remote';
 
-  log(`Search: "${kw}" | ${locMode} | ${salLabel}`,'info');
+  log(`Role: ${roleKey} | Location: ${locMode} | Salary: ${salLabel}`, 'info');
+  log(`Running ${queries.length} queries × 2 sources = ${queries.length*2} requests`, 'info');
 
-  const [azR, rdR] = await Promise.allSettled([
-    fetchAdzuna(kw, locMode, salMin),
-    fetchReed(kw, locMode, salMin),
-  ]);
+  // Build all fetch promises
+  const promises = [];
 
-  const azJobs = azR.status === 'fulfilled' ? azR.value : (log('Adzuna failed: '+azR.reason,'error'), []);
-  const rdJobs = rdR.status === 'fulfilled' ? rdR.value : (log('Reed failed: '+rdR.reason,'error'), []);
+  queries.forEach(q => {
+    if (locMode === 'both' || locMode === 'edinburgh') {
+      promises.push(adzunaOne(q, edinLoc, salMin));
+      promises.push(reedOne(q, 'Edinburgh', salMin, false));
+    }
+    if (locMode === 'both' || locMode === 'remote') {
+      promises.push(adzunaOne(q + ' remote', 'uk', salMin));
+      promises.push(reedOne(q, 'Edinburgh', salMin, true));
+    }
+  });
 
-  const seen = new Set();
-  allJobs = [...azJobs, ...rdJobs].filter(j => {
+  const results = await Promise.allSettled(promises);
+  const allRaw  = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+
+  // Dedupe by id, then by title+org
+  const seenId  = new Set();
+  const seenKey = new Set();
+  allJobs = allRaw.filter(j => {
+    if (seenId.has(j.id)) return false; seenId.add(j.id);
     const k = (j.title+j.org).toLowerCase().replace(/\s/g,'');
-    if (seen.has(k)) return false; seen.add(k); return true;
+    if (seenKey.has(k)) return false; seenKey.add(k);
+    return true;
   });
 
   if (locMode === 'remote') allJobs = allJobs.filter(j => isRemote(j));
+
   allJobs.forEach(j => j._score = score(j));
   allJobs.sort((a,b) => b._score - a._score);
 
-  log(`Final: ${allJobs.length} unique jobs`, allJobs.length?'ok':'warn');
-  setStatus(`${allJobs.length} results · ${salLabel} · Adzuna ${azJobs.length} · Reed ${rdJobs.length}`);
+  const azCount = allJobs.filter(j=>j.source==='adzuna').length;
+  const rdCount = allJobs.filter(j=>j.source==='reed').length;
+  log(`Done — ${allJobs.length} unique jobs (Adzuna: ${azCount}, Reed: ${rdCount})`, allJobs.length?'ok':'warn');
+
+  setStatus(`${allJobs.length} results · ${salLabel} · Adzuna ${azCount} · Reed ${rdCount}`);
   renderResults();
   btn.disabled = false; btn.textContent = 'Search jobs';
 }
@@ -296,14 +335,20 @@ async function runSearch() {
 function renderResults() {
   const area = document.getElementById('results-area');
   if (!allJobs.length) {
-    area.innerHTML = `<div class="empty-state"><div class="big">😕</div><p>No results found.<br>Try <strong>All suitable roles</strong>, lower the salary to <strong>£25,000+</strong>, or switch to <strong>Edinburgh + Remote</strong>.<br>Open <strong>🛠 Debug</strong> to see what the APIs returned.</p></div>`;
+    area.innerHTML = `<div class="empty-state"><div class="big">😕</div><p>No results found — try a lower salary or different role type.<br>Open <strong>🛠 Debug</strong> to see API responses.</p></div>`;
     return;
   }
   let jobs = [...allJobs];
   if (sortMode==='recent') jobs.sort((a,b)=>new Date(b.created||0)-new Date(a.created||0));
   else jobs.sort((a,b)=>b._score-a._score);
 
-  let html = `<div class="results-header"><div class="results-count">${jobs.length} roles found</div><div class="sort-row"><button class="sort-btn ${sortMode==='relevance'?'active':''}" onclick="setSort('relevance')">Best match</button><button class="sort-btn ${sortMode==='recent'?'active':''}" onclick="setSort('recent')">Most recent</button></div></div><div class="job-list">`;
+  let html = `<div class="results-header">
+    <div class="results-count">${jobs.length} roles found</div>
+    <div class="sort-row">
+      <button class="sort-btn ${sortMode==='relevance'?'active':''}" onclick="setSort('relevance')">Best match</button>
+      <button class="sort-btn ${sortMode==='recent'?'active':''}" onclick="setSort('recent')">Most recent</button>
+    </div>
+  </div><div class="job-list">`;
 
   jobs.forEach((j,i) => {
     const tags   = detectTags(j);
@@ -311,6 +356,7 @@ function renderResults() {
     const remote = isRemote(j);
     const best   = j._score >= 4;
     const snip   = (j.description||'').replace(/<[^>]+>/g,'').slice(0,300)+'…';
+
     html += `<div class="job-card${best?' best-match':''}" id="jcard-${i}">
       <div class="card-main" onclick="toggleCard(${i})">
         <div class="card-top">
@@ -333,6 +379,7 @@ function renderResults() {
       </div>
     </div>`;
   });
+
   html += '</div>';
   area.innerHTML = html;
 }
@@ -340,8 +387,14 @@ function renderResults() {
 function toggleCard(i) { document.getElementById(`jcard-${i}`).classList.toggle('expanded'); }
 function setSort(m) { sortMode=m; renderResults(); }
 function setStatus(m) { document.getElementById('status-bar').textContent=m; }
-function showLoading() { document.getElementById('results-area').innerHTML=`<div class="loading-state"><div class="spinner"></div><span>Searching Adzuna and Reed…</span></div>`; }
-function clearResults() { allJobs=[]; document.getElementById('results-area').innerHTML=`<div class="empty-state"><div class="big">🔍</div><p>Choose a role type and hit <strong>Search jobs</strong>.</p></div>`; setStatus(''); document.getElementById('debug-panel').innerHTML=''; }
+function showLoading() {
+  document.getElementById('results-area').innerHTML=`<div class="loading-state"><div class="spinner"></div><span>Searching Adzuna and Reed…</span><span class="sub">Running multiple queries in parallel</span></div>`;
+}
+function clearResults() {
+  allJobs=[];
+  document.getElementById('results-area').innerHTML=`<div class="empty-state"><div class="big">🔍</div><p>Choose a role type and hit <strong>Search jobs</strong>.</p></div>`;
+  setStatus(''); document.getElementById('debug-panel').innerHTML='';
+}
 </script>
 </body>
 </html>
