@@ -341,8 +341,9 @@ async function reedOne(what, loc, sal, remote) {
 }
 
 // Single Jooble fetch via proxy
-async function joobleOne(what, loc) {
-  const p = new URLSearchParams({ keywords: what, location: loc });
+async function joobleOne(what, loc, sal) {
+  const remote = loc === 'remote';
+  const p = new URLSearchParams({ keywords: what, location: remote ? '' : loc, minimumSalary: sal || 35000, remote: remote ? 'true' : 'false' });
   const r = await fetch(`${JOOBLE_PROXY}?${p}`);
   if (!r.ok) { log(`Jooble "${what}" → proxy ${r.status}`, 'error'); return []; }
   const d = await r.json();
@@ -390,12 +391,12 @@ async function joobleOne(what, loc) {
     if (locMode === 'both' || locMode === 'edinburgh') {
       promises.push(adzunaOne(q, edinLoc, salMin));
       promises.push(reedOne(q, 'Edinburgh', salMin, false));
-      promises.push(joobleOne(q, 'Edinburgh'));
+      promises.push(joobleOne(q, 'Edinburgh', salMin));
     }
     if (locMode === 'both' || locMode === 'remote') {
       promises.push(adzunaOne(q + ' remote', 'uk', salMin));
       promises.push(reedOne(q, 'Edinburgh', salMin, true));
-      promises.push(joobleOne(q, 'remote'));
+      promises.push(joobleOne(q, 'remote', salMin));
     }
   });
 
@@ -403,7 +404,7 @@ async function joobleOne(what, loc) {
   extraRemoteQueries.forEach(q => {
     promises.push(adzunaOne(q, 'uk', salMin));
     promises.push(reedOne(q, '', salMin, true));
-    promises.push(joobleOne(q, 'remote'));
+    promises.push(joobleOne(q, 'remote', salMin));
   });
 
   const results = await Promise.allSettled(promises);

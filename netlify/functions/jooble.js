@@ -1,30 +1,36 @@
-const JOOBLE_KEY = '26833169-20fb-40df-a18c-ec5122da515d';
+const JOOBLE_API_KEY = '26833169-20fb-40df-a18c-ec5122da515d';
 
 exports.handler = async function(event) {
   const params = event.queryStringParameters || {};
-  const keywords = params.keywords || 'education manager';
+  const keywords = params.keywords || 'education';
   const location  = params.location  || 'Edinburgh';
+  const salary    = parseInt(params.minimumSalary || '35000');
+  const remote    = params.remote === 'true';
 
-  const body = JSON.stringify({ keywords, location, resultsOnPage: 20 });
+  const body = {
+    keywords: keywords,
+    location: remote ? '' : location,
+    salary:   salary,
+    page:     1,
+  };
 
-  console.log('Jooble request:', body);
+  console.log('Jooble request:', JSON.stringify(body));
 
   try {
-    const response = await fetch(`https://jooble.org/api/${JOOBLE_KEY}`, {
+    const response = await fetch(`https://jooble.org/api/${JOOBLE_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body,
+      body: JSON.stringify(body),
     });
 
     const text = await response.text();
-    console.log('Jooble status:', response.status);
-    console.log('Jooble preview:', text.slice(0, 200));
+    console.log('Jooble status:', response.status, 'preview:', text.slice(0, 200));
 
     if (!response.ok) {
       return {
         statusCode: response.status,
         headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Jooble API error', status: response.status, detail: text })
+        body: JSON.stringify({ error: 'Jooble error', status: response.status, detail: text })
       };
     }
 
