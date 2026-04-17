@@ -99,7 +99,7 @@
       <div class="brand-icon">
         <svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="6.5" stroke="white" stroke-width="1.5"/><path d="M5.5 8.8L7.5 10.8L11.5 6.2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div><div class="brand-name">Next chapter</div><div class="brand-sub">Jobs matched to your background</div></div>
+      <div><div class="brand-name">Bubs jobs</div><div class="brand-sub">Jobs matched for a bubs</div></div>
     </div>
     <div class="profile-tags">
       <span class="ptag">SENCO</span><span class="ptag">Asst. Headteacher</span><span class="ptag">Edinburgh + Remote</span>
@@ -167,7 +167,7 @@ const SEARCH_QUERIES = {
   all:          ['safeguarding', 'inclusion coordinator', 'SEN coordinator', 'education coordinator', 'SENCO', 'learning support', 'children services', 'youth worker'],
   project:      ['project coordinator education', 'project manager children', 'project manager charity', 'programme coordinator children'],
   safeguarding: ['safeguarding', 'safeguarding manager', 'safeguarding officer', 'designated safeguarding lead'],
-  senco:        ['SENCO', 'SEN coordinator', 'SEND coordinator', 'inclusion manager', 'SEN officer', 'SEND tutor', '1:1 tutor', 'learning support'],
+  senco:        ['SENCO', 'SEN coordinator', 'SEND coordinator', 'inclusion manager', 'SEN officer', 'learning support'],
   leadership:   ['head of education', 'service manager children', 'team leader education', 'operations manager charity', 'education manager'],
   education:    ['education consultant', 'learning coordinator', 'training manager education', 'curriculum coordinator', 'EdTech'],
   charity:      ['charity coordinator children', 'youth charity', 'children charity manager', 'voluntary sector education'],
@@ -192,7 +192,7 @@ const INCLUDE_TERMS = [
   'education','school','academy','children','young people','youth','student','pupil','learning',
   'sen','send','senco','inclusion','safeguarding','pastoral','behaviour','wellbeing',
   'charity','third sector','voluntary','community','social care','early years','nursery',
-  'edtech','curriculum','teaching','tutor','tutoring','mentor','support worker',
+  'edtech','curriculum','teaching','mentor','support worker',
   'nhs','council','local authority','public sector','government','ofsted',
   'family support','looked after','lac','adoption','foster','disability',
 ];
@@ -226,8 +226,6 @@ const MATCH_TAGS = {
   'education':                 {label:'Education',      type:'good'},
   'leadership':                {label:'Leadership',     type:'good'},
   'coordinator':               {label:'Coordinator',    type:'good'},
-  'tutor':                     {label:'Tutoring',       type:'good'},
-  '1:1':                       {label:'1:1 support',    type:'good'},
   'young people':              {label:'Young people',   type:'good'},
   'remote':                    {label:'Remote/WFH',     type:'new'},
   'work from home':            {label:'Work from home', type:'new'},
@@ -339,7 +337,7 @@ async function runSearch() {
 
   // For SENCO role type, always also search remote/nationwide regardless of location setting
   const extraRemoteQueries = roleKey === 'senco' || roleKey === 'all'
-    ? ['SENCO remote', 'SEND coordinator remote', '1:1 tutor online', 'online tutor SEN', 'remote learning support']
+    ? ['SENCO remote', 'SEND coordinator remote', 'remote learning support']
     : [];
 
   queries.forEach(q => {
