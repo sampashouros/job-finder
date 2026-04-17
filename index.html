@@ -62,6 +62,7 @@
   .source-badge { font-size: 10px; padding: 3px 7px; border-radius: 4px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; flex-shrink: 0; }
   .source-adzuna { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
   .source-reed { background: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8; }
+  .source-jooble { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
   .card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .meta-chip { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-muted); }
   .meta-chip svg { width: 12px; height: 12px; }
@@ -160,7 +161,8 @@
 <script>
 const ADZUNA_APP_ID  = '48908c3e';
 const ADZUNA_APP_KEY = 'f486e192fc75b1200048886c266fce28';
-const REED_PROXY     = '/.netlify/functions/reed';
+const REED_PROXY   = '/.netlify/functions/reed';
+const JOOBLE_PROXY = '/.netlify/functions/jooble';
 
 // Short, focused search terms per role type — long strings return 0 results
 const SEARCH_QUERIES = {
@@ -173,41 +175,65 @@ const SEARCH_QUERIES = {
   charity:      ['charity coordinator children', 'youth charity', 'children charity manager', 'voluntary sector education'],
 };
 
-// Words that suggest a job is NOT relevant — used to filter out construction, finance, etc.
-const EXCLUDE_TERMS = [
-  'construction','site manager','quantity surveyor','civil engineer','structural engineer',
-  'tax','accountant','accounting','finance manager','financial manager','audit','auditor',
-  'solicitor','legal','conveyancing','mortgage','insurance','banking','investment',
-  'software engineer','developer','devops','backend','frontend','full stack','data engineer',
-  'marketing manager','digital marketing','seo','ppc','social media manager',
-  'sales manager','business development','account manager','telesales',
-  'chef','catering','kitchen','hospitality','hotel',
-  'warehouse','logistics','supply chain','haulage','driver',
+// Title-level hard exclusions — if job TITLE contains any of these, drop immediately
+const EXCLUDE_TITLE = [
+  'machine learning','data scientist','data engineer','data analyst','software engineer',
+  'software developer','web developer','devops','backend','frontend','full stack','fullstack',
+  'cloud engineer','platform engineer','security engineer','network engineer','it engineer',
+  'infrastructure engineer','solutions architect','ml engineer','ai engineer',
+  'mechanical engineer','structural engineer','civil engineer','electrical engineer',
+  'quantity surveyor','site manager','construction','building manager',
+  'tax','accountant','accounting','financial manager','finance manager','audit','auditor',
+  'solicitor','legal counsel','conveyancing','mortgage','insurance broker','banking',
+  'investment manager','fund manager','portfolio manager','financial advisor',
+  'marketing manager','digital marketing','seo manager','ppc','paid media',
+  'sales manager','business development','account manager','telesales','sales executive',
+  'chef','head chef','sous chef','catering manager','kitchen manager',
+  'warehouse manager','logistics','supply chain','haulage',
   'dental','dentist','pharmacy','pharmacist','optician','radiographer',
-  'electrician','plumber','hvac','mechanical engineer',
+  'electrician','plumber','hvac','gas engineer',
+  'modern workplace','cybersecurity','cyber security','penetration test',
 ];
 
-// Words that confirm a job IS relevant to her background
-const INCLUDE_TERMS = [
-  'education','school','academy','children','young people','youth','student','pupil','learning',
-  'sen','send','senco','inclusion','safeguarding','pastoral','behaviour','wellbeing',
-  'charity','third sector','voluntary','community','social care','early years','nursery',
-  'edtech','curriculum','teaching','mentor','support worker',
-  'nhs','council','local authority','public sector','government','ofsted',
-  'family support','looked after','lac','adoption','foster','disability',
+// Description-level soft exclusions — if title looks OK but description is clearly off-sector
+const EXCLUDE_DESC = [
+  'machine learning','kubernetes','terraform','aws lambda','azure devops',
+  'react.js','node.js','python developer','java developer','typescript',
+];
+
+// Words that confirm a job IS relevant — checked as whole words where possible
+const INCLUDE_TITLE = [
+  'senco','send','safeguarding','inclusion','sen coordinator','special educational needs',
+  'education','school','academy','children','young people','youth worker',
+  'pastoral','wellbeing','learning support','family support',
+  'early years','nursery','teaching assistant','support worker',
+  'charity coordinator','voluntary','community manager',
+];
+
+const INCLUDE_ANY = [
+  'senco','safeguarding','inclusion coordinator','special educational needs',
+  'children\'s services','young people','youth service','early years',
+  'looked after children','family support','social care','education coordinator',
+  'learning disability','disability support','pastoral support',
+  'charity sector','third sector','voluntary sector','community interest',
+  'local authority education','school improvement','ofsted',
 ];
 
 function isRelevantJob(job) {
-  const t = ((job.title||'')+' '+(job.description||'')).toLowerCase();
+  const title = (job.title||'').toLowerCase();
+  const full  = (title + ' ' + (job.description||'')).toLowerCase();
 
-  // Hard exclude — if title contains any of these, drop immediately
-  const titleLower = (job.title||'').toLowerCase();
-  if (EXCLUDE_TERMS.some(ex => titleLower.includes(ex))) return false;
+  // Hard exclude on title
+  if (EXCLUDE_TITLE.some(ex => title.includes(ex))) return false;
 
-  // If any include term appears anywhere, it's relevant
-  if (INCLUDE_TERMS.some(inc => t.includes(inc))) return true;
+  // Soft exclude on description (only if title didn't already pass an include check)
+  const titlePass = INCLUDE_TITLE.some(inc => title.includes(inc));
+  if (!titlePass && EXCLUDE_DESC.some(ex => full.includes(ex))) return false;
 
-  // If no include term found, drop it — too generic
+  // Must have at least one strong include signal
+  if (INCLUDE_TITLE.some(inc => title.includes(inc))) return true;
+  if (INCLUDE_ANY.some(inc => full.includes(inc))) return true;
+
   return false;
 }
 
@@ -314,7 +340,27 @@ async function reedOne(what, loc, sal, remote) {
   }));
 }
 
-async function runSearch() {
+// Single Jooble fetch via proxy
+async function joobleOne(what, loc) {
+  const p = new URLSearchParams({ keywords: what, location: loc });
+  const r = await fetch(`${JOOBLE_PROXY}?${p}`);
+  if (!r.ok) { log(`Jooble "${what}" → proxy ${r.status}`, 'error'); return []; }
+  const d = await r.json();
+  if (d.error) { log(`Jooble "${what}" → API error: ${d.error}`, 'error'); return []; }
+  const jobs = d.jobs || [];
+  log(`Jooble "${what}" @ ${loc} → ${jobs.length} results`, jobs.length ? 'ok' : 'warn');
+  return jobs.map(j => ({
+    id:          'jooble-' + (j.id || Math.random()),
+    source:      'jooble',
+    title:       j.title || '',
+    org:         j.company || 'Not specified',
+    location:    j.location || '',
+    description: j.snippet || '',
+    salary:      j.salary || null,
+    url:         j.link || '#',
+    created:     j.updated || null,
+  }));
+}
   const btn      = document.getElementById('search-btn');
   const roleKey  = document.getElementById('role-type').value;
   const locMode  = document.getElementById('location-type').value;
@@ -330,7 +376,7 @@ async function runSearch() {
   const remote   = locMode === 'remote';
 
   log(`Role: ${roleKey} | Location: ${locMode} | Salary: ${salLabel}`, 'info');
-  log(`Running ${queries.length} queries × 2 sources = ${queries.length*2} requests`, 'info');
+  log(`Running ${queries.length} queries × 3 sources (Adzuna, Reed, Jooble)`, 'info');
 
   // Build all fetch promises
   const promises = [];
@@ -344,10 +390,12 @@ async function runSearch() {
     if (locMode === 'both' || locMode === 'edinburgh') {
       promises.push(adzunaOne(q, edinLoc, salMin));
       promises.push(reedOne(q, 'Edinburgh', salMin, false));
+      promises.push(joobleOne(q, 'Edinburgh'));
     }
     if (locMode === 'both' || locMode === 'remote') {
       promises.push(adzunaOne(q + ' remote', 'uk', salMin));
       promises.push(reedOne(q, 'Edinburgh', salMin, true));
+      promises.push(joobleOne(q, 'remote'));
     }
   });
 
@@ -355,6 +403,7 @@ async function runSearch() {
   extraRemoteQueries.forEach(q => {
     promises.push(adzunaOne(q, 'uk', salMin));
     promises.push(reedOne(q, '', salMin, true));
+    promises.push(joobleOne(q, 'remote'));
   });
 
   const results = await Promise.allSettled(promises);
@@ -403,9 +452,10 @@ async function runSearch() {
 
   const azCount = allJobs.filter(j=>j.source==='adzuna').length;
   const rdCount = allJobs.filter(j=>j.source==='reed').length;
-  log(`Done — ${allJobs.length} unique jobs (Adzuna: ${azCount}, Reed: ${rdCount})`, allJobs.length?'ok':'warn');
+  const jbCount = allJobs.filter(j=>j.source==='jooble').length;
+  log(`Done — ${allJobs.length} unique jobs (Adzuna: ${azCount}, Reed: ${rdCount}, Jooble: ${jbCount})`, allJobs.length?'ok':'warn');
 
-  setStatus(`${allJobs.length} results · ${salLabel} · Adzuna ${azCount} · Reed ${rdCount}`);
+  setStatus(`${allJobs.length} results · ${salLabel} · Adzuna ${azCount} · Reed ${rdCount} · Jooble ${jbCount}`);
   renderResults();
   btn.disabled = false; btn.textContent = 'Search jobs';
 }
@@ -439,7 +489,7 @@ function renderResults() {
       <div class="card-main" onclick="toggleCard(${i})">
         <div class="card-top">
           <div><div class="card-title">${j.title}</div><div class="card-org">${j.org}</div></div>
-          <span class="source-badge source-${j.source}">${j.source==='adzuna'?'Adzuna':'Reed'}</span>
+          <span class="source-badge source-${j.source}">${j.source==='adzuna'?'Adzuna':j.source==='reed'?'Reed':'Jooble'}</span>
         </div>
         <div class="card-meta">
           <span class="meta-chip ${remote?'chip-remote':''}">
@@ -466,7 +516,7 @@ function toggleCard(i) { document.getElementById(`jcard-${i}`).classList.toggle(
 function setSort(m) { sortMode=m; renderResults(); }
 function setStatus(m) { document.getElementById('status-bar').textContent=m; }
 function showLoading() {
-  document.getElementById('results-area').innerHTML=`<div class="loading-state"><div class="spinner"></div><span>Searching Adzuna and Reed…</span><span class="sub">Running multiple queries in parallel</span></div>`;
+  document.getElementById('results-area').innerHTML=`<div class="loading-state"><div class="spinner"></div><span>Searching Adzuna, Reed and Jooble…</span><span class="sub">Running multiple queries in parallel</span></div>`;
 }
 function clearResults() {
   allJobs=[];
