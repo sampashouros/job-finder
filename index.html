@@ -318,7 +318,29 @@ async function runSearch() {
     return true;
   });
 
-  if (locMode === 'remote') allJobs = allJobs.filter(j => isRemote(j));
+  // Strict client-side location filter — APIs don't filter reliably enough
+  const SCOTLAND_TERMS = ['edinburgh','scotland','scottish','lothian','fife','glasgow','dundee','aberdeen','stirling','falkirk','livingston','kirkcaldy'];
+  const REMOTE_TERMS   = ['remote','work from home','wfh','home based','home-based','anywhere in the uk','uk wide','nationwide'];
+
+  function jobIsEdinburgh(job) {
+    const loc = (job.location||'').toLowerCase();
+    return SCOTLAND_TERMS.some(t => loc.includes(t));
+  }
+  function jobIsRemote(job) {
+    const t = ((job.title||'')+' '+(job.description||'')+' '+(job.location||'')).toLowerCase();
+    return REMOTE_TERMS.some(r => t.includes(r));
+  }
+
+  if (locMode === 'edinburgh') {
+    allJobs = allJobs.filter(j => jobIsEdinburgh(j));
+  } else if (locMode === 'remote') {
+    allJobs = allJobs.filter(j => jobIsRemote(j));
+  } else {
+    // both — keep Edinburgh jobs AND remote jobs, drop everything else
+    allJobs = allJobs.filter(j => jobIsEdinburgh(j) || jobIsRemote(j));
+  }
+
+  log(`After location filter (${locMode}): ${allJobs.length} jobs remaining`, 'info');
 
   allJobs.forEach(j => j._score = score(j));
   allJobs.sort((a,b) => b._score - a._score);
