@@ -164,30 +164,73 @@ const REED_PROXY     = '/.netlify/functions/reed';
 
 // Short, focused search terms per role type — long strings return 0 results
 const SEARCH_QUERIES = {
-  all:          ['manager', 'coordinator', 'safeguarding', 'inclusion', 'education'],
-  project:      ['project manager', 'project coordinator', 'programme manager'],
-  safeguarding: ['safeguarding', 'safeguarding manager', 'safeguarding officer'],
-  senco:        ['SENCO', 'SEN coordinator', 'inclusion manager', 'SEN officer'],
-  leadership:   ['manager', 'team leader', 'operations manager', 'service manager'],
-  education:    ['education consultant', 'learning coordinator', 'training manager'],
-  charity:      ['charity manager', 'third sector', 'charity coordinator', 'voluntary sector'],
+  all:          ['safeguarding', 'inclusion coordinator', 'SEN coordinator', 'education coordinator', 'SENCO', 'learning support', 'children services', 'youth worker'],
+  project:      ['project coordinator education', 'project manager children', 'project manager charity', 'programme coordinator children'],
+  safeguarding: ['safeguarding', 'safeguarding manager', 'safeguarding officer', 'designated safeguarding lead'],
+  senco:        ['SENCO', 'SEN coordinator', 'SEND coordinator', 'inclusion manager', 'SEN officer', 'SEND tutor', '1:1 tutor', 'learning support'],
+  leadership:   ['head of education', 'service manager children', 'team leader education', 'operations manager charity', 'education manager'],
+  education:    ['education consultant', 'learning coordinator', 'training manager education', 'curriculum coordinator', 'EdTech'],
+  charity:      ['charity coordinator children', 'youth charity', 'children charity manager', 'voluntary sector education'],
 };
+
+// Words that suggest a job is NOT relevant — used to filter out construction, finance, etc.
+const EXCLUDE_TERMS = [
+  'construction','site manager','quantity surveyor','civil engineer','structural engineer',
+  'tax','accountant','accounting','finance manager','financial manager','audit','auditor',
+  'solicitor','legal','conveyancing','mortgage','insurance','banking','investment',
+  'software engineer','developer','devops','backend','frontend','full stack','data engineer',
+  'marketing manager','digital marketing','seo','ppc','social media manager',
+  'sales manager','business development','account manager','telesales',
+  'chef','catering','kitchen','hospitality','hotel',
+  'warehouse','logistics','supply chain','haulage','driver',
+  'dental','dentist','pharmacy','pharmacist','optician','radiographer',
+  'electrician','plumber','hvac','mechanical engineer',
+];
+
+// Words that confirm a job IS relevant to her background
+const INCLUDE_TERMS = [
+  'education','school','academy','children','young people','youth','student','pupil','learning',
+  'sen','send','senco','inclusion','safeguarding','pastoral','behaviour','wellbeing',
+  'charity','third sector','voluntary','community','social care','early years','nursery',
+  'edtech','curriculum','teaching','tutor','tutoring','mentor','support worker',
+  'nhs','council','local authority','public sector','government','ofsted',
+  'family support','looked after','lac','adoption','foster','disability',
+];
+
+function isRelevantJob(job) {
+  const t = ((job.title||'')+' '+(job.description||'')).toLowerCase();
+
+  // Hard exclude — if title contains any of these, drop immediately
+  const titleLower = (job.title||'').toLowerCase();
+  if (EXCLUDE_TERMS.some(ex => titleLower.includes(ex))) return false;
+
+  // If any include term appears anywhere, it's relevant
+  if (INCLUDE_TERMS.some(inc => t.includes(inc))) return true;
+
+  // If no include term found, drop it — too generic
+  return false;
+}
 
 const PROFILE_KW = ['project','safeguarding','senco','sen','inclusion','special educational needs','education','leadership','manager','coordinator','consultant','charity','third sector','programme','training','learning','wellbeing','pastoral','policy','compliance'];
 
 const MATCH_TAGS = {
-  'safeguarding':              {label:'Safeguarding',  type:'strong'},
-  'senco':                     {label:'SENCO match',   type:'strong'},
-  'inclusion':                 {label:'Inclusion',     type:'strong'},
-  'special educational needs': {label:'SEN relevant',  type:'strong'},
-  'project manager':           {label:'PM role',       type:'good'},
-  'junior':                    {label:'Junior level',  type:'good'},
-  'charity':                   {label:'Third sector',  type:'good'},
-  'education':                 {label:'Education',     type:'good'},
-  'leadership':                {label:'Leadership',    type:'good'},
-  'coordinator':               {label:'Coordinator',   type:'good'},
-  'remote':                    {label:'Remote/WFH',    type:'new'},
-  'work from home':            {label:'Work from home',type:'new'},
+  'safeguarding':              {label:'Safeguarding',   type:'strong'},
+  'senco':                     {label:'SENCO match',    type:'strong'},
+  'send':                      {label:'SEND',           type:'strong'},
+  'inclusion':                 {label:'Inclusion',      type:'strong'},
+  'special educational needs': {label:'SEN relevant',   type:'strong'},
+  'designated safeguarding':   {label:'DSL role',       type:'strong'},
+  'project manager':           {label:'PM role',        type:'good'},
+  'junior':                    {label:'Junior level',   type:'good'},
+  'charity':                   {label:'Third sector',   type:'good'},
+  'education':                 {label:'Education',      type:'good'},
+  'leadership':                {label:'Leadership',     type:'good'},
+  'coordinator':               {label:'Coordinator',    type:'good'},
+  'tutor':                     {label:'Tutoring',       type:'good'},
+  '1:1':                       {label:'1:1 support',    type:'good'},
+  'young people':              {label:'Young people',   type:'good'},
+  'remote':                    {label:'Remote/WFH',     type:'new'},
+  'work from home':            {label:'Work from home', type:'new'},
 };
 
 let allJobs = [], sortMode = 'relevance', debugVisible = false;
@@ -294,6 +337,11 @@ async function runSearch() {
   // Build all fetch promises
   const promises = [];
 
+  // For SENCO role type, always also search remote/nationwide regardless of location setting
+  const extraRemoteQueries = roleKey === 'senco' || roleKey === 'all'
+    ? ['SENCO remote', 'SEND coordinator remote', '1:1 tutor online', 'online tutor SEN', 'remote learning support']
+    : [];
+
   queries.forEach(q => {
     if (locMode === 'both' || locMode === 'edinburgh') {
       promises.push(adzunaOne(q, edinLoc, salMin));
@@ -305,18 +353,28 @@ async function runSearch() {
     }
   });
 
+  // Always run extra remote SENCO/tutor queries nationwide
+  extraRemoteQueries.forEach(q => {
+    promises.push(adzunaOne(q, 'uk', salMin));
+    promises.push(reedOne(q, '', salMin, true));
+  });
+
   const results = await Promise.allSettled(promises);
   const allRaw  = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
 
   // Dedupe by id, then by title+org
   const seenId  = new Set();
   const seenKey = new Set();
-  allJobs = allRaw.filter(j => {
+  const deduped = allRaw.filter(j => {
     if (seenId.has(j.id)) return false; seenId.add(j.id);
     const k = (j.title+j.org).toLowerCase().replace(/\s/g,'');
     if (seenKey.has(k)) return false; seenKey.add(k);
     return true;
   });
+
+  // Strip irrelevant sectors (construction, finance, tech, etc.)
+  allJobs = deduped.filter(j => isRelevantJob(j));
+  log(`Relevance filter: ${deduped.length} → ${allJobs.length} jobs (removed ${deduped.length - allJobs.length} off-sector)`, 'info');
 
   // Strict client-side location filter — APIs don't filter reliably enough
   const SCOTLAND_TERMS = ['edinburgh','scotland','scottish','lothian','fife','glasgow','dundee','aberdeen','stirling','falkirk','livingston','kirkcaldy'];
