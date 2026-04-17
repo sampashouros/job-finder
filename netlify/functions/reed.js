@@ -4,43 +4,47 @@ exports.handler = async function(event) {
   const params = event.queryStringParameters || {};
   const keywords = params.keywords || 'project manager education';
   const location = params.location || 'Edinburgh';
-  const distanceFromLocation = params.distance || '20';
-  const minimumSalary = params.minimumSalary || '35000';
+  const distance = params.distance || '20';
+  const minimumSalary = params.minimumSalary || '30000';
   const remoteOnly = params.remote === 'true';
 
   let url = `https://www.reed.co.uk/api/1.0/search?keywords=${encodeURIComponent(keywords)}&minimumSalary=${minimumSalary}&resultsToTake=20`;
-
   if (!remoteOnly) {
-    url += `&locationName=${encodeURIComponent(location)}&distanceFromLocation=${distanceFromLocation}`;
+    url += `&locationName=${encodeURIComponent(location)}&distanceFromLocation=${distance}`;
   }
+
+  console.log('Reed URL:', url);
 
   try {
     const response = await fetch(url, {
       headers: {
-        'Authorization': 'Basic ' + Buffer.from(REED_API_KEY + ':').toString('base64')
+        'Authorization': 'Basic ' + Buffer.from(REED_API_KEY + ':').toString('base64'),
+        'Content-Type': 'application/json'
       }
     });
+
+    const text = await response.text();
+    console.log('Reed status:', response.status);
+    console.log('Reed response preview:', text.slice(0, 200));
 
     if (!response.ok) {
       return {
         statusCode: response.status,
-        body: JSON.stringify({ error: 'Reed API error', status: response.status })
+        headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Reed API error', status: response.status, detail: text })
       };
     }
 
-    const data = await response.json();
-
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify(data)
+      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+      body: text
     };
   } catch (err) {
+    console.error('Reed fetch error:', err);
     return {
       statusCode: 500,
+      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: err.message })
     };
   }

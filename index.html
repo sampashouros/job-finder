@@ -6,203 +6,105 @@
 <title>Next Chapter — Job Finder</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #f7f6f2;
-    --surface: #ffffff;
-    --border: #e4e2dc;
-    --border-strong: #c8c5bc;
-    --text: #1a1a18;
-    --text-muted: #6b6a65;
-    --text-faint: #9e9c97;
-    --accent: #2563eb;
-    --accent-bg: #eff4ff;
-    --accent-border: #bfcffd;
-    --green: #16a34a;
-    --green-bg: #f0fdf4;
-    --green-border: #bbf7d0;
-    --amber: #b45309;
-    --amber-bg: #fffbeb;
-    --radius: 10px;
-    --radius-sm: 6px;
+    --bg: #f7f6f2; --surface: #ffffff; --border: #e4e2dc; --border-strong: #c8c5bc;
+    --text: #1a1a18; --text-muted: #6b6a65;
+    --accent: #2563eb; --accent-bg: #eff4ff; --accent-border: #bfcffd;
+    --green: #16a34a; --green-bg: #f0fdf4; --green-border: #bbf7d0;
+    --amber: #b45309; --amber-bg: #fffbeb;
+    --radius: 10px; --radius-sm: 6px;
   }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.5;
-  }
-
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 1.25rem 1.5rem;
-    position: sticky; top: 0; z-index: 10;
-  }
-  .header-inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.5; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1.25rem 1.5rem; position: sticky; top: 0; z-index: 10; }
+  .header-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
   .brand { display: flex; align-items: center; gap: 10px; }
-  .brand-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .brand-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
   .brand-icon svg { width: 17px; height: 17px; }
-  .brand-name { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
-  .brand-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
-
+  .brand-name { font-size: 16px; font-weight: 600; }
+  .brand-sub { font-size: 12px; color: var(--text-muted); }
   .profile-tags { display: flex; gap: 6px; flex-wrap: wrap; }
   .ptag { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); font-weight: 500; }
-
-  main { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
-
-  .controls {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
-    margin-bottom: 1.25rem;
-  }
-  .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  main { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+  .controls { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+  .controls-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
   .ctrl-group { display: flex; flex-direction: column; gap: 5px; }
   .ctrl-label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
-  select, input[type="text"] {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    background: var(--surface);
-    color: var(--text);
-    appearance: none;
-    -webkit-appearance: none;
-  }
-  select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
-
-  .search-row { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
-  .btn-search {
-    padding: 9px 24px; border-radius: var(--radius-sm);
-    background: var(--accent); color: #fff;
-    border: none; font-size: 14px; font-weight: 600;
-    cursor: pointer; letter-spacing: -0.01em;
-    transition: opacity 0.15s;
-  }
+  select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--surface); color: var(--text); appearance: none; -webkit-appearance: none; cursor: pointer; }
+  select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .search-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .btn-search { padding: 9px 24px; border-radius: var(--radius-sm); background: var(--accent); color: #fff; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
   .btn-search:hover { opacity: 0.88; }
   .btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-clear { padding: 9px 16px; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); border: 1px solid var(--border); font-size: 13px; cursor: pointer; }
   .btn-clear:hover { background: var(--bg); }
+  .btn-debug { padding: 9px 14px; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); border: 1px solid var(--border); font-size: 12px; cursor: pointer; margin-left: auto; }
   .status-bar { font-size: 13px; color: var(--text-muted); }
-
+  .debug-panel { background: #0f1117; border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1rem; display: none; font-family: 'SF Mono', monospace; font-size: 12px; line-height: 1.8; max-height: 300px; overflow-y: auto; }
+  .debug-panel.visible { display: block; }
+  .dl { padding: 0; }
+  .dl.info  { color: #60a5fa; }
+  .dl.ok    { color: #4ade80; }
+  .dl.warn  { color: #fbbf24; }
+  .dl.error { color: #f87171; }
   .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .results-count { font-size: 14px; font-weight: 500; }
   .sort-row { display: flex; gap: 6px; }
   .sort-btn { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); cursor: pointer; }
   .sort-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
-
   .job-list { display: flex; flex-direction: column; gap: 10px; }
-
-  .job-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    transition: border-color 0.12s;
-  }
+  .job-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.12s; }
   .job-card:hover { border-color: var(--border-strong); }
   .job-card.best-match { border-color: var(--accent-border); }
-
   .card-main { padding: 1rem 1.25rem; cursor: pointer; }
   .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  .card-title-block { flex: 1; min-width: 0; }
   .card-title { font-size: 15px; font-weight: 600; line-height: 1.35; margin-bottom: 3px; }
   .card-org { font-size: 13px; color: var(--text-muted); }
-
   .source-badge { font-size: 10px; padding: 3px 7px; border-radius: 4px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; flex-shrink: 0; }
   .source-adzuna { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
   .source-reed { background: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8; }
-
   .card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
   .meta-chip { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-muted); }
-  .meta-chip svg { width: 12px; height: 12px; flex-shrink: 0; }
+  .meta-chip svg { width: 12px; height: 12px; }
   .chip-remote { color: var(--green); font-weight: 500; }
   .chip-salary { color: var(--text); font-weight: 500; }
-
   .match-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
   .match-badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
   .badge-strong { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
   .badge-good { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); }
   .badge-new { background: var(--amber-bg); color: var(--amber); border: 1px solid #fde68a; }
-
-  .card-expand-btn {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 12px; color: var(--accent);
-    margin-top: 10px; cursor: pointer;
-    background: none; border: none; padding: 0;
-  }
+  .card-expand-btn { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--accent); margin-top: 10px; cursor: pointer; background: none; border: none; padding: 0; }
   .card-expand-btn svg { width: 13px; height: 13px; transition: transform 0.2s; }
   .job-card.expanded .card-expand-btn svg { transform: rotate(180deg); }
-
-  .card-detail {
-    padding: 0 1.25rem 1.25rem;
-    border-top: 1px solid var(--border);
-    display: none;
-  }
+  .card-detail { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); display: none; }
   .job-card.expanded .card-detail { display: block; }
-
   .detail-snippet { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-top: 12px; }
-
-  .apply-link {
-    display: inline-flex; align-items: center; gap: 5px;
-    margin-top: 14px; padding: 7px 16px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--surface);
-    font-size: 13px; font-weight: 500; color: var(--accent);
-    text-decoration: none; transition: background 0.12s;
-  }
+  .apply-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 14px; padding: 7px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 500; color: var(--accent); text-decoration: none; transition: background 0.12s; }
   .apply-link:hover { background: var(--accent-bg); border-color: var(--accent-border); }
   .apply-link svg { width: 13px; height: 13px; }
-
   .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
   .empty-state .big { font-size: 32px; margin-bottom: 10px; }
   .empty-state p { font-size: 14px; line-height: 1.7; }
-
   .loading-state { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 3rem; color: var(--text-muted); font-size: 14px; }
   .spinner { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .error-banner { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: var(--radius); padding: 12px 16px; font-size: 13px; margin-bottom: 12px; }
-
-  @media (max-width: 600px) {
-    .controls-grid { grid-template-columns: 1fr; }
-    .header-inner { flex-direction: column; align-items: flex-start; }
-    .profile-tags { display: none; }
-  }
+  @media (max-width: 640px) { .controls-grid { grid-template-columns: 1fr 1fr; } .header-inner { flex-direction: column; align-items: flex-start; } .profile-tags { display: none; } }
+  @media (max-width: 420px) { .controls-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
-
 <header>
   <div class="header-inner">
     <div class="brand">
       <div class="brand-icon">
-        <svg viewBox="0 0 17 17" fill="none">
-          <circle cx="8.5" cy="8.5" r="6.5" stroke="white" stroke-width="1.5"/>
-          <path d="M5.5 8.8L7.5 10.8L11.5 6.2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="6.5" stroke="white" stroke-width="1.5"/><path d="M5.5 8.8L7.5 10.8L11.5 6.2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div>
-        <div class="brand-name">Next chapter</div>
-        <div class="brand-sub">Jobs matched to your background</div>
-      </div>
+      <div><div class="brand-name">Next chapter</div><div class="brand-sub">Jobs matched to your background</div></div>
     </div>
     <div class="profile-tags">
-      <span class="ptag">SENCO</span>
-      <span class="ptag">Asst. Headteacher</span>
-      <span class="ptag">Edinburgh + Remote</span>
-      <span class="ptag">£40k–£55k</span>
+      <span class="ptag">SENCO</span><span class="ptag">Asst. Headteacher</span><span class="ptag">Edinburgh + Remote</span>
     </div>
   </div>
 </header>
-
 <main>
   <div class="controls">
     <div class="controls-grid">
@@ -226,277 +128,220 @@
           <option value="remote">Remote / WFH only</option>
         </select>
       </div>
+      <div class="ctrl-group">
+        <label class="ctrl-label">Minimum salary</label>
+        <select id="salary-min">
+          <option value="25000">£25,000+</option>
+          <option value="30000">£30,000+</option>
+          <option value="35000" selected>£35,000+</option>
+          <option value="40000">£40,000+</option>
+          <option value="45000">£45,000+</option>
+          <option value="50000">£50,000+</option>
+          <option value="55000">£55,000+</option>
+        </select>
+      </div>
     </div>
     <div class="search-row">
       <button class="btn-search" id="search-btn" onclick="runSearch()">Search jobs</button>
       <button class="btn-clear" onclick="clearResults()">Clear</button>
       <span class="status-bar" id="status-bar"></span>
+      <button class="btn-debug" onclick="toggleDebug()">🛠 Debug</button>
     </div>
   </div>
-
-  <div id="error-area"></div>
+  <div class="debug-panel" id="debug-panel"></div>
   <div id="results-area">
     <div class="empty-state">
       <div class="big">🔍</div>
-      <p>Choose a role type and hit <strong>Search jobs</strong>.<br>Results pull live from Adzuna and Reed.</p>
+      <p>Choose a role type and hit <strong>Search jobs</strong>.<br>Start with <strong>All suitable roles</strong> + <strong>£30,000+</strong> to verify results are loading.</p>
     </div>
   </div>
 </main>
-
 <script>
-  const ADZUNA_APP_ID  = '48908c3e';
-  const ADZUNA_APP_KEY = 'f486e192fc75b1200048886c266fce28';
+const ADZUNA_APP_ID  = '48908c3e';
+const ADZUNA_APP_KEY = 'f486e192fc75b1200048886c266fce28';
+const REED_PROXY     = '/.netlify/functions/reed';
 
-  // This gets replaced automatically by Netlify at deploy time
-  // with your actual site URL, e.g. https://your-site.netlify.app
-  const REED_PROXY = '/.netlify/functions/reed';
+const PROFILE_KW = ['project manager','project management','safeguarding','senco','sen','inclusion','special educational needs','education','leadership','manager','coordinator','consultant','charity','third sector','programme manager','operations','compliance','policy','training','learning','development','support','wellbeing','pastoral'];
+const MATCH_TAGS = {
+  'safeguarding':              {label:'Safeguarding',  type:'strong'},
+  'senco':                     {label:'SENCO match',   type:'strong'},
+  'inclusion':                 {label:'Inclusion',     type:'strong'},
+  'special educational needs': {label:'SEN relevant',  type:'strong'},
+  'project manager':           {label:'PM role',       type:'good'},
+  'junior':                    {label:'Junior level',  type:'good'},
+  'charity':                   {label:'Third sector',  type:'good'},
+  'education':                 {label:'Education',     type:'good'},
+  'leadership':                {label:'Leadership',    type:'good'},
+  'coordinator':               {label:'Coordinator',   type:'good'},
+  'remote':                    {label:'Remote/WFH',    type:'new'},
+  'work from home':            {label:'Work from home',type:'new'},
+};
 
-  const PROFILE_KEYWORDS = [
-    'project manager','project management','safeguarding','senco','sen',
-    'inclusion','special educational needs','education','leadership',
-    'manager','coordinator','consultant','charity','third sector',
-    'programme manager','operations','compliance','policy','training',
-    'learning','development','support','wellbeing','pastoral'
-  ];
+let allJobs = [], sortMode = 'relevance', debugVisible = false;
 
-  const MATCH_TAGS = {
-    'safeguarding':             { label: 'Safeguarding',    type: 'strong' },
-    'senco':                    { label: 'SENCO match',     type: 'strong' },
-    'sen ':                     { label: 'SEN relevant',    type: 'strong' },
-    'inclusion':                { label: 'Inclusion',       type: 'strong' },
-    'special educational needs':{ label: 'SEN relevant',    type: 'strong' },
-    'project manager':          { label: 'PM role',         type: 'good'   },
-    'junior':                   { label: 'Junior level',    type: 'good'   },
-    'charity':                  { label: 'Third sector',    type: 'good'   },
-    'education':                { label: 'Education',       type: 'good'   },
-    'leadership':               { label: 'Leadership',      type: 'good'   },
-    'coordinator':              { label: 'Coordinator',     type: 'good'   },
-    'remote':                   { label: 'Remote/WFH',      type: 'new'    },
-    'work from home':           { label: 'Work from home',  type: 'new'    },
-  };
+function log(msg, type='info') {
+  const panel = document.getElementById('debug-panel');
+  const d = document.createElement('div');
+  d.className = 'dl ' + type;
+  d.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  panel.appendChild(d);
+  panel.scrollTop = panel.scrollHeight;
+}
 
-  let allJobs  = [];
-  let sortMode = 'relevance';
+function toggleDebug() {
+  debugVisible = !debugVisible;
+  document.getElementById('debug-panel').classList.toggle('visible', debugVisible);
+}
 
-  function detectMatchTags(job) {
-    const text = ((job.title||'') + ' ' + (job.description||'') + ' ' + (job.location||'')).toLowerCase();
-    const found = new Map();
-    for (const [kw, tag] of Object.entries(MATCH_TAGS)) {
-      if (text.includes(kw) && !found.has(tag.label)) found.set(tag.label, tag);
-    }
-    return Array.from(found.values()).slice(0, 5);
+function detectTags(job) {
+  const t = ((job.title||'')+' '+(job.description||'')+' '+(job.location||'')).toLowerCase();
+  const found = new Map();
+  for (const [kw, tag] of Object.entries(MATCH_TAGS)) {
+    if (t.includes(kw) && !found.has(tag.label)) found.set(tag.label, tag);
   }
+  return Array.from(found.values()).slice(0,5);
+}
 
-  function scoreJob(job) {
-    const text = ((job.title||'') + ' ' + (job.description||'')).toLowerCase();
-    let score = 0;
-    PROFILE_KEYWORDS.forEach(kw => { if (text.includes(kw)) score++; });
-    if (text.includes('safeguarding') || text.includes('senco') || text.includes('inclusion')) score += 3;
-    if (text.includes('junior') || text.includes('entry level') || text.includes('entry-level')) score += 1;
-    return score;
+function score(job) {
+  const t = ((job.title||'')+' '+(job.description||'')).toLowerCase();
+  let s = 0;
+  PROFILE_KW.forEach(kw => { if (t.includes(kw)) s++; });
+  if (t.includes('safeguarding')||t.includes('senco')||t.includes('inclusion')) s+=3;
+  if (t.includes('junior')||t.includes('entry level')||t.includes('entry-level')) s+=1;
+  return s;
+}
+
+function salaryStr(job) {
+  if (job.salaryMin && job.salaryMax) return `£${Math.round(job.salaryMin/1000)}k–£${Math.round(job.salaryMax/1000)}k`;
+  if (job.salaryMin) return `From £${Math.round(job.salaryMin/1000)}k`;
+  if (job.salary) return job.salary;
+  return null;
+}
+
+function isRemote(job) {
+  const t = ((job.title||'')+' '+(job.description||'')+' '+(job.location||'')).toLowerCase();
+  return t.includes('remote')||t.includes('work from home')||t.includes('wfh')||t.includes('home based')||t.includes('home-based');
+}
+
+async function fetchAdzuna(kw, loc, sal) {
+  const where = loc === 'remote' ? 'uk' : 'edinburgh';
+  let what = kw || 'manager education charity';
+  if (loc === 'remote') what += ' remote';
+  const url = `https://api.adzuna.com/v1/api/jobs/gb/search/1?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}&results_per_page=20&what=${encodeURIComponent(what)}&where=${encodeURIComponent(where)}&salary_min=${sal}&distance=20&content-type=application/json`;
+  log(`Adzuna → what="${what}" where="${where}" salary_min=${sal}`,'info');
+  const r = await fetch(url);
+  log(`Adzuna ← ${r.status}`, r.ok?'ok':'error');
+  if (!r.ok) { const b=await r.text(); log(`Adzuna body: ${b.slice(0,150)}`,'error'); throw new Error('Adzuna '+r.status); }
+  const d = await r.json();
+  log(`Adzuna: ${d.results?.length??0} results (total count: ${d.count??'?'})`,'ok');
+  if (!d.results?.length) log('Adzuna zero results — try lower salary or broader role type','warn');
+  return (d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',title:j.title,org:j.company?.display_name||'Not specified',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));
+}
+
+async function fetchReed(kw, loc, sal) {
+  const remote = loc === 'remote';
+  const p = new URLSearchParams({keywords:kw||'manager education',minimumSalary:sal,...(remote?{remote:'true'}:{location:'Edinburgh',distance:'20'})});
+  const proxyUrl = `${REED_PROXY}?${p}`;
+  log(`Reed proxy → ${proxyUrl}`,'info');
+  const r = await fetch(proxyUrl);
+  log(`Reed proxy ← ${r.status}`, r.ok?'ok':'error');
+  if (!r.ok) { const b=await r.text(); log(`Reed error: ${b.slice(0,200)}`,'error'); throw new Error('Reed '+r.status); }
+  const d = await r.json();
+  if (d.error) { log(`Reed API error: ${d.error} — ${d.detail||''}`,'error'); throw new Error(d.error); }
+  log(`Reed: ${d.results?.length??0} results`,'ok');
+  if (!d.results?.length) log('Reed zero results — try lower salary or broader role type','warn');
+  return (d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',title:j.jobTitle,org:j.employerName||'Not specified',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,url:j.jobUrl,created:j.date}));
+}
+
+async function runSearch() {
+  const btn = document.getElementById('search-btn');
+  const roleType = document.getElementById('role-type').value;
+  const locMode  = document.getElementById('location-type').value;
+  const salMin   = document.getElementById('salary-min').value;
+  const salLabel = document.getElementById('salary-min').selectedOptions[0].text;
+
+  document.getElementById('debug-panel').innerHTML = '';
+  btn.disabled = true; btn.textContent = 'Searching…';
+  setStatus(''); showLoading();
+
+  let kw = roleType || 'manager education safeguarding charity coordinator';
+  if (locMode === 'remote' || locMode === 'both') kw += ' remote';
+
+  log(`Search: "${kw}" | ${locMode} | ${salLabel}`,'info');
+
+  const [azR, rdR] = await Promise.allSettled([
+    fetchAdzuna(kw, locMode, salMin),
+    fetchReed(kw, locMode, salMin),
+  ]);
+
+  const azJobs = azR.status === 'fulfilled' ? azR.value : (log('Adzuna failed: '+azR.reason,'error'), []);
+  const rdJobs = rdR.status === 'fulfilled' ? rdR.value : (log('Reed failed: '+rdR.reason,'error'), []);
+
+  const seen = new Set();
+  allJobs = [...azJobs, ...rdJobs].filter(j => {
+    const k = (j.title+j.org).toLowerCase().replace(/\s/g,'');
+    if (seen.has(k)) return false; seen.add(k); return true;
+  });
+
+  if (locMode === 'remote') allJobs = allJobs.filter(j => isRemote(j));
+  allJobs.forEach(j => j._score = score(j));
+  allJobs.sort((a,b) => b._score - a._score);
+
+  log(`Final: ${allJobs.length} unique jobs`, allJobs.length?'ok':'warn');
+  setStatus(`${allJobs.length} results · ${salLabel} · Adzuna ${azJobs.length} · Reed ${rdJobs.length}`);
+  renderResults();
+  btn.disabled = false; btn.textContent = 'Search jobs';
+}
+
+function renderResults() {
+  const area = document.getElementById('results-area');
+  if (!allJobs.length) {
+    area.innerHTML = `<div class="empty-state"><div class="big">😕</div><p>No results found.<br>Try <strong>All suitable roles</strong>, lower the salary to <strong>£25,000+</strong>, or switch to <strong>Edinburgh + Remote</strong>.<br>Open <strong>🛠 Debug</strong> to see what the APIs returned.</p></div>`;
+    return;
   }
+  let jobs = [...allJobs];
+  if (sortMode==='recent') jobs.sort((a,b)=>new Date(b.created||0)-new Date(a.created||0));
+  else jobs.sort((a,b)=>b._score-a._score);
 
-  function salaryDisplay(job) {
-    if (job.salaryMin && job.salaryMax) return `£${Math.round(job.salaryMin/1000)}k–£${Math.round(job.salaryMax/1000)}k`;
-    if (job.salaryMin) return `From £${Math.round(job.salaryMin/1000)}k`;
-    if (job.salary)    return job.salary;
-    return null;
-  }
+  let html = `<div class="results-header"><div class="results-count">${jobs.length} roles found</div><div class="sort-row"><button class="sort-btn ${sortMode==='relevance'?'active':''}" onclick="setSort('relevance')">Best match</button><button class="sort-btn ${sortMode==='recent'?'active':''}" onclick="setSort('recent')">Most recent</button></div></div><div class="job-list">`;
 
-  function isRemote(job) {
-    const text = ((job.title||'') + ' ' + (job.description||'') + ' ' + (job.location||'')).toLowerCase();
-    return text.includes('remote') || text.includes('work from home') || text.includes('wfh') || text.includes('home based') || text.includes('home-based');
-  }
-
-  async function fetchAdzuna(keywords, locationMode) {
-    const locParam   = (locationMode === 'remote') ? 'uk' : 'edinburgh';
-    let   what       = keywords || 'project manager safeguarding education';
-    if (locationMode === 'remote') what += ' remote';
-
-    const url = `https://api.adzuna.com/v1/api/jobs/gb/search/1`
-      + `?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}`
-      + `&results_per_page=20`
-      + `&what=${encodeURIComponent(what)}`
-      + `&where=${encodeURIComponent(locParam)}`
-      + `&salary_min=35000&distance=20`
-      + `&content-type=application/json`;
-
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error('Adzuna error ' + resp.status);
-    const data = await resp.json();
-
-    return (data.results || []).map(j => ({
-      id:          'az-' + j.id,
-      source:      'adzuna',
-      title:       j.title,
-      org:         j.company?.display_name || 'Not specified',
-      location:    j.location?.display_name || '',
-      description: j.description,
-      salaryMin:   j.salary_min,
-      salaryMax:   j.salary_max,
-      url:         j.redirect_url,
-      created:     j.created,
-    }));
-  }
-
-  async function fetchReed(keywords, locationMode) {
-    const remoteOnly = (locationMode === 'remote');
-    const params = new URLSearchParams({
-      keywords:      keywords || 'project manager education',
-      minimumSalary: '35000',
-      ...(remoteOnly ? { remote: 'true' } : { location: 'Edinburgh', distance: '20' })
-    });
-
-    const resp = await fetch(`${REED_PROXY}?${params}`);
-    if (!resp.ok) throw new Error('Reed proxy error ' + resp.status);
-    const data = await resp.json();
-
-    return (data.results || []).map(j => ({
-      id:          'reed-' + j.jobId,
-      source:      'reed',
-      title:       j.jobTitle,
-      org:         j.employerName || 'Not specified',
-      location:    j.locationName || '',
-      description: j.jobDescription,
-      salary:      j.minimumSalary
-                     ? `£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary ? '–£'+Math.round(j.maximumSalary/1000)+'k' : '+'}`
-                     : null,
-      url:         j.jobUrl,
-      created:     j.date,
-    }));
-  }
-
-  async function runSearch() {
-    const btn          = document.getElementById('search-btn');
-    const roleType     = document.getElementById('role-type').value;
-    const locationMode = document.getElementById('location-type').value;
-    const errorArea    = document.getElementById('error-area');
-
-    btn.disabled     = true;
-    btn.textContent  = 'Searching…';
-    errorArea.innerHTML = '';
-    setStatus('Fetching from Adzuna and Reed…');
-    showLoading();
-
-    let keywords = roleType || 'project manager safeguarding SENCO inclusion education';
-    if (locationMode === 'remote' || locationMode === 'both') keywords += ' remote';
-
-    let adzunaJobs = [], reedJobs = [];
-    const errors   = [];
-
-    await Promise.allSettled([
-      fetchAdzuna(keywords, locationMode).then(r => adzunaJobs = r).catch(e => errors.push('Adzuna: ' + e.message)),
-      fetchReed(keywords, locationMode).then(r => reedJobs = r).catch(e => errors.push('Reed: ' + e.message)),
-    ]);
-
-    if (errors.length) {
-      errorArea.innerHTML = errors.map(e => `<div class="error-banner">${e}</div>`).join('');
-    }
-
-    // Dedupe by title+org
-    const seen = new Set();
-    allJobs = [...adzunaJobs, ...reedJobs].filter(j => {
-      const key = (j.title + j.org).toLowerCase().replace(/\s/g, '');
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    if (locationMode === 'remote') allJobs = allJobs.filter(j => isRemote(j));
-
-    allJobs.forEach(j => j._score = scoreJob(j));
-    allJobs.sort((a, b) => b._score - a._score);
-
-    const az = adzunaJobs.length, rd = reedJobs.length;
-    setStatus(`${allJobs.length} results · Adzuna ${az} · Reed ${rd}`);
-    renderResults();
-
-    btn.disabled    = false;
-    btn.textContent = 'Search jobs';
-  }
-
-  function renderResults() {
-    const area = document.getElementById('results-area');
-    if (!allJobs.length) {
-      area.innerHTML = `<div class="empty-state"><div class="big">😕</div><p>No results found. Try broadening the role type or switching to "Edinburgh + Remote".</p></div>`;
-      return;
-    }
-
-    let jobs = [...allJobs];
-    if (sortMode === 'recent') jobs.sort((a, b) => new Date(b.created||0) - new Date(a.created||0));
-    else jobs.sort((a, b) => b._score - a._score);
-
-    let html = `
-      <div class="results-header">
-        <div class="results-count">${jobs.length} roles found</div>
-        <div class="sort-row">
-          <button class="sort-btn ${sortMode==='relevance'?'active':''}" onclick="setSort('relevance')">Best match</button>
-          <button class="sort-btn ${sortMode==='recent'?'active':''}"    onclick="setSort('recent')">Most recent</button>
+  jobs.forEach((j,i) => {
+    const tags   = detectTags(j);
+    const sal    = salaryStr(j);
+    const remote = isRemote(j);
+    const best   = j._score >= 4;
+    const snip   = (j.description||'').replace(/<[^>]+>/g,'').slice(0,300)+'…';
+    html += `<div class="job-card${best?' best-match':''}" id="jcard-${i}">
+      <div class="card-main" onclick="toggleCard(${i})">
+        <div class="card-top">
+          <div><div class="card-title">${j.title}</div><div class="card-org">${j.org}</div></div>
+          <span class="source-badge source-${j.source}">${j.source==='adzuna'?'Adzuna':'Reed'}</span>
         </div>
+        <div class="card-meta">
+          <span class="meta-chip ${remote?'chip-remote':''}">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M6 1C3.24 1 1 3.24 1 6s2.24 5 5 5 5-2.24 5-5S8.76 1 6 1z" stroke="currentColor" stroke-width="1"/><path d="M1 6h10M6 1c-1.1 1.4-1.7 3-1.7 5s.6 3.6 1.7 5M6 1c1.1 1.4 1.7 3 1.7 5S7.1 9.6 6 11" stroke="currentColor" stroke-width="1"/></svg>
+            ${remote?'Remote / WFH':j.location}
+          </span>
+          ${sal?`<span class="meta-chip chip-salary"><svg viewBox="0 0 12 12" fill="none"><rect x="1" y="2.5" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M1 5h10" stroke="currentColor" stroke-width="1"/></svg>${sal}</span>`:''}
+        </div>
+        ${tags.length?`<div class="match-badges">${tags.map(t=>`<span class="match-badge badge-${t.type}">${t.label}</span>`).join('')}</div>`:''}
+        <button class="card-expand-btn">View details <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 4.5L6.5 8.5L10.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
-      <div class="job-list">`;
+      <div class="card-detail">
+        <p class="detail-snippet">${snip}</p>
+        <a class="apply-link" href="${j.url}" target="_blank" rel="noopener">View full listing <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  area.innerHTML = html;
+}
 
-    jobs.forEach((j, i) => {
-      const tags    = detectMatchTags(j);
-      const salary  = salaryDisplay(j);
-      const remote  = isRemote(j);
-      const isBest  = j._score >= 4;
-      const snippet = (j.description||'').replace(/<[^>]+>/g,'').slice(0,300) + '…';
-
-      html += `
-        <div class="job-card${isBest?' best-match':''}" id="jcard-${i}">
-          <div class="card-main" onclick="toggleCard(${i})">
-            <div class="card-top">
-              <div class="card-title-block">
-                <div class="card-title">${j.title}</div>
-                <div class="card-org">${j.org}</div>
-              </div>
-              <span class="source-badge source-${j.source}">${j.source==='adzuna'?'Adzuna':'Reed'}</span>
-            </div>
-            <div class="card-meta">
-              <span class="meta-chip ${remote?'chip-remote':''}">
-                <svg viewBox="0 0 12 12" fill="none"><path d="M6 1C3.24 1 1 3.24 1 6s2.24 5 5 5 5-2.24 5-5S8.76 1 6 1z" stroke="currentColor" stroke-width="1"/><path d="M1 6h10M6 1c-1.1 1.4-1.7 3-1.7 5s.6 3.6 1.7 5M6 1c1.1 1.4 1.7 3 1.7 5S7.1 9.6 6 11" stroke="currentColor" stroke-width="1"/></svg>
-                ${remote ? 'Remote / WFH' : j.location}
-              </span>
-              ${salary ? `<span class="meta-chip chip-salary">
-                <svg viewBox="0 0 12 12" fill="none"><rect x="1" y="2.5" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M1 5h10" stroke="currentColor" stroke-width="1"/></svg>
-                ${salary}
-              </span>` : ''}
-            </div>
-            ${tags.length ? `<div class="match-badges">${tags.map(t=>`<span class="match-badge badge-${t.type}">${t.label}</span>`).join('')}</div>` : ''}
-            <button class="card-expand-btn">
-              View details
-              <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 4.5L6.5 8.5L10.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-          </div>
-          <div class="card-detail">
-            <p class="detail-snippet">${snippet}</p>
-            <a class="apply-link" href="${j.url}" target="_blank" rel="noopener">
-              View full listing
-              <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </a>
-          </div>
-        </div>`;
-    });
-
-    html += '</div>';
-    area.innerHTML = html;
-  }
-
-  function toggleCard(i) { document.getElementById(`jcard-${i}`).classList.toggle('expanded'); }
-  function setSort(mode) { sortMode = mode; renderResults(); }
-  function setStatus(msg) { document.getElementById('status-bar').textContent = msg; }
-  function showLoading() {
-    document.getElementById('results-area').innerHTML = `
-      <div class="loading-state"><div class="spinner"></div><span>Searching Adzuna and Reed…</span></div>`;
-  }
-  function clearResults() {
-    allJobs = [];
-    document.getElementById('results-area').innerHTML = `
-      <div class="empty-state"><div class="big">🔍</div><p>Choose a role type and hit <strong>Search jobs</strong>.</p></div>`;
-    document.getElementById('error-area').innerHTML = '';
-    setStatus('');
-  }
+function toggleCard(i) { document.getElementById(`jcard-${i}`).classList.toggle('expanded'); }
+function setSort(m) { sortMode=m; renderResults(); }
+function setStatus(m) { document.getElementById('status-bar').textContent=m; }
+function showLoading() { document.getElementById('results-area').innerHTML=`<div class="loading-state"><div class="spinner"></div><span>Searching Adzuna and Reed…</span></div>`; }
+function clearResults() { allJobs=[]; document.getElementById('results-area').innerHTML=`<div class="empty-state"><div class="big">🔍</div><p>Choose a role type and hit <strong>Search jobs</strong>.</p></div>`; setStatus(''); document.getElementById('debug-panel').innerHTML=''; }
 </script>
 </body>
 </html>
