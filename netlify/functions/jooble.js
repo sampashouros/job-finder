@@ -1,4 +1,4 @@
-const JOOBLE_API_KEY = '26833169-20fb-40df-a18c-ec5122da515d';
+const JOOBLE_API_KEY = '04f99635-0736-4c4d-859b-0b04f958fc32';
 
 exports.handler = async function(event) {
   const params = event.queryStringParameters || {};
@@ -17,7 +17,7 @@ exports.handler = async function(event) {
   console.log('Jooble request:', JSON.stringify(body));
 
   try {
-    const response = await fetch(`https://jooble.org/api/${JOOBLE_API_KEY}`, {
+    const response = await fetch(`https://uk.jooble.org/api/${JOOBLE_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
