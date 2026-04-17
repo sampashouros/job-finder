@@ -144,7 +144,7 @@
           </div>
           <div class="cb-item" onclick="toggleCb(this)">
             <input type="checkbox" value="project" id="cb-project">
-            <label for="cb-project">Project / Programme manager</label>
+            <label for="cb-project">Junior / Trainee project manager</label>
           </div>
           <div class="cb-item" onclick="toggleCb(this)">
             <input type="checkbox" value="leadership" id="cb-leadership">
@@ -215,7 +215,7 @@ const JOOBLE_PROXY   = '/.netlify/functions/jooble';
 const SEARCH_QUERIES = {
   senco:        ['SENCO', 'SEN coordinator', 'SEND coordinator', 'inclusion manager', 'SEN officer', 'learning support'],
   safeguarding: ['safeguarding', 'safeguarding manager', 'safeguarding officer', 'designated safeguarding lead'],
-  project:      ['project coordinator education', 'project manager children', 'project manager charity', 'programme coordinator children'],
+  project:      ['junior project coordinator', 'trainee project manager', 'assistant project manager', 'project support officer'],
   leadership:   ['head of education', 'service manager children', 'team leader education', 'operations manager charity', 'education manager'],
   education:    ['education consultant', 'learning coordinator', 'training manager education', 'curriculum coordinator', 'EdTech'],
   charity:      ['charity coordinator children', 'youth charity', 'children charity manager', 'voluntary sector education'],
@@ -237,7 +237,9 @@ const EXCLUDE_TITLE = [
   'warehouse manager','logistics','supply chain','haulage',
   'dental','dentist','pharmacy','pharmacist','optician','radiographer',
   'electrician','plumber','hvac','gas engineer',
-  'modern workplace','cybersecurity','cyber security','penetration test',
+  'technology project manager','it project manager','technical project manager',
+  'senior project manager','principal project manager','project manager',
+  'programme manager','delivery manager',
 ];
 
 const EXCLUDE_DESC = [
@@ -313,11 +315,18 @@ function toggleDebug() {
 function isRelevantJob(job) {
   const title = (job.title||'').toLowerCase();
   const full  = (title + ' ' + (job.description||'')).toLowerCase();
-  if (EXCLUDE_TITLE.some(ex => title.includes(ex))) return false;
+
+  // Junior/trainee PM always allowed through before any exclusion check
+  const isJuniorPM = ['junior project','trainee project','assistant project','project support'].some(t => title.includes(t));
+
+  if (!isJuniorPM) {
+    if (EXCLUDE_TITLE.some(ex => title.includes(ex))) return false;
+  }
   const titlePass = INCLUDE_TITLE.some(inc => title.includes(inc));
   if (!titlePass && EXCLUDE_DESC.some(ex => full.includes(ex))) return false;
   if (INCLUDE_TITLE.some(inc => title.includes(inc))) return true;
   if (INCLUDE_ANY.some(inc => full.includes(inc))) return true;
+  if (isJuniorPM) return true;
   return false;
 }
 
