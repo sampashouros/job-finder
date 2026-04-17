@@ -65,9 +65,10 @@
   .sort-select { padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--rs); font-size: 12px; background: var(--surface); color: var(--text); appearance: none; cursor: pointer; }
 
   /* GROUP JUMP NAV */
-  .group-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-  .group-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.1s; text-decoration: none; }
+  .group-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+  .group-pill { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; transition: all 0.1s; text-decoration: none; white-space: nowrap; }
   .group-pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+  .group-pill strong { font-weight: 600; }
 
   /* GROUP SECTIONS */
   .group-section { margin-bottom: 24px; }
@@ -190,9 +191,9 @@
 
   <div class="results-col">
     <div id="results-area">
-      <div class="empty-state">
-        <div class="big">🔍</div>
-        <p>All role types are pre-selected.<br>Hit <strong>Search jobs</strong> to find matches.</p>
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <span>Finding jobs for a bubs…</span>
       </div>
     </div>
   </div>
@@ -449,24 +450,22 @@ function renderResults(salLabel,az,rd,jb) {
   const countLine = `${allJobs.length} results · ${salLbl} · Adzuna ${az??allJobs.filter(j=>j.source==='adzuna').length} · Reed ${rd??allJobs.filter(j=>j.source==='reed').length} · Jooble ${jb??allJobs.filter(j=>j.source==='jooble').length}`;
 
   const jobs=getSortedJobs();
-  const sort=document.getElementById('sort-select')?.value||'relevance';
+  const sort=document.getElementById('sort-select')?.value||'group';
   const grouped = sort==='group';
 
-  // Build group nav if grouping
-  let groupNav='';
+  // Always build role group nav
+  const byRoleAll=new Map();
+  allJobs.forEach(j=>{ if(!byRoleAll.has(j._role))byRoleAll.set(j._role,[]); byRoleAll.get(j._role).push(j); });
+  const roleOrder=['senco','safeguarding','project','leadership','education','charity'];
+  const sortedGroups=[...byRoleAll.entries()].sort((a,b)=>roleOrder.indexOf(a[0])-roleOrder.indexOf(b[0]));
+
+  const groupNav='<div class="group-nav">'+sortedGroups.map(([role,rjobs])=>
+    `<a class="group-pill" href="#group-${role}">${ROLE_LABELS[role]||role} <strong>(${rjobs.length})</strong></a>`
+  ).join('')+'</div>';
+
   let sections='';
-
   if(grouped){
-    const byRole=new Map();
-    jobs.forEach(j=>{ if(!byRole.has(j._role))byRole.set(j._role,[]); byRole.get(j._role).push(j); });
-    const roleOrder=['senco','safeguarding','project','leadership','education','charity'];
-    const sorted=[...byRole.entries()].sort((a,b)=>roleOrder.indexOf(a[0])-roleOrder.indexOf(b[0]));
-
-    groupNav='<div class="group-nav">'+sorted.map(([role,rjobs])=>
-      `<a class="group-pill" href="#group-${role}">${ROLE_LABELS[role]||role} <strong>(${rjobs.length})</strong></a>`
-    ).join('')+'</div>';
-
-    sections=sorted.map(([role,rjobs])=>
+    sections=sortedGroups.map(([role,rjobs])=>
       `<div class="group-section" id="group-${role}">
         <div class="group-heading">${ROLE_LABELS[role]||role} <span class="group-count">${rjobs.length} roles</span></div>
         <div class="job-list">${rjobs.map((j,i)=>cardHTML(j,'g-'+role+'-'+i)).join('')}</div>
@@ -484,11 +483,11 @@ function renderResults(salLabel,az,rd,jb) {
       </div>
       <div class="toolbar-right">
         <select class="sort-select" id="sort-select" onchange="renderResults()">
+          <option value="group">Group by role type</option>
           <option value="relevance">Best match</option>
           <option value="recent">Most recent</option>
           <option value="salary-high">Salary: high → low</option>
           <option value="salary-low">Salary: low → high</option>
-          <option value="group">Group by role type</option>
         </select>
       </div>
     </div>
@@ -533,6 +532,9 @@ function clearResults() {
   document.getElementById('results-area').innerHTML='<div class="empty-state"><div class="big">🔍</div><p>Pick role types and hit <strong>Search jobs</strong>.</p></div>';
   document.getElementById('debug-panel').innerHTML='';
 }
+
+// Auto-search on load
+window.addEventListener('DOMContentLoaded', () => runSearch());
 </script>
 </body>
 </html>
