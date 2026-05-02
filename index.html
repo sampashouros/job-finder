@@ -72,8 +72,8 @@
 
   /* GROUP NAV */
   .group-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
-  .group-pill { font-size: 12px; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; text-decoration: none; white-space: nowrap; transition: all 0.1s; }
-  .group-pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+  .group-pill { font-size: 12px; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; text-decoration: none; white-space: nowrap; transition: all 0.1s; display: inline-block; }
+  .group-pill:hover, .group-pill.active { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
   .group-pill strong { font-weight: 600; }
 
   /* RESULTS */
@@ -142,6 +142,19 @@
   .dl.info { color: #60a5fa; } .dl.ok { color: #4ade80; } .dl.warn { color: #fbbf24; } .dl.error { color: #f87171; }
 
   @media (max-width: 700px) { main { grid-template-columns: 1fr; } .sidebar { position: static; } .ptags { display: none; } }
+
+  /* DARK MODE */
+  html.dark {
+    --bg: #111110; --surface: #1c1c1a; --border: #2e2e2b; --border-strong: #3d3d39;
+    --text: #e8e6e1; --muted: #8a8880; --faint: #5a5856;
+    --accent: #4f8ef7; --accent-bg: #1a2540; --accent-border: #2a3d6e;
+    --green: #4ade80; --green-bg: #0f2318; --green-border: #1a4030;
+    --amber: #fbbf24; --amber-bg: #1f1a0e;
+    --red: #f87171; --red-bg: #2a1010; --red-border: #4a2020;
+  }
+  html.dark select, html.dark .sort-select { background: var(--surface); color: var(--text); border-color: var(--border); }
+  html.dark .btn-dismiss { background: var(--surface); }
+  html.dark .apply-link { background: var(--surface); }
 </style>
 </head>
 <body>
@@ -152,8 +165,11 @@
       <div class="brand-icon"><svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="6.5" stroke="white" stroke-width="1.5"/><path d="M5.5 8.8L7.5 10.8L11.5 6.2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div><div class="brand-name">Bubs jobs</div><div class="brand-sub">Jobs matched for a bubs</div></div>
     </div>
-    <div class="ptags">
-      <span class="ptag">SENCO</span><span class="ptag">Asst. Headteacher</span><span class="ptag">Edinburgh + Remote</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="ptags">
+        <span class="ptag">SENCO</span><span class="ptag">Asst. Headteacher</span><span class="ptag">Edinburgh + Remote</span>
+      </div>
+      <button id="dark-toggle" onclick="toggleDark()" style="background:none;border:1px solid var(--border);border-radius:var(--rs);padding:4px 8px;cursor:pointer;font-size:14px;color:var(--muted);">🌙</button>
     </div>
   </div>
 </header>
@@ -425,7 +441,7 @@ function renderActive(){
   const roleOrder=['senco','safeguarding','project','leadership','education','charity'];
   const sortedGroups=[...byRoleAll.entries()].sort((a,b)=>roleOrder.indexOf(a[0])-roleOrder.indexOf(b[0]));
   const groupNav='<div class="group-nav">'+sortedGroups.map(([role,rjobs])=>
-    `<a class="group-pill" href="#group-${role}">${ROLE_LABELS[role]||role} <strong>(${rjobs.length})</strong></a>`
+    `<span class="group-pill" onclick="jumpToGroup('${role}')">${ROLE_LABELS[role]||role} <strong>(${rjobs.length})</strong></span>`
   ).join('')+'</div>';
 
   let sections='';
@@ -515,6 +531,32 @@ function cardHTML(j,idx,isArchived){
 }
 
 function toggleCard(idx){document.getElementById(`card-${idx}`)?.classList.toggle('expanded');}
+
+function jumpToGroup(role){
+  // Switch to grouped view if not already
+  const sel=document.getElementById('sort-select');
+  if(sel&&sel.value!=='group'){sel.value='group';render();}
+  // Wait for DOM then scroll
+  setTimeout(()=>{
+    const el=document.getElementById('group-'+role);
+    if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  },50);
+}
+
+// Dark mode
+function initDarkMode(){
+  const saved=localStorage.getItem('bubs_dark');
+  if(saved==='1'||(!saved&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
+    document.documentElement.classList.add('dark');
+    document.getElementById('dark-toggle').textContent='☀️';
+  }
+}
+function toggleDark(){
+  const isDark=document.documentElement.classList.toggle('dark');
+  localStorage.setItem('bubs_dark',isDark?'1':'0');
+  document.getElementById('dark-toggle').textContent=isDark?'☀️':'🌙';
+}
+
 function clearAll(){
   allJobs=[];archived=[];saveArchive();
   document.querySelectorAll('#role-toggles input').forEach(cb=>{cb.checked=false;});
@@ -522,7 +564,7 @@ function clearAll(){
   document.getElementById('debug-panel').innerHTML='';
 }
 
-window.addEventListener('DOMContentLoaded',()=>runSearch());
+window.addEventListener('DOMContentLoaded',()=>{initDarkMode();runSearch();});
 </script>
 </body>
 </html>
