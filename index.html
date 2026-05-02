@@ -12,6 +12,7 @@
     --accent: #2563eb; --accent-bg: #eff4ff; --accent-border: #bfcffd;
     --green: #16a34a; --green-bg: #f0fdf4; --green-border: #bbf7d0;
     --amber: #b45309; --amber-bg: #fffbeb;
+    --red: #dc2626; --red-bg: #fef2f2; --red-border: #fecaca;
     --r: 10px; --rs: 6px;
   }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.5; }
@@ -27,28 +28,33 @@
   .ptags { display: flex; gap: 5px; flex-wrap: wrap; }
   .ptag { font-size: 11px; padding: 2px 8px; border-radius: 20px; background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); font-weight: 500; }
 
-  /* MAIN */
-  main { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.5rem; display: grid; grid-template-columns: 260px 1fr; gap: 1.25rem; align-items: start; }
+  /* LAYOUT */
+  main { max-width: 960px; margin: 0 auto; padding: 1.25rem 1.5rem; display: grid; grid-template-columns: 250px 1fr; gap: 1.25rem; align-items: start; }
 
-  /* SIDEBAR CONTROLS */
+  /* SIDEBAR */
   .sidebar { position: sticky; top: 68px; display: flex; flex-direction: column; gap: 10px; }
   .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1rem; }
   .panel-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
 
-  .cb-list { display: flex; flex-direction: column; gap: 3px; }
-  .cb-item { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: var(--rs); border: 1px solid transparent; cursor: pointer; transition: background 0.1s; }
-  .cb-item:hover { background: var(--bg); }
-  .cb-item.checked { background: var(--accent-bg); border-color: var(--accent-border); }
-  .cb-item input { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
-  .cb-item label { font-size: 13px; cursor: pointer; line-height: 1.3; }
-  .cb-item.checked label { color: var(--accent); font-weight: 500; }
+  /* TOGGLES */
+  .toggle-list { display: flex; flex-direction: column; gap: 5px; }
+  .toggle-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 0; cursor: pointer; }
+  .toggle-label { font-size: 13px; color: var(--text); user-select: none; }
+  .toggle-switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 20px; transition: background 0.2s; }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .toggle-switch input:checked ~ .toggle-track { background: var(--accent); }
+  .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(16px); }
 
-  select { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--rs); font-size: 13px; background: var(--surface); color: var(--text); appearance: none; cursor: pointer; }
-  select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  /* SELECTS */
   .select-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
   .select-group:last-child { margin-bottom: 0; }
   .select-label { font-size: 11px; color: var(--muted); font-weight: 500; }
+  select { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--rs); font-size: 13px; background: var(--surface); color: var(--text); appearance: none; cursor: pointer; }
+  select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
 
+  /* BUTTONS */
   .btn-search { width: 100%; padding: 9px; border-radius: var(--rs); background: var(--accent); color: #fff; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
   .btn-search:hover { opacity: 0.88; }
   .btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -56,23 +62,30 @@
   .btn-clear:hover { background: var(--bg); }
   .btn-debug { width: 100%; padding: 6px; border-radius: var(--rs); background: transparent; color: var(--faint); border: 1px solid var(--border); font-size: 11px; cursor: pointer; }
 
-  /* RESULTS AREA */
-  .results-col { min-width: 0; }
-  .results-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
-  .results-count { font-size: 14px; font-weight: 500; }
-  .status-bar { font-size: 12px; color: var(--muted); }
-  .toolbar-right { display: flex; align-items: center; gap: 8px; }
-  .sort-select { padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--rs); font-size: 12px; background: var(--surface); color: var(--text); appearance: none; cursor: pointer; }
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .tab { padding: 7px 14px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s; user-select: none; display: flex; align-items: center; gap: 6px; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-count { font-size: 11px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 1px 7px; font-weight: 500; color: var(--muted); }
+  .tab.active .tab-count { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
 
-  /* GROUP JUMP NAV */
-  .group-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
-  .group-pill { font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; transition: all 0.1s; text-decoration: none; white-space: nowrap; }
+  /* GROUP NAV */
+  .group-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+  .group-pill { font-size: 12px; padding: 4px 11px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); cursor: pointer; text-decoration: none; white-space: nowrap; transition: all 0.1s; }
   .group-pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
   .group-pill strong { font-weight: 600; }
 
-  /* GROUP SECTIONS */
-  .group-section { margin-bottom: 24px; }
-  .group-heading { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  /* RESULTS */
+  .results-col { min-width: 0; }
+  .results-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .results-count { font-size: 14px; font-weight: 500; }
+  .status-bar { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .sort-select { padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--rs); font-size: 12px; background: var(--surface); color: var(--text); appearance: none; cursor: pointer; }
+
+  /* GROUPS */
+  .group-section { margin-bottom: 22px; }
+  .group-heading { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 5px 0; border-bottom: 1px solid var(--border); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
   .group-count { font-weight: 400; }
 
   /* JOB CARDS */
@@ -80,19 +93,26 @@
   .job-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; transition: border-color 0.12s; }
   .job-card:hover { border-color: var(--border-strong); }
   .job-card.best-match { border-left: 3px solid var(--accent); }
-  .card-main { padding: .875rem 1rem; cursor: pointer; }
-  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .job-card.archived-card { opacity: 0.6; }
+  .card-main { padding: .875rem 1rem .75rem; cursor: pointer; }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
   .card-title { font-size: 14px; font-weight: 600; line-height: 1.35; margin-bottom: 2px; }
   .card-org { font-size: 12px; color: var(--muted); }
-  .source-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; flex-shrink: 0; }
+  .card-top-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .source-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
   .source-adzuna { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
   .source-reed   { background: #fdf2f8; color: #9d174d; border: 1px solid #fbcfe8; }
   .source-jooble { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  .btn-dismiss { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--faint); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; transition: all 0.15s; flex-shrink: 0; }
+  .btn-dismiss:hover { background: var(--red-bg); border-color: var(--red-border); color: var(--red); }
+  .btn-restore { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .btn-restore:hover { border-color: var(--green); color: var(--green); background: var(--green-bg); }
   .card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
   .meta-chip { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); }
   .meta-chip svg { width: 11px; height: 11px; }
   .chip-remote { color: var(--green); font-weight: 500; }
   .chip-salary { color: var(--text); font-weight: 500; }
+  .chip-date { color: var(--faint); }
   .match-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
   .match-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
   .badge-strong { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
@@ -119,17 +139,13 @@
   /* DEBUG */
   .debug-panel { background: #0f1117; border-radius: var(--r); padding: .875rem 1rem; display: none; font-family: 'SF Mono', monospace; font-size: 11px; line-height: 1.8; max-height: 220px; overflow-y: auto; }
   .debug-panel.visible { display: block; }
-  .dl { padding: 0; }
   .dl.info { color: #60a5fa; } .dl.ok { color: #4ade80; } .dl.warn { color: #fbbf24; } .dl.error { color: #f87171; }
 
-  @media (max-width: 700px) {
-    main { grid-template-columns: 1fr; }
-    .sidebar { position: static; }
-    .ptags { display: none; }
-  }
+  @media (max-width: 700px) { main { grid-template-columns: 1fr; } .sidebar { position: static; } .ptags { display: none; } }
 </style>
 </head>
 <body>
+
 <header>
   <div class="header-inner">
     <div class="brand">
@@ -144,15 +160,34 @@
 
 <main>
   <aside class="sidebar">
+
     <div class="panel">
       <div class="panel-title">Role types</div>
-      <div class="cb-list" id="role-checkboxes">
-        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="senco" checked><label>SENCO / Inclusion / SEN</label></div>
-        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="safeguarding" checked><label>Safeguarding</label></div>
-        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="project" checked><label>Junior project manager</label></div>
-        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="leadership" checked><label>Leadership / Management</label></div>
-        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="education" checked><label>Education consulting / EdTech</label></div>
-        <div class="cb-item checked" onclick="toggleCb(this)"><input type="checkbox" value="charity" checked><label>Charity / Third sector</label></div>
+      <div class="toggle-list" id="role-toggles">
+        <label class="toggle-item">
+          <span class="toggle-label">SENCO / Inclusion / SEN</span>
+          <div class="toggle-switch"><input type="checkbox" value="senco"><div class="toggle-track"></div><div class="toggle-thumb"></div></div>
+        </label>
+        <label class="toggle-item">
+          <span class="toggle-label">Safeguarding</span>
+          <div class="toggle-switch"><input type="checkbox" value="safeguarding"><div class="toggle-track"></div><div class="toggle-thumb"></div></div>
+        </label>
+        <label class="toggle-item">
+          <span class="toggle-label">Junior project manager</span>
+          <div class="toggle-switch"><input type="checkbox" value="project"><div class="toggle-track"></div><div class="toggle-thumb"></div></div>
+        </label>
+        <label class="toggle-item">
+          <span class="toggle-label">Leadership / Management</span>
+          <div class="toggle-switch"><input type="checkbox" value="leadership"><div class="toggle-track"></div><div class="toggle-thumb"></div></div>
+        </label>
+        <label class="toggle-item">
+          <span class="toggle-label">Education / EdTech</span>
+          <div class="toggle-switch"><input type="checkbox" value="education"><div class="toggle-track"></div><div class="toggle-thumb"></div></div>
+        </label>
+        <label class="toggle-item">
+          <span class="toggle-label">Charity / Third sector</span>
+          <div class="toggle-switch"><input type="checkbox" value="charity"><div class="toggle-track"></div><div class="toggle-thumb"></div></div>
+        </label>
       </div>
     </div>
 
@@ -182,7 +217,7 @@
 
     <div class="panel" style="display:flex;flex-direction:column;gap:7px;">
       <button class="btn-search" id="search-btn" onclick="runSearch()">Search jobs</button>
-      <button class="btn-clear" onclick="clearResults()">Clear results</button>
+      <button class="btn-clear" onclick="clearAll()">Clear results</button>
       <button class="btn-debug" onclick="toggleDebug()">🛠 Debug</button>
     </div>
 
@@ -191,10 +226,7 @@
 
   <div class="results-col">
     <div id="results-area">
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <span>Finding jobs for a bubs…</span>
-      </div>
+      <div class="loading-state"><div class="spinner"></div><span>Finding jobs for a bubs…</span></div>
     </div>
   </div>
 </main>
@@ -212,190 +244,79 @@ const SEARCH_QUERIES = {
   education:    ['education consultant', 'learning coordinator', 'training manager education', 'curriculum coordinator', 'EdTech'],
   charity:      ['charity coordinator children', 'youth charity', 'children charity manager', 'voluntary sector education'],
 };
-
-const ROLE_LABELS = {
-  senco: 'SENCO / Inclusion',
-  safeguarding: 'Safeguarding',
-  project: 'Junior PM',
-  leadership: 'Leadership',
-  education: 'Education / EdTech',
-  charity: 'Charity / Third sector',
-};
-
-const EXCLUDE_TITLE = [
-  'machine learning','data scientist','data engineer','data analyst','software engineer',
-  'software developer','web developer','devops','backend','frontend','full stack','fullstack',
-  'cloud engineer','platform engineer','security engineer','network engineer','it engineer',
-  'infrastructure engineer','solutions architect','ml engineer','ai engineer',
-  'mechanical engineer','structural engineer','civil engineer','electrical engineer',
-  'quantity surveyor','site manager','construction','building manager',
-  'tax','accountant','accounting','financial manager','finance manager','audit','auditor',
-  'solicitor','legal counsel','conveyancing','mortgage','insurance broker','banking',
-  'investment manager','fund manager','portfolio manager','financial advisor',
-  'marketing manager','digital marketing','seo manager','ppc','paid media',
-  'sales manager','business development','account manager','telesales','sales executive',
-  'chef','head chef','sous chef','catering manager','kitchen manager',
-  'warehouse manager','logistics','supply chain','haulage',
-  'dental','dentist','pharmacy','pharmacist','optician','radiographer',
-  'electrician','plumber','hvac','gas engineer',
-  'modern workplace','cybersecurity','cyber security','penetration test',
-  'technology project manager','it project manager','technical project manager',
-  'senior project manager','principal project manager',
-  'programme manager','delivery manager',
-];
-const EXCLUDE_DESC = ['machine learning','kubernetes','terraform','aws lambda','azure devops','react.js','node.js','python developer','java developer','typescript'];
+const ROLE_LABELS = { senco:'SENCO / Inclusion', safeguarding:'Safeguarding', project:'Junior PM', leadership:'Leadership', education:'Education / EdTech', charity:'Charity / Third sector' };
+const EXCLUDE_TITLE = ['machine learning','data scientist','data engineer','data analyst','software engineer','software developer','web developer','devops','backend','frontend','full stack','fullstack','cloud engineer','platform engineer','security engineer','network engineer','it engineer','infrastructure engineer','solutions architect','ml engineer','ai engineer','mechanical engineer','structural engineer','civil engineer','electrical engineer','quantity surveyor','site manager','construction','building manager','tax','accountant','accounting','financial manager','finance manager','audit','auditor','solicitor','legal counsel','conveyancing','mortgage','insurance broker','banking','investment manager','fund manager','portfolio manager','financial advisor','marketing manager','digital marketing','seo manager','ppc','paid media','sales manager','business development','account manager','telesales','sales executive','chef','head chef','sous chef','catering manager','kitchen manager','warehouse manager','logistics','supply chain','haulage','dental','dentist','pharmacy','pharmacist','optician','radiographer','electrician','plumber','hvac','gas engineer','modern workplace','cybersecurity','cyber security','penetration test','technology project manager','it project manager','technical project manager','senior project manager','principal project manager','programme manager','delivery manager'];
+const EXCLUDE_DESC  = ['machine learning','kubernetes','terraform','aws lambda','azure devops','react.js','node.js','python developer','java developer','typescript'];
 const INCLUDE_TITLE = ['senco','send','safeguarding','inclusion','sen coordinator','special educational needs','education','school','academy','children','young people','youth worker','pastoral','wellbeing','learning support','family support','early years','nursery','teaching assistant','support worker','charity coordinator','voluntary','community manager'];
 const INCLUDE_ANY   = ['senco','safeguarding','inclusion coordinator','special educational needs',"children's services",'young people','youth service','early years','looked after children','family support','social care','education coordinator','learning disability','disability support','pastoral support','charity sector','third sector','voluntary sector','community interest','local authority education','school improvement','ofsted'];
-const MATCH_TAGS    = {
-  'safeguarding':{label:'Safeguarding',type:'strong'},'senco':{label:'SENCO',type:'strong'},
-  'send':{label:'SEND',type:'strong'},'inclusion':{label:'Inclusion',type:'strong'},
-  'special educational needs':{label:'SEN',type:'strong'},'designated safeguarding':{label:'DSL',type:'strong'},
-  'project manager':{label:'PM role',type:'good'},'junior':{label:'Junior',type:'good'},
-  'charity':{label:'Third sector',type:'good'},'education':{label:'Education',type:'good'},
-  'leadership':{label:'Leadership',type:'good'},'coordinator':{label:'Coordinator',type:'good'},
-  'young people':{label:'Young people',type:'good'},
-  'remote':{label:'Remote/WFH',type:'new'},'work from home':{label:'WFH',type:'new'},
-};
+const MATCH_TAGS    = {'safeguarding':{label:'Safeguarding',type:'strong'},'senco':{label:'SENCO',type:'strong'},'send':{label:'SEND',type:'strong'},'inclusion':{label:'Inclusion',type:'strong'},'special educational needs':{label:'SEN',type:'strong'},'designated safeguarding':{label:'DSL',type:'strong'},'project manager':{label:'PM role',type:'good'},'junior':{label:'Junior',type:'good'},'charity':{label:'Third sector',type:'good'},'education':{label:'Education',type:'good'},'leadership':{label:'Leadership',type:'good'},'coordinator':{label:'Coordinator',type:'good'},'young people':{label:'Young people',type:'good'},'remote':{label:'Remote/WFH',type:'new'},'work from home':{label:'WFH',type:'new'}};
 const SCOTLAND = ['edinburgh','scotland','scottish','lothian','fife','glasgow','dundee','aberdeen','stirling','falkirk','livingston'];
 const REMOTE_T = ['remote','work from home','wfh','home based','home-based','anywhere in the uk','uk wide','nationwide'];
 
-let allJobs = [], sortMode = 'relevance', debugVisible = false;
+let allJobs = [];         // active jobs
+let archived = [];        // dismissed jobs
+let currentTab = 'active';
+let debugVisible = false;
 
-function toggleCb(item) {
-  const cb = item.querySelector('input');
-  cb.checked = !cb.checked;
-  item.classList.toggle('checked', cb.checked);
-}
-function getSelectedRoles() {
-  const checked = [...document.querySelectorAll('#role-checkboxes input:checked')].map(c => c.value);
-  return checked.length ? checked : Object.keys(SEARCH_QUERIES);
-}
-function log(msg, type='info') {
-  const p = document.getElementById('debug-panel');
-  const d = document.createElement('div');
-  d.className='dl '+type;
-  d.textContent='['+new Date().toLocaleTimeString()+'] '+msg;
-  p.appendChild(d); p.scrollTop=p.scrollHeight;
-}
-function toggleDebug() { debugVisible=!debugVisible; document.getElementById('debug-panel').classList.toggle('visible',debugVisible); }
+// --- STORAGE ---
+function saveArchive() { try { localStorage.setItem('bubs_archived', JSON.stringify(archived.map(j=>j.id))); } catch(e){} }
+function loadArchive()  { try { return JSON.parse(localStorage.getItem('bubs_archived')||'[]'); } catch(e){ return []; } }
 
-function isRelevantJob(job) {
-  const title = (job.title||'').toLowerCase();
-  const full  = title+' '+(job.description||'').toLowerCase();
-  const isJuniorPM = ['junior project','trainee project','assistant project','project support'].some(t=>title.includes(t));
-  if (!isJuniorPM && EXCLUDE_TITLE.some(ex=>title.includes(ex))) return false;
-  const titlePass = INCLUDE_TITLE.some(i=>title.includes(i));
-  if (!titlePass && EXCLUDE_DESC.some(ex=>full.includes(ex))) return false;
-  if (INCLUDE_TITLE.some(i=>title.includes(i))) return true;
-  if (INCLUDE_ANY.some(i=>full.includes(i))) return true;
-  if (isJuniorPM) return true;
+// --- HELPERS ---
+function log(msg,type='info'){const p=document.getElementById('debug-panel');const d=document.createElement('div');d.className='dl '+type;d.textContent='['+new Date().toLocaleTimeString()+'] '+msg;p.appendChild(d);p.scrollTop=p.scrollHeight;}
+function toggleDebug(){debugVisible=!debugVisible;document.getElementById('debug-panel').classList.toggle('visible',debugVisible);}
+function getSelectedRoles(){const checked=[...document.querySelectorAll('#role-toggles input:checked')].map(c=>c.value);return checked.length?checked:Object.keys(SEARCH_QUERIES);}
+
+function isRelevantJob(job){
+  const title=(job.title||'').toLowerCase();
+  const full=title+' '+(job.description||'').toLowerCase();
+  const isJuniorPM=['junior project','trainee project','assistant project','project support'].some(t=>title.includes(t));
+  if(!isJuniorPM&&EXCLUDE_TITLE.some(ex=>title.includes(ex)))return false;
+  const titlePass=INCLUDE_TITLE.some(i=>title.includes(i));
+  if(!titlePass&&EXCLUDE_DESC.some(ex=>full.includes(ex)))return false;
+  if(INCLUDE_TITLE.some(i=>title.includes(i)))return true;
+  if(INCLUDE_ANY.some(i=>full.includes(i)))return true;
+  if(isJuniorPM)return true;
   return false;
 }
-function jobIsEdinburgh(j) { return SCOTLAND.some(t=>(j.location||'').toLowerCase().includes(t)); }
-function jobIsRemote(j) { const t=((j.title||'')+' '+(j.description||'')+' '+(j.location||'')).toLowerCase(); return REMOTE_T.some(r=>t.includes(r)); }
-function detectTags(job) {
-  const t=((job.title||'')+' '+(job.description||'')+' '+(job.location||'')).toLowerCase();
-  const found=new Map();
-  for(const [kw,tag] of Object.entries(MATCH_TAGS)) if(t.includes(kw)&&!found.has(tag.label)) found.set(tag.label,tag);
-  return Array.from(found.values()).slice(0,5);
-}
-function scoreJob(job) {
-  const t=((job.title||'')+' '+(job.description||'')).toLowerCase();
-  let s=0;
-  ['project','safeguarding','senco','sen','inclusion','education','leadership','manager','coordinator','consultant','charity','third sector','wellbeing','pastoral'].forEach(k=>{if(t.includes(k))s++;});
-  if(t.includes('safeguarding')||t.includes('senco')||t.includes('inclusion'))s+=3;
-  if(t.includes('junior')||t.includes('entry level'))s+=1;
-  return s;
-}
-function salaryNum(job) { return job.salaryMin || (job.salary ? parseInt((job.salary||'').replace(/[^0-9]/g,'')) : 0) || 0; }
-function salaryStr(job) {
-  if(job.salaryMin&&job.salaryMax) return `£${Math.round(job.salaryMin/1000)}k–£${Math.round(job.salaryMax/1000)}k`;
-  if(job.salaryMin) return `From £${Math.round(job.salaryMin/1000)}k`;
-  if(job.salary) return job.salary;
-  return null;
-}
-function guessRole(job) {
-  const t=(job.title||'').toLowerCase();
-  if(t.includes('safeguard')||t.includes('dsl')) return 'safeguarding';
-  if(t.includes('senco')||t.includes('sen ')||t.includes('inclusion')||t.includes('send')) return 'senco';
-  if(t.includes('project')||t.includes('programme')) return 'project';
-  if(t.includes('charity')||t.includes('voluntary')||t.includes('third sector')) return 'charity';
-  if(t.includes('education')||t.includes('learning')||t.includes('edtech')||t.includes('curriculum')) return 'education';
-  return 'leadership';
-}
+function jobIsEdinburgh(j){return SCOTLAND.some(t=>(j.location||'').toLowerCase().includes(t));}
+function jobIsRemote(j){const t=((j.title||'')+' '+(j.description||'')+' '+(j.location||'')).toLowerCase();return REMOTE_T.some(r=>t.includes(r));}
+function detectTags(job){const t=((job.title||'')+' '+(job.description||'')+' '+(job.location||'')).toLowerCase();const found=new Map();for(const[kw,tag]of Object.entries(MATCH_TAGS))if(t.includes(kw)&&!found.has(tag.label))found.set(tag.label,tag);return Array.from(found.values()).slice(0,5);}
+function scoreJob(job){const t=((job.title||'')+' '+(job.description||'')).toLowerCase();let s=0;['project','safeguarding','senco','sen','inclusion','education','leadership','manager','coordinator','consultant','charity','third sector','wellbeing','pastoral'].forEach(k=>{if(t.includes(k))s++;});if(t.includes('safeguarding')||t.includes('senco')||t.includes('inclusion'))s+=3;if(t.includes('junior')||t.includes('entry level'))s+=1;return s;}
+function salaryNum(job){return job.salaryMin||(job.salary?parseInt((job.salary||'').replace(/[^0-9]/g,''))||0:0)||0;}
+function salaryStr(job){if(job.salaryMin&&job.salaryMax)return`£${Math.round(job.salaryMin/1000)}k–£${Math.round(job.salaryMax/1000)}k`;if(job.salaryMin)return`From £${Math.round(job.salaryMin/1000)}k`;if(job.salary)return job.salary;return null;}
+function guessRole(job){const t=(job.title||'').toLowerCase();if(t.includes('safeguard')||t.includes('dsl'))return'safeguarding';if(t.includes('senco')||t.includes('sen ')||t.includes('inclusion')||t.includes('send'))return'senco';if(t.includes('project')||t.includes('programme'))return'project';if(t.includes('charity')||t.includes('voluntary')||t.includes('third sector'))return'charity';if(t.includes('education')||t.includes('learning')||t.includes('edtech')||t.includes('curriculum'))return'education';return'leadership';}
+function formatDate(str){if(!str)return null;const d=new Date(str);if(isNaN(d))return null;const now=new Date();const days=Math.floor((now-d)/86400000);if(days===0)return'Today';if(days===1)return'Yesterday';if(days<7)return`${days}d ago`;if(days<30)return`${Math.floor(days/7)}w ago`;return`${Math.floor(days/30)}mo ago`;}
 
-async function adzunaOne(what, where, sal) {
-  try {
-    const p=new URLSearchParams({what,where,salary:sal});
-    const r=await fetch(`${ADZUNA_PROXY}?${p}`);
-    if(!r.ok){log(`Adzuna "${what}" → ${r.status}`,'error');return[];}
-    const d=await r.json();
-    if(d.error){log(`Adzuna "${what}" error: ${d.error||d.exception}`,'error');return[];}
-    log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');
-    return (d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',title:j.title,org:j.company?.display_name||'',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));
-  } catch(e){log(`Adzuna "${what}" error: ${e.message}`,'error');return[];}
-}
-async function reedOne(what,loc,sal,remote) {
-  try {
-    const p=new URLSearchParams({keywords:what,minimumSalary:sal,...(remote?{remote:'true'}:{location:loc,distance:'20'})});
-    const r=await fetch(`${REED_PROXY}?${p}`);
-    if(!r.ok){log(`Reed "${what}" → ${r.status}`,'error');return[];}
-    const d=await r.json();
-    if(d.error){log(`Reed "${what}" error: ${d.error}`,'error');return[];}
-    log(`Reed "${what}" → ${d.results?.length??0}`,d.results?.length?'ok':'warn');
-    return (d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',title:j.jobTitle,org:j.employerName||'',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,salaryMin:j.minimumSalary,url:j.jobUrl,created:j.date}));
-  } catch(e){log(`Reed "${what}" error: ${e.message}`,'error');return[];}
-}
-async function joobleOne(what,loc,sal) {
-  try {
-    const remote=loc==='remote';
-    const p=new URLSearchParams({keywords:what,location:remote?'':loc,minimumSalary:sal||35000,remote:remote?'true':'false'});
-    const r=await fetch(`${JOOBLE_PROXY}?${p}`);
-    if(!r.ok){log(`Jooble "${what}" → ${r.status}`,'error');return[];}
-    const d=await r.json();
-    if(d.error){log(`Jooble "${what}" error: ${d.error}`,'error');return[];}
-    const jobs=d.jobs||[];
-    log(`Jooble "${what}" → ${jobs.length}`,jobs.length?'ok':'warn');
-    return jobs.map(j=>({id:'jooble-'+(j.id||Math.random()),source:'jooble',title:j.title||'',org:j.company||'',location:j.location||'',description:j.snippet||'',salary:j.salary||null,url:j.link||'#',created:j.updated||null}));
-  } catch(e){log(`Jooble "${what}" error: ${e.message}`,'error');return[];}
-}
+// --- API CALLS ---
+async function adzunaOne(what,where,sal){try{const p=new URLSearchParams({what,where,salary:sal});const r=await fetch(`${ADZUNA_PROXY}?${p}`);if(!r.ok){log(`Adzuna "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Adzuna "${what}" err: ${d.error}`,'error');return[];}log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',title:j.title,org:j.company?.display_name||'',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));}catch(e){log(`Adzuna "${what}" err: ${e.message}`,'error');return[];}}
+async function reedOne(what,loc,sal,remote){try{const p=new URLSearchParams({keywords:what,minimumSalary:sal,...(remote?{remote:'true'}:{location:loc,distance:'20'})});const r=await fetch(`${REED_PROXY}?${p}`);if(!r.ok){log(`Reed "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Reed "${what}" err: ${d.error}`,'error');return[];}log(`Reed "${what}" → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',title:j.jobTitle,org:j.employerName||'',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,salaryMin:j.minimumSalary,url:j.jobUrl,created:j.date}));}catch(e){log(`Reed "${what}" err: ${e.message}`,'error');return[];}}
+async function joobleOne(what,loc,sal){try{const remote=loc==='remote';const p=new URLSearchParams({keywords:what,location:remote?'':loc,minimumSalary:sal||35000,remote:remote?'true':'false'});const r=await fetch(`${JOOBLE_PROXY}?${p}`);if(!r.ok){log(`Jooble "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Jooble "${what}" err: ${d.error}`,'error');return[];}const jobs=d.jobs||[];log(`Jooble "${what}" → ${jobs.length}`,jobs.length?'ok':'warn');return jobs.map(j=>({id:'jooble-'+(j.id||Math.random()),source:'jooble',title:j.title||'',org:j.company||'',location:j.location||'',description:j.snippet||'',salary:j.salary||null,url:j.link||'#',created:j.updated||null}));}catch(e){log(`Jooble "${what}" err: ${e.message}`,'error');return[];}}
 
-async function runSearch() {
-  const btn     = document.getElementById('search-btn');
-  const locMode = document.getElementById('location-type').value;
-  const salMin  = document.getElementById('salary-min').value;
-  const salLabel= document.getElementById('salary-min').selectedOptions[0].text;
-  const roles   = getSelectedRoles();
+// --- SEARCH ---
+async function runSearch(){
+  const btn=document.getElementById('search-btn');
+  const locMode=document.getElementById('location-type').value;
+  const salMin=document.getElementById('salary-min').value;
+  const salLabel=document.getElementById('salary-min').selectedOptions[0].text;
+  const roles=getSelectedRoles();
 
   document.getElementById('debug-panel').innerHTML='';
-  btn.disabled=true; btn.textContent='Searching…';
+  btn.disabled=true;btn.textContent='Searching…';
   document.getElementById('results-area').innerHTML='<div class="loading-state"><div class="spinner"></div><span>Searching Adzuna, Reed and Jooble…</span></div>';
 
   log(`Roles: ${roles.join(', ')} | ${locMode} | ${salLabel}`,'info');
 
   const querySet=new Set();
   roles.forEach(r=>(SEARCH_QUERIES[r]||[]).forEach(q=>querySet.add(q)));
-  const extraRemote=(roles.includes('senco')||roles.length===Object.keys(SEARCH_QUERIES).length)
-    ?['SENCO remote','SEND coordinator remote','remote learning support']:[];
+  const extraRemote=(roles.includes('senco')||roles.length===Object.keys(SEARCH_QUERIES).length)?['SENCO remote','SEND coordinator remote','remote learning support']:[];
 
   const promises=[];
   querySet.forEach(q=>{
-    if(locMode==='both'||locMode==='edinburgh'){
-      promises.push(adzunaOne(q,'edinburgh',salMin));
-      promises.push(reedOne(q,'Edinburgh',salMin,false));
-      promises.push(joobleOne(q,'Edinburgh',salMin));
-    }
-    if(locMode==='both'||locMode==='remote'){
-      promises.push(adzunaOne(q+' remote','uk',salMin));
-      promises.push(reedOne(q,'Edinburgh',salMin,true));
-      promises.push(joobleOne(q,'remote',salMin));
-    }
+    if(locMode==='both'||locMode==='edinburgh'){promises.push(adzunaOne(q,'edinburgh',salMin));promises.push(reedOne(q,'Edinburgh',salMin,false));promises.push(joobleOne(q,'Edinburgh',salMin));}
+    if(locMode==='both'||locMode==='remote'){promises.push(adzunaOne(q+' remote','uk',salMin));promises.push(reedOne(q,'Edinburgh',salMin,true));promises.push(joobleOne(q,'remote',salMin));}
   });
-  extraRemote.forEach(q=>{
-    promises.push(adzunaOne(q,'uk',salMin));
-    promises.push(reedOne(q,'',salMin,true));
-    promises.push(joobleOne(q,'remote',salMin));
-  });
+  extraRemote.forEach(q=>{promises.push(adzunaOne(q,'uk',salMin));promises.push(reedOne(q,'',salMin,true));promises.push(joobleOne(q,'remote',salMin));});
 
   const results=await Promise.allSettled(promises);
   const allRaw=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
@@ -408,105 +329,172 @@ async function runSearch() {
     return true;
   });
 
-  allJobs=deduped.filter(j=>isRelevantJob(j));
-  log(`Sector filter: ${deduped.length} → ${allJobs.length}`,'info');
+  let jobs=deduped.filter(j=>isRelevantJob(j));
+  log(`Sector filter: ${deduped.length} → ${jobs.length}`,'info');
 
-  const before=allJobs.length;
-  if(locMode==='edinburgh') allJobs=allJobs.filter(j=>jobIsEdinburgh(j));
-  else if(locMode==='remote') allJobs=allJobs.filter(j=>jobIsRemote(j));
-  else allJobs=allJobs.filter(j=>jobIsEdinburgh(j)||jobIsRemote(j));
-  log(`Location filter: ${before} → ${allJobs.length}`,'info');
+  const before=jobs.length;
+  if(locMode==='edinburgh') jobs=jobs.filter(j=>jobIsEdinburgh(j));
+  else if(locMode==='remote') jobs=jobs.filter(j=>jobIsRemote(j));
+  else jobs=jobs.filter(j=>jobIsEdinburgh(j)||jobIsRemote(j));
+  log(`Location filter: ${before} → ${jobs.length}`,'info');
 
-  allJobs.forEach(j=>{j._score=scoreJob(j);j._role=guessRole(j);});
+  // Load archived IDs and filter them out
+  const archivedIds=new Set(loadArchive());
+  archived=jobs.filter(j=>archivedIds.has(j.id));
+  allJobs=jobs.filter(j=>!archivedIds.has(j.id));
+
+  // Stamp role + score on every job
+  [...allJobs,...archived].forEach(j=>{j._score=scoreJob(j);j._role=guessRole(j);});
 
   const az=allJobs.filter(j=>j.source==='adzuna').length;
   const rd=allJobs.filter(j=>j.source==='reed').length;
   const jb=allJobs.filter(j=>j.source==='jooble').length;
-  log(`Done: ${allJobs.length} jobs — Adzuna ${az} · Reed ${rd} · Jooble ${jb}`,allJobs.length?'ok':'warn');
+  log(`Done: ${allJobs.length} active + ${archived.length} archived — Adzuna ${az} · Reed ${rd} · Jooble ${jb}`,allJobs.length?'ok':'warn');
 
-  renderResults(salLabel,az,rd,jb);
-  btn.disabled=false; btn.textContent='Search jobs';
+  currentTab='active';
+  render(salLabel,az,rd,jb);
+  btn.disabled=false;btn.textContent='Search jobs';
 }
 
-function getSortedJobs() {
-  const sort=document.getElementById('sort-select')?.value||'relevance';
-  const jobs=[...allJobs];
-  if(sort==='salary-high') jobs.sort((a,b)=>(salaryNum(b)||0)-(salaryNum(a)||0));
-  else if(sort==='salary-low') jobs.sort((a,b)=>(salaryNum(a)||999999)-(salaryNum(b)||999999));
-  else if(sort==='recent') jobs.sort((a,b)=>new Date(b.created||0)-new Date(a.created||0));
-  else if(sort==='group') jobs.sort((a,b)=>a._role.localeCompare(b._role));
-  else jobs.sort((a,b)=>b._score-a._score);
-  return jobs;
+// --- DISMISS / RESTORE ---
+function dismiss(id){
+  const idx=allJobs.findIndex(j=>j.id===id);
+  if(idx===-1)return;
+  const [job]=allJobs.splice(idx,1);
+  archived.push(job);
+  saveArchive();
+  render();
+}
+function restore(id){
+  const idx=archived.findIndex(j=>j.id===id);
+  if(idx===-1)return;
+  const [job]=archived.splice(idx,1);
+  allJobs.push(job);
+  // re-sort
+  allJobs.sort((a,b)=>new Date(b.created||0)-new Date(a.created||0));
+  saveArchive();
+  render();
+}
+function clearArchive(){archived=[];saveArchive();render();}
+
+// --- RENDER ---
+let _salLabel='',_az=0,_rd=0,_jb=0;
+function render(salLabel,az,rd,jb){
+  if(salLabel!==undefined){_salLabel=salLabel;_az=az;_rd=rd;_jb=jb;}
+  currentTab==='active'?renderActive():renderArchived();
+  updateTabCounts();
 }
 
-function renderResults(salLabel,az,rd,jb) {
+function updateTabCounts(){
+  const area=document.getElementById('results-area');
+  const tabEl=area.querySelector('.tabs');
+  if(!tabEl)return;
+  tabEl.querySelector('[data-tab="active"] .tab-count').textContent=allJobs.length;
+  tabEl.querySelector('[data-tab="archived"] .tab-count').textContent=archived.length;
+}
+
+function tabsHTML(){
+  return `<div class="tabs">
+    <div class="tab${currentTab==='active'?' active':''}" data-tab="active" onclick="switchTab('active')">Jobs <span class="tab-count">${allJobs.length}</span></div>
+    <div class="tab${currentTab==='archived'?' active':''}" data-tab="archived" onclick="switchTab('archived')">Archived <span class="tab-count">${archived.length}</span></div>
+  </div>`;}
+function switchTab(t){currentTab=t;render();}
+
+function getSorted(jobs){
+  const sort=document.getElementById('sort-select')?.value||'recent';
+  const j=[...jobs];
+  if(sort==='salary-high')j.sort((a,b)=>(salaryNum(b)||0)-(salaryNum(a)||0));
+  else if(sort==='salary-low')j.sort((a,b)=>(salaryNum(a)||999999)-(salaryNum(b)||999999));
+  else if(sort==='relevance')j.sort((a,b)=>b._score-a._score);
+  else j.sort((a,b)=>new Date(b.created||0)-new Date(a.created||0)); // default: recent
+  return j;
+}
+
+function renderActive(){
   const area=document.getElementById('results-area');
   if(!allJobs.length){
-    area.innerHTML='<div class="empty-state"><div class="big">😕</div><p>No results — try more role types, lower salary, or Edinburgh + Remote.<br>Open <strong>🛠 Debug</strong> to diagnose.</p></div>';
+    area.innerHTML=tabsHTML()+'<div class="empty-state"><div class="big">😕</div><p>No results — try different filters or lower the salary.<br>Open <strong>🛠 Debug</strong> to diagnose.</p></div>';
     return;
   }
+  const sortVal=document.getElementById('sort-select')?.value||'recent';
+  const jobs=getSorted(allJobs);
 
-  const salLbl = salLabel || document.getElementById('salary-min')?.selectedOptions[0]?.text || '';
-  const countLine = `${allJobs.length} results · ${salLbl} · Adzuna ${az??allJobs.filter(j=>j.source==='adzuna').length} · Reed ${rd??allJobs.filter(j=>j.source==='reed').length} · Jooble ${jb??allJobs.filter(j=>j.source==='jooble').length}`;
-
-  const jobs=getSortedJobs();
-  const sort=document.getElementById('sort-select')?.value||'group';
-  const grouped = sort==='group';
-
-  // Always build role group nav
+  // Always build group nav from active jobs
   const byRoleAll=new Map();
-  allJobs.forEach(j=>{ if(!byRoleAll.has(j._role))byRoleAll.set(j._role,[]); byRoleAll.get(j._role).push(j); });
+  allJobs.forEach(j=>{if(!byRoleAll.has(j._role))byRoleAll.set(j._role,[]);byRoleAll.get(j._role).push(j);});
   const roleOrder=['senco','safeguarding','project','leadership','education','charity'];
   const sortedGroups=[...byRoleAll.entries()].sort((a,b)=>roleOrder.indexOf(a[0])-roleOrder.indexOf(b[0]));
-
   const groupNav='<div class="group-nav">'+sortedGroups.map(([role,rjobs])=>
     `<a class="group-pill" href="#group-${role}">${ROLE_LABELS[role]||role} <strong>(${rjobs.length})</strong></a>`
   ).join('')+'</div>';
 
   let sections='';
-  if(grouped){
-    sections=sortedGroups.map(([role,rjobs])=>
-      `<div class="group-section" id="group-${role}">
+  if(sortVal==='group'){
+    sections=sortedGroups.map(([role,rjobs])=>{
+      const sorted=getSorted(rjobs);
+      return `<div class="group-section" id="group-${role}">
         <div class="group-heading">${ROLE_LABELS[role]||role} <span class="group-count">${rjobs.length} roles</span></div>
-        <div class="job-list">${rjobs.map((j,i)=>cardHTML(j,'g-'+role+'-'+i)).join('')}</div>
-      </div>`
-    ).join('');
+        <div class="job-list">${sorted.map((j,i)=>cardHTML(j,'a-'+role+'-'+i,false)).join('')}</div>
+      </div>`;
+    }).join('');
   } else {
-    sections=`<div class="job-list">${jobs.map((j,i)=>cardHTML(j,'j'+i)).join('')}</div>`;
+    sections=`<div class="job-list">${jobs.map((j,i)=>cardHTML(j,'a'+i,false)).join('')}</div>`;
   }
 
+  const countLine=`${allJobs.length} results · ${_salLabel} · Adzuna ${_az} · Reed ${_rd} · Jooble ${_jb}`;
   area.innerHTML=`
+    ${tabsHTML()}
     <div class="results-toolbar">
-      <div>
-        <div class="results-count">${allJobs.length} roles found</div>
-        <div class="status-bar">${countLine}</div>
-      </div>
-      <div class="toolbar-right">
-        <select class="sort-select" id="sort-select" onchange="renderResults()">
-          <option value="group">Group by role type</option>
-          <option value="relevance">Best match</option>
-          <option value="recent">Most recent</option>
-          <option value="salary-high">Salary: high → low</option>
-          <option value="salary-low">Salary: low → high</option>
-        </select>
-      </div>
+      <div><div class="results-count">${allJobs.length} roles found</div><div class="status-bar">${countLine}</div></div>
+      <select class="sort-select" id="sort-select" onchange="render()">
+        <option value="recent"${sortVal==='recent'?' selected':''}>Most recent</option>
+        <option value="group"${sortVal==='group'?' selected':''}>Group by role type</option>
+        <option value="relevance"${sortVal==='relevance'?' selected':''}>Best match</option>
+        <option value="salary-high"${sortVal==='salary-high'?' selected':''}>Salary: high → low</option>
+        <option value="salary-low"${sortVal==='salary-low'?' selected':''}>Salary: low → high</option>
+      </select>
     </div>
     ${groupNav}
     ${sections}`;
 }
 
-function cardHTML(j, idx) {
+function renderArchived(){
+  const area=document.getElementById('results-area');
+  if(!archived.length){
+    area.innerHTML=tabsHTML()+'<div class="empty-state"><div class="big">🗂️</div><p>No archived jobs yet.<br>Hit <strong>✕</strong> on any listing to hide it here.</p></div>';
+    return;
+  }
+  const jobs=[...archived].sort((a,b)=>new Date(b.created||0)-new Date(a.created||0));
+  area.innerHTML=`
+    ${tabsHTML()}
+    <div class="results-toolbar">
+      <div><div class="results-count">${archived.length} archived</div><div class="status-bar">Jobs you've dismissed</div></div>
+      <button style="font-size:12px;padding:5px 12px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;" onclick="clearArchive()">Clear all</button>
+    </div>
+    <div class="job-list">${jobs.map((j,i)=>cardHTML(j,'ar'+i,true)).join('')}</div>`;
+}
+
+function cardHTML(j,idx,isArchived){
   const tags=detectTags(j);
   const sal=salaryStr(j);
   const remote=jobIsRemote(j);
-  const best=j._score>=4;
+  const best=j._score>=4&&!isArchived;
   const snip=(j.description||'').replace(/<[^>]+>/g,'').slice(0,280)+'…';
   const src=j.source==='adzuna'?'Adzuna':j.source==='reed'?'Reed':'Jooble';
-  return `<div class="job-card${best?' best-match':''}" id="card-${idx}">
+  const dateStr=formatDate(j.created);
+
+  const actionBtn=isArchived
+    ?`<button class="btn-restore" onclick="event.stopPropagation();restore('${j.id}')">↩ Restore</button>`
+    :`<button class="btn-dismiss" onclick="event.stopPropagation();dismiss('${j.id}')" title="Hide this job">✕</button>`;
+
+  return `<div class="job-card${best?' best-match':''}${isArchived?' archived-card':''}" id="card-${idx}">
     <div class="card-main" onclick="toggleCard('${idx}')">
       <div class="card-top">
         <div><div class="card-title">${j.title}</div><div class="card-org">${j.org}</div></div>
-        <span class="source-badge source-${j.source}">${src}</span>
+        <div class="card-top-right">
+          <span class="source-badge source-${j.source}">${src}</span>
+          ${actionBtn}
+        </div>
       </div>
       <div class="card-meta">
         <span class="meta-chip ${remote?'chip-remote':''}">
@@ -514,6 +502,7 @@ function cardHTML(j, idx) {
           ${remote?'Remote / WFH':j.location}
         </span>
         ${sal?`<span class="meta-chip chip-salary"><svg viewBox="0 0 12 12" fill="none"><rect x="1" y="2.5" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M1 5h10" stroke="currentColor" stroke-width="1"/></svg>${sal}</span>`:''}
+        ${dateStr?`<span class="meta-chip chip-date">${dateStr}</span>`:''}
       </div>
       ${tags.length?`<div class="match-badges">${tags.map(t=>`<span class="match-badge badge-${t.type}">${t.label}</span>`).join('')}</div>`:''}
       <button class="card-expand-btn">View details <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 4.5L6.5 8.5L10.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -525,16 +514,15 @@ function cardHTML(j, idx) {
   </div>`;
 }
 
-function toggleCard(idx) { document.getElementById(`card-${idx}`)?.classList.toggle('expanded'); }
-function clearResults() {
-  allJobs=[];
-  document.querySelectorAll('#role-checkboxes input').forEach(cb=>{cb.checked=true;cb.closest('.cb-item').classList.add('checked');});
-  document.getElementById('results-area').innerHTML='<div class="empty-state"><div class="big">🔍</div><p>Pick role types and hit <strong>Search jobs</strong>.</p></div>';
+function toggleCard(idx){document.getElementById(`card-${idx}`)?.classList.toggle('expanded');}
+function clearAll(){
+  allJobs=[];archived=[];saveArchive();
+  document.querySelectorAll('#role-toggles input').forEach(cb=>{cb.checked=false;});
+  document.getElementById('results-area').innerHTML='<div class="empty-state"><div class="big">🔍</div><p>Toggle some role types and hit <strong>Search jobs</strong>.</p></div>';
   document.getElementById('debug-panel').innerHTML='';
 }
 
-// Auto-search on load
-window.addEventListener('DOMContentLoaded', () => runSearch());
+window.addEventListener('DOMContentLoaded',()=>runSearch());
 </script>
 </body>
 </html>
