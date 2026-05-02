@@ -256,18 +256,20 @@ const REED_PROXY   = '/.netlify/functions/reed';
 const JOOBLE_PROXY = '/.netlify/functions/jooble';
 
 const SEARCH_QUERIES = {
-  senco:        ['SENCO', 'SEN coordinator', 'SEND coordinator', 'inclusion manager', 'SEN officer', 'learning support'],
-  safeguarding: ['safeguarding', 'safeguarding manager', 'safeguarding officer', 'designated safeguarding lead'],
-  project:      ['junior project coordinator', 'trainee project manager', 'assistant project manager', 'project support officer'],
-  leadership:   ['head of education', 'service manager children', 'team leader education', 'operations manager charity', 'education manager'],
-  education:    ['education consultant', 'education coordinator', 'curriculum coordinator', 'EdTech', 'training coordinator'],
-  ld:           ['learning manager', 'learning officer', 'learning and development manager', 'L&D manager', 'learning and development officer', 'learning coordinator', 'training manager', 'skills coach', 'learning manager charity', 'learning officer museum', 'learning officer heritage', 'learning officer gallery', 'learning officer council'],
-  charity:      ['charity coordinator children', 'youth charity', 'children charity manager', 'voluntary sector education'],
+  senco:        ['SENCO', 'SEN coordinator', 'inclusion manager', 'learning support'],
+  safeguarding: ['safeguarding officer', 'designated safeguarding lead', 'safeguarding manager'],
+  project:      ['trainee project manager', 'assistant project manager', 'project support officer'],
+  leadership:   ['education manager', 'team leader education', 'service manager children'],
+  education:    ['education consultant', 'education coordinator', 'EdTech'],
+  ld:           ['learning manager', 'learning officer', 'L&D manager', 'training manager'],
+  charity:      ['youth charity', 'children charity manager', 'voluntary sector education'],
 };
 const ROLE_LABELS = { senco:'SENCO / Inclusion', safeguarding:'Safeguarding', project:'Junior PM', leadership:'Leadership', education:'Education / EdTech', ld:'Learning roles', charity:'Charity / Third sector' };
 const EXCLUDE_TITLE = ['machine learning','data scientist','data engineer','data analyst','software engineer','software developer','web developer','devops','backend','frontend','full stack','fullstack','cloud engineer','platform engineer','security engineer','network engineer','it engineer','infrastructure engineer','solutions architect','ml engineer','ai engineer','mechanical engineer','structural engineer','civil engineer','electrical engineer','quantity surveyor','site manager','construction','building manager','tax','accountant','accounting','financial manager','finance manager','audit','auditor','solicitor','legal counsel','conveyancing','mortgage','insurance broker','banking','investment manager','fund manager','portfolio manager','financial advisor','marketing manager','digital marketing','seo manager','ppc','paid media','sales manager','business development','account manager','telesales','sales executive','chef','head chef','sous chef','catering manager','kitchen manager','warehouse manager','logistics','supply chain','haulage','dental','dentist','pharmacy','pharmacist','optician','radiographer','electrician','plumber','hvac','gas engineer','modern workplace','cybersecurity','cyber security','penetration test','technology project manager','it project manager','technical project manager','senior project manager','principal project manager','programme manager','delivery manager',
   // Teaching roles to exclude
-  'class teacher','classroom teacher','primary teacher','secondary teacher','nursery teacher','reception teacher','maths teacher','english teacher','science teacher','pe teacher','art teacher','music teacher','history teacher','geography teacher','french teacher','spanish teacher','biology teacher','chemistry teacher','physics teacher','teacher of','nqt','newly qualified teacher','supply teacher','cover teacher','head of department','head of year','deputy headteacher','headteacher','head teacher','principal teacher','head of maths','head of english','head of science','lecturer','professor','tutor','ecg teacher',
+  'class teacher','classroom teacher','primary teacher','secondary teacher','nursery teacher','reception teacher','maths teacher','english teacher','science teacher','pe teacher','art teacher','music teacher','history teacher','geography teacher','french teacher','spanish teacher','biology teacher','chemistry teacher','physics teacher','teacher of','nqt','newly qualified teacher','supply teacher','cover teacher','head of department','head of year','deputy headteacher','headteacher','head teacher','principal teacher','head of maths','head of english','head of science','lecturer','professor','ecg teacher','religious education','home economics','modern studies','computing teacher','drama teacher','design teacher',
+  // Social work (specialist field, not right for her)
+  'social worker','child protection social','approved mental health','amhp',
 ];
 const EXCLUDE_DESC  = ['machine learning','kubernetes','terraform','aws lambda','azure devops','react.js','node.js','python developer','java developer','typescript'];
 const INCLUDE_TITLE = ['senco','send','safeguarding','inclusion','sen coordinator','special educational needs','youth worker','pastoral','wellbeing','learning support','learning manager','learning officer','learning coordinator','learning and development','l&d','training manager','skills coach','family support','early years','nursery','teaching assistant','support worker','charity coordinator','voluntary','community manager','museum','heritage','gallery','library','education officer','education coordinator','education manager','education consultant','education advisor'];
@@ -290,9 +292,29 @@ function log(msg,type='info'){const p=document.getElementById('debug-panel');con
 function toggleDebug(){debugVisible=!debugVisible;document.getElementById('debug-panel').classList.toggle('visible',debugVisible);}
 function getSelectedRoles(){const checked=[...document.querySelectorAll('#role-toggles input:checked')].map(c=>c.value);return checked.length?checked:Object.keys(SEARCH_QUERIES);}
 
+// These patterns in the title = instant drop, no exceptions
+const HARD_EXCLUDE_PATTERNS = [
+  /\bteacher\b/,
+  /\bteaching\b(?!.*assistant)/,  // allow "teaching assistant" but not plain "teaching"
+  /\blecturer\b/,
+  /\bprofessor\b/,
+  /\bsocial worker\b/,
+  /\bnqt\b/,
+  /\bhead of \w+ school\b/,
+  /\breligious education\b/,
+  /\bhome economics\b/,
+  /\bmodern studies\b/,
+  /\bcover supervisor\b/,
+  /\bsupply\b.*\bschool\b/,
+];
+
 function isRelevantJob(job){
   const title=(job.title||'').toLowerCase();
   const full=title+' '+(job.description||'').toLowerCase();
+
+  // Hard pattern exclusions — catches "Teacher of X", "X Teacher", etc.
+  if(HARD_EXCLUDE_PATTERNS.some(p=>p.test(title)))return false;
+
   const isJuniorPM=['junior project','trainee project','assistant project','project support'].some(t=>title.includes(t));
   if(!isJuniorPM&&EXCLUDE_TITLE.some(ex=>title.includes(ex)))return false;
   const titlePass=INCLUDE_TITLE.some(i=>title.includes(i));
@@ -314,7 +336,15 @@ function formatDate(str){if(!str)return null;const d=new Date(str);if(isNaN(d))r
 // --- API CALLS ---
 async function adzunaOne(what,where,sal){try{const p=new URLSearchParams({what,where,salary:sal});const r=await fetch(`${ADZUNA_PROXY}?${p}`);if(!r.ok){log(`Adzuna "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Adzuna "${what}" err: ${d.error}`,'error');return[];}log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',title:j.title,org:j.company?.display_name||'',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));}catch(e){log(`Adzuna "${what}" err: ${e.message}`,'error');return[];}}
 async function reedOne(what,loc,sal,remote){try{const p=new URLSearchParams({keywords:what,minimumSalary:sal,...(remote?{remote:'true'}:{location:loc,distance:'20'})});const r=await fetch(`${REED_PROXY}?${p}`);if(!r.ok){log(`Reed "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Reed "${what}" err: ${d.error}`,'error');return[];}log(`Reed "${what}" → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',title:j.jobTitle,org:j.employerName||'',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,salaryMin:j.minimumSalary,url:j.jobUrl,created:j.date}));}catch(e){log(`Reed "${what}" err: ${e.message}`,'error');return[];}}
-async function joobleOne(what,loc,sal){try{const remote=loc==='remote';const p=new URLSearchParams({keywords:what,location:remote?'':loc,minimumSalary:sal||35000,remote:remote?'true':'false'});const r=await fetch(`${JOOBLE_PROXY}?${p}`);if(!r.ok){log(`Jooble "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Jooble "${what}" err: ${d.error}`,'error');return[];}const jobs=d.jobs||[];log(`Jooble "${what}" → ${jobs.length}`,jobs.length?'ok':'warn');return jobs.map(j=>({id:'jooble-'+(j.id||Math.random()),source:'jooble',title:j.title||'',org:j.company||'',location:j.location||'',description:j.snippet||'',salary:j.salary||null,url:j.link||'#',created:j.updated||null}));}catch(e){log(`Jooble "${what}" err: ${e.message}`,'error');return[];}}
+async function joobleOne(what,loc,sal){try{const remote=loc==='remote';const p=new URLSearchParams({keywords:what,location:remote?'':loc,minimumSalary:sal||35000,remote:remote?'true':'false'});const r=await fetch(`${JOOBLE_PROXY}?${p}`);if(!r.ok){log(`Jooble "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Jooble "${what}" err: ${d.error}`,'error');return[];}const jobs=d.jobs||[];
+  // Jooble returns 30 regardless of quality — pre-filter: at least one meaningful keyword must appear in title or snippet
+  const kwWords=what.toLowerCase().replace(' remote','').split(' ').filter(w=>w.length>3);
+  const relevant=jobs.filter(j=>{const txt=((j.title||'')+' '+(j.snippet||'')).toLowerCase();return kwWords.some(w=>txt.includes(w));});
+  log(`Jooble "${what}" → ${jobs.length} (${relevant.length} relevant)`,relevant.length?'ok':'warn');
+  return relevant.map(j=>{
+    const cleanTitle=(j.title||'').replace(/\s*-\s*\d+_\d+\s*$/, '').replace(/\s*-\s*\d{5,}\s*$/, '').trim();
+    return {id:'jooble-'+(j.id||Math.random()),source:'jooble',title:cleanTitle,org:j.company||'',location:j.location||'',description:j.snippet||'',salary:j.salary||null,url:j.link||'#',created:j.updated||null};
+  });}catch(e){log(`Jooble "${what}" err: ${e.message}`,'error');return[];}}
 
 // --- SEARCH ---
 async function runSearch(){
@@ -332,17 +362,55 @@ async function runSearch(){
 
   const querySet=new Set();
   roles.forEach(r=>(SEARCH_QUERIES[r]||[]).forEach(q=>querySet.add(q)));
-  const extraRemote=(roles.includes('senco')||roles.length===Object.keys(SEARCH_QUERIES).length)?['SENCO remote','SEND coordinator remote','remote learning support']:[];
+  const queries=[...querySet];
 
-  const promises=[];
-  querySet.forEach(q=>{
-    if(locMode==='both'||locMode==='edinburgh'){promises.push(adzunaOne(q,'edinburgh',salMin));promises.push(reedOne(q,'Edinburgh',salMin,false));promises.push(joobleOne(q,'Edinburgh',salMin));}
-    if(locMode==='both'||locMode==='remote'){promises.push(adzunaOne(q+' remote','uk',salMin));promises.push(reedOne(q,'Edinburgh',salMin,true));promises.push(joobleOne(q,'remote',salMin));}
+  log(`${queries.length} unique queries across 3 sources`,'info');
+
+  // Run Reed + Jooble in parallel (they handle it fine)
+  // Run Adzuna in small batches of 3 to avoid 429s
+  const reedJooblePromises=[];
+  queries.forEach(q=>{
+    if(locMode==='both'||locMode==='edinburgh'){
+      reedJooblePromises.push(reedOne(q,'Edinburgh',salMin,false));
+      reedJooblePromises.push(joobleOne(q,'Edinburgh',salMin));
+    }
+    if(locMode==='both'||locMode==='remote'){
+      reedJooblePromises.push(reedOne(q,'Edinburgh',salMin,true));
+      reedJooblePromises.push(joobleOne(q,'remote',salMin));
+    }
   });
-  extraRemote.forEach(q=>{promises.push(adzunaOne(q,'uk',salMin));promises.push(reedOne(q,'',salMin,true));promises.push(joobleOne(q,'remote',salMin));});
+  // Extra remote SENCO queries
+  if(roles.includes('senco')||roles.length===Object.keys(SEARCH_QUERIES).length){
+    ['SENCO remote','SEND coordinator'].forEach(q=>{
+      reedJooblePromises.push(reedOne(q,'',salMin,true));
+      reedJooblePromises.push(joobleOne(q,'remote',salMin));
+    });
+  }
 
-  const results=await Promise.allSettled(promises);
-  const allRaw=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
+  // Adzuna in batches of 4 with a small delay between batches
+  const adzunaQueries=[];
+  queries.forEach(q=>{
+    if(locMode==='both'||locMode==='edinburgh') adzunaQueries.push([q,'edinburgh',salMin]);
+    if(locMode==='both'||locMode==='remote')    adzunaQueries.push([q+' remote','uk',salMin]);
+  });
+
+  async function runAdzunaBatches(items,batchSize=4,delayMs=300){
+    const results=[];
+    for(let i=0;i<items.length;i+=batchSize){
+      const batch=items.slice(i,i+batchSize);
+      const batchResults=await Promise.allSettled(batch.map(([q,w,s])=>adzunaOne(q,w,s)));
+      results.push(...batchResults);
+      if(i+batchSize<items.length) await new Promise(r=>setTimeout(r,delayMs));
+    }
+    return results;
+  }
+
+  const [rjResults,azResults]=await Promise.all([
+    Promise.allSettled(reedJooblePromises),
+    runAdzunaBatches(adzunaQueries),
+  ]);
+
+  const allRaw=[...rjResults,...azResults].flatMap(r=>r.status==='fulfilled'?r.value:[]);
 
   const seenId=new Set(),seenKey=new Set();
   const deduped=allRaw.filter(j=>{
