@@ -487,10 +487,11 @@ function friendlyError(status, m) {
 }
 
 // Calls Claude through the function and reads the streamed tool call.
-async function callClaude({ system, messages, tool, maxTokens = 6000, onProgress }) {
+async function callClaude({ system, messages, tool, maxTokens = 24000, onProgress }) {
   const res = await api("claude", { payload: {
     model: S.lib.settings.model, max_tokens: maxTokens, system, messages,
-    output_config: { format: { type: "json_schema", schema: strictSchema(tool.input_schema) } },
+    // effort "low": picking and trimming sentences doesn't need long thinking, and thinking counts towards max_tokens, time and cost
+    output_config: { effort: "low", format: { type: "json_schema", schema: strictSchema(tool.input_schema) } },
   } });
   const reader = res.body.getReader(), dec = new TextDecoder();
   let buf = "", json = "", usage = {}, stop = null;
@@ -510,7 +511,7 @@ async function callClaude({ system, messages, tool, maxTokens = 6000, onProgress
       else if (ev.type === "error") throw friendlyError(ev.error && ev.error.type === "overloaded_error" ? 529 : 500, (ev.error && ev.error.message) || "Claude error");
     }
   }
-  if (stop === "max_tokens") throw new Error("The draft was cut off. Try a shorter length.");
+  if (stop === "max_tokens") throw new Error("Claude ran out of room before finishing. Try again, or switch model in Settings.");
   if (stop === "refusal") throw new Error("Claude declined to write this one. Try rewording the notes.");
   if (!json) throw new Error("Claude didn't return anything. Try again.");
   let input; try { input = JSON.parse(json); } catch { throw new Error("The response was incomplete (the connection may have timed out). Try again, or pick a shorter length."); }
@@ -1060,7 +1061,7 @@ Rules:
 
 EXISTING LIBRARY
 ${libraryText()}` }];
-    const { input, usage } = await callClaude({ system: sys, messages: [{ role: "user", content: [{ type: "text", text: `Letter (written for: ${role || "unknown role"}):\n\n${text}` }] }], tool: SPLIT_TOOL, maxTokens: 8000 });
+    const { input, usage } = await callClaude({ system: sys, messages: [{ role: "user", content: [{ type: "text", text: `Letter (written for: ${role || "unknown role"}):\n\n${text}` }] }], tool: SPLIT_TOOL });
     reviewSplit(input.items || [], role, pence(costUsd(usage)));
   } catch (ex) { err("#addErr", ex.message); }
   finally { btn.disabled = false; btn.textContent = "Split & tag"; }

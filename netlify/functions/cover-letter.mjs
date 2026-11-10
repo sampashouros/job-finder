@@ -6,7 +6,7 @@ import { getStore } from "@netlify/blobs";
 import { timingSafeEqual, createHash } from "node:crypto";
 
 const ALLOWED_MODELS = ["claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5"];
-const MAX_TOKENS_CAP = 8000;
+const MAX_TOKENS_CAP = 32000; // includes Claude's thinking, which counts towards the limit
 const STORE = "cover-letters";
 const LIBRARY_KEY = "library";
 
@@ -69,7 +69,8 @@ export default async (req) => {
           max_tokens: Math.min(Number(p.max_tokens) || 4000, MAX_TOKENS_CAP),
           system: p.system,
           messages: p.messages,
-          output_config: p.output_config, // JSON schema for structured output
+          // JSON schema for structured output, plus effort (how hard Claude thinks first)
+          output_config: p.output_config,
           stream: true,
         }),
       });
