@@ -5,3 +5,8 @@
   for = "/*"
   [headers.values]
     Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/letters.html"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

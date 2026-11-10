@@ -127,6 +127,13 @@
   .apply-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 12px; padding: 6px 14px; border-radius: var(--rs); border: 1px solid var(--border); background: var(--surface); font-size: 12px; font-weight: 500; color: var(--accent); text-decoration: none; }
   .apply-link:hover { background: var(--accent-bg); border-color: var(--accent-border); }
   .apply-link svg { width: 11px; height: 11px; }
+  .letter-link { margin-left: 6px; cursor: pointer; font-family: inherit; }
+
+  /* SITE NAV (jobs ↔ cover letters) */
+  .site-nav { display: flex; gap: 2px; }
+  .site-nav a { font-size: 13px; font-weight: 500; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: var(--rs); }
+  .site-nav a:hover { color: var(--text); background: var(--bg); }
+  .site-nav a.on { color: var(--accent); background: var(--accent-bg); }
 
   /* STATES */
   .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
@@ -169,6 +176,7 @@
       <div class="ptags">
         <span class="ptag">SENCO</span><span class="ptag">Asst. Headteacher</span><span class="ptag">Edinburgh + Remote</span>
       </div>
+      <nav class="site-nav"><a href="index.html" class="on">Jobs</a><a href="letters.html">Cover letters</a></nav>
       <button id="dark-toggle" onclick="toggleDark()" style="background:none;border:1px solid var(--border);border-radius:var(--rs);padding:4px 8px;cursor:pointer;font-size:14px;color:var(--muted);">🌙</button>
     </div>
   </div>
@@ -601,11 +609,22 @@ function cardHTML(j,idx,isArchived){
     <div class="card-detail">
       <p class="detail-snippet">${snip}</p>
       <a class="apply-link" href="${j.url}" target="_blank" rel="noopener">View full listing <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <button class="apply-link letter-link" onclick="event.stopPropagation();writeLetter('${j.id}')">✍️ Write cover letter</button>
     </div>
   </div>`;
 }
 
 function toggleCard(idx){document.getElementById(`card-${idx}`)?.classList.toggle('expanded');}
+
+// Hand a job over to the cover letter page
+function writeLetter(id){
+  const j=[...allJobs,...archived].find(x=>x.id===id);
+  if(!j)return;
+  const text=new DOMParser().parseFromString(j.description||'','text/html').body.textContent||''; // inert parse, strips tags
+  const job={title:j.title,org:j.org,location:j.location,salary:salaryStr(j),url:j.url,description:text.trim()};
+  try{localStorage.setItem('bubs_letter_job',JSON.stringify(job));}catch(e){}
+  location.href='letters.html';
+}
 
 function jumpToGroup(role){
   const sel=document.getElementById('sort-select');

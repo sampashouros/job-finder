@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Bubs Jobs · Cover letters</title>
+<script>
+  // Apply dark mode before paint, shared with the jobs page
+  try { const s = localStorage.getItem('bubs_dark'); if (s === '1' || (!s && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark'); } catch (e) {}
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f7f6f2; --surface: #fff; --border: #e4e2dc; --border-strong: #c8c5bc;
+    --text: #1a1a18; --muted: #6b6a65; --faint: #9e9c97;
+    --accent: #2563eb; --accent-ink: #fff; --accent-bg: #eff4ff; --accent-border: #bfcffd;
+    --green: #16a34a; --green-bg: #f0fdf4; --green-border: #bbf7d0;
+    --amber: #b45309; --amber-bg: #fffbeb; --amber-border: #fde68a;
+    --red: #dc2626; --red-bg: #fef2f2; --red-border: #fecaca;
+    --r: 10px; --rs: 6px;
+    --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  }
+  html.dark {
+    --bg: #111110; --surface: #1c1c1a; --border: #2e2e2b; --border-strong: #3d3d39;
+    --text: #e8e6e1; --muted: #8a8880; --faint: #5a5856;
+    --accent: #4f8ef7; --accent-ink: #0b1220; --accent-bg: #1a2540; --accent-border: #2a3d6e;
+    --green: #4ade80; --green-bg: #0f2318; --green-border: #1a4030;
+    --amber: #fbbf24; --amber-bg: #1f1a0e; --amber-border: #4a3b12;
+    --red: #f87171; --red-bg: #2a1010; --red-border: #4a2020;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; line-height: 1.5; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  a { color: var(--accent); }
+  .hidden { display: none !important; }
+
+  /* HEADER (matches the jobs page) */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem; position: sticky; top: 0; z-index: 20; }
+  .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+  .brand-icon { width: 30px; height: 30px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .brand-icon svg { width: 16px; height: 16px; }
+  .brand-name { font-size: 15px; font-weight: 600; }
+  .brand-sub { font-size: 11px; color: var(--muted); }
+  .head-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .site-nav { display: flex; gap: 2px; }
+  .site-nav a, .site-nav button { font-size: 13px; font-weight: 500; color: var(--muted); text-decoration: none; padding: 5px 10px; border-radius: var(--rs); border: 0; background: none; cursor: pointer; }
+  .site-nav a:hover, .site-nav button:hover { color: var(--text); background: var(--bg); }
+  .site-nav .on { color: var(--accent); background: var(--accent-bg); }
+  .icon-btn { background: none; border: 1px solid var(--border); border-radius: var(--rs); padding: 4px 8px; cursor: pointer; font-size: 14px; color: var(--muted); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 1.25rem 1.5rem 4rem; }
+  @media (max-width: 600px) { header { padding: .75rem 1rem; } main { padding: 1rem 1rem 4rem; } }
+
+  /* GENERIC */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1rem 1.1rem; }
+  .panel-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+  .stack > * + * { margin-top: 12px; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.25rem; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .side { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 10px; }
+  @media (max-width: 860px) { .side { position: static; } }
+  .lbl { display: block; font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 5px; }
+  .hint { font-size: 12px; color: var(--muted); line-height: 1.55; }
+  input[type=text], input[type=password], input[type=search], select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--rs); font-size: 14px; background: var(--surface); color: var(--text);
+  }
+  select { appearance: none; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 15px) 55%, calc(100% - 10px) 55%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 28px; }
+  textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  input:focus, select:focus, textarea:focus, [contenteditable]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .row > .grow { flex: 1 1 180px; min-width: 0; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; border-radius: var(--rs); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+  .btn:hover { border-color: var(--border-strong); background: var(--bg); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn.primary:hover { opacity: .9; background: var(--accent); }
+  .btn.small { padding: 4px 10px; font-size: 12px; }
+  .btn.ghost { border-color: transparent; background: none; color: var(--muted); }
+  .btn.ghost:hover { color: var(--text); background: var(--bg); }
+  .btn.danger { color: var(--red); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn.wide { width: 100%; padding: 9px; font-size: 14px; }
+
+  .msg { font-size: 13px; padding: 8px 12px; border-radius: var(--rs); }
+  .msg.err { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .msg.warn { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .msg.ok { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+
+  /* TABS (same as jobs page) */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .tab { padding: 7px 14px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; display: flex; align-items: center; gap: 6px; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-count { font-size: 11px; background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 1px 7px; font-weight: 500; color: var(--muted); }
+  .tab.active .tab-count { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); }
+
+  .center { max-width: 400px; margin: 8vh auto 0; }
+
+  /* CHIPS */
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 2px 9px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); white-space: nowrap; line-height: 1.6; }
+  button.chip { cursor: pointer; }
+  button.chip:hover, .chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+  .chip .x { border: 0; background: none; cursor: pointer; color: inherit; opacity: .6; padding: 0 0 0 2px; font-size: 11px; }
+  .badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; }
+  .badge.reused { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .badge.adapted { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); }
+  .badge.new { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .badge.heading { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+
+  /* DROP ZONE */
+  .drop { border: 1.5px dashed var(--border); border-radius: var(--rs); padding: 9px 12px; text-align: center; color: var(--muted); font-size: 12px; cursor: pointer; }
+  .drop:hover, .drop.over { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+
+  /* DRAFT */
+  .draft-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+  .draft-title { font-size: 16px; font-weight: 600; line-height: 1.35; }
+  .para { border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+  .para:hover { border-color: var(--border-strong); }
+  .para .txt { font: 16px/1.65 var(--serif); padding: 12px 14px 8px; white-space: pre-wrap; border-radius: var(--r) var(--r) 0 0; }
+  .para .txt.heading { font: 600 14px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  .para .meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 6px 10px 8px; border-top: 1px dashed var(--border); }
+  .para .meta .sp { margin-left: auto; display: flex; gap: 0; }
+  .letter-line { font: 16px/1.65 var(--serif); white-space: pre-wrap; padding: 0 2px; }
+  .reqs { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .reqs li { padding-left: 24px; position: relative; font-size: 13px; line-height: 1.4; }
+  .reqs li::before { position: absolute; left: 0; top: 0; width: 17px; height: 17px; border-radius: 50%; font-size: 10px; display: grid; place-items: center; font-weight: 700; }
+  .reqs li.yes::before { content: "✓"; background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .reqs li.no::before { content: "!"; background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .reqs .pri { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; }
+  .gap { border-left: 3px solid var(--amber); padding: 4px 0 4px 10px; font-size: 13px; }
+  .gap + .gap { margin-top: 10px; }
+  .loading { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; }
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .75s linear infinite; flex: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* LIBRARY */
+  .libcard { padding: .8rem 1rem; }
+  .libtop { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .libtop .id { font-weight: 600; color: var(--text); }
+  .libtop .sp { margin-left: auto; display: flex; }
+  .libtop select { width: auto; padding: 2px 24px 2px 7px; font-size: 11px; }
+  .libcard .txt { font: 15px/1.6 var(--serif); margin: 6px 0 9px; white-space: pre-wrap; }
+  .libcard textarea { font: 15px/1.6 var(--serif); min-height: 150px; margin: 6px 0 9px; }
+  .tagadd { width: 140px !important; padding: 2px 8px !important; font-size: 11px !important; border-radius: 20px !important; }
+
+  dialog { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); padding: 0; width: min(640px, calc(100vw - 32px)); box-shadow: 0 20px 60px rgba(0,0,0,.25); margin: auto; }
+  dialog::backdrop { background: rgba(0,0,0,.35); }
+  .dh { padding: 16px 18px 0; font-weight: 600; }
+  .db { padding: 10px 18px; max-height: 62vh; overflow: auto; }
+  .df { padding: 10px 18px 16px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+  .split-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .split-item:last-child { border: 0; }
+  .split-item .t { font: 14px/1.55 var(--serif); }
+  .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 16px; border-radius: 20px; font-size: 13px; z-index: 50; }
+  hr.s { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+  details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="brand" href="index.html">
+      <div class="brand-icon"><svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="6.5" stroke="white" stroke-width="1.5"/><path d="M5.5 8.8L7.5 10.8L11.5 6.2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><div class="brand-name">Bubs jobs</div><div class="brand-sub">Cover letters, in her own words</div></div>
+    </a>
+    <div class="head-right">
+      <nav class="site-nav">
+        <a href="index.html">Jobs</a>
+        <a href="letters.html" class="on">Cover letters</a>
+      </nav>
+      <button class="icon-btn" id="dark-toggle" title="Toggle dark mode">🌙</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- LOCK -->
+  <section id="view-lock" class="hidden">
+    <div class="panel center stack">
+      <div class="panel-title">Cover letters</div>
+      <p class="hint">This bit is private. Enter the password to open her letter library.</p>
+      <form id="unlockForm" class="stack">
+        <input type="password" id="unlockPass" placeholder="Password" autocomplete="current-password">
+        <label class="hint" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="remember" checked> Remember on this device</label>
+        <div id="unlockErr" class="msg err hidden"></div>
+        <button class="btn primary wide" id="unlockBtn">Unlock</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- FIRST RUN -->
+  <section id="view-setup" class="hidden">
+    <div class="panel center stack" style="max-width:480px">
+      <div class="panel-title">First-time setup</div>
+      <p class="hint">The library is empty. Import <b>library.json</b> (her paragraphs from her old letters) to get started. It's stored privately on Netlify, not in the code.</p>
+      <input type="file" id="setupFile" accept=".json,application/json">
+      <div id="setupErr" class="msg err hidden"></div>
+      <button class="btn primary wide" id="setupBtn">Import library</button>
+      <button class="btn ghost small" id="setupEmpty" style="width:fit-content">Start with an empty library instead</button>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <section id="view-app" class="hidden">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="write">Write</button>
+      <button class="tab" data-tab="library">Library <span class="tab-count" id="libTabCount">0</span></button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </div>
+
+    <!-- WRITE -->
+    <div id="tab-write" class="grid">
+      <div class="stack">
+        <div class="panel stack">
+          <div id="jobNote" class="msg warn hidden"></div>
+          <div>
+            <label class="lbl" for="jd">Job description / person specification</label>
+            <textarea id="jd" rows="9" placeholder="Paste the advert, job description and person specification here…"></textarea>
+          </div>
+          <div class="drop" id="drop" tabindex="0">or <u>upload a file</u> (PDF, Word or text), or drop it here</div>
+          <input type="file" id="jdFile" accept=".pdf,.docx,.txt,.md" hidden>
+          <div id="jdFileChip" class="chips hidden"></div>
+          <div class="row">
+            <div class="grow">
+              <label class="lbl" for="fmt">Type</label>
+              <select id="fmt"><option value="letter">Cover letter</option><option value="statement">Supporting statement</option></select>
+            </div>
+            <div class="grow">
+              <label class="lbl" for="len">Length</label>
+              <select id="len">
+                <option value="350">Short (~350 words)</option>
+                <option value="550" selected>Standard (~550 words)</option>
+                <option value="800">Long (~800 words)</option>
+              </select>
+            </div>
+            <div class="grow" id="addrWrap">
+              <label class="lbl" for="addr">Greeting (optional)</label>
+              <input type="text" id="addr" placeholder="Dear Hiring Manager,">
+            </div>
+          </div>
+          <div>
+            <label class="lbl" for="notes">Anything to emphasise or avoid? (optional)</label>
+            <input type="text" id="notes" placeholder="e.g. lead with the phonics work; don't mention the Church of England">
+          </div>
+          <div id="genErr" class="msg err hidden"></div>
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <span class="hint" id="modelHint"></span>
+            <button class="btn primary" id="genBtn">Write draft</button>
+          </div>
+        </div>
+
+        <div id="loading" class="panel loading hidden"><span class="spinner"></span><span id="loadingMsg"></span></div>
+
+        <div id="result" class="panel stack hidden">
+          <div class="draft-head">
+            <div>
+              <div class="draft-title" id="resTitle">Draft</div>
+              <div class="hint" id="resMeta"></div>
+            </div>
+            <div class="row">
+              <button class="btn small" data-action="copy-letter">Copy letter</button>
+              <button class="btn small" data-action="download-txt">Download .txt</button>
+            </div>
+          </div>
+          <p class="hint">Click a paragraph to edit it. The chips show which of her old paragraphs it came from. Click one to see the original.</p>
+          <div id="greetingOut" class="letter-line hidden"></div>
+          <div id="paras" class="stack"></div>
+          <div id="signoffOut" class="letter-line hidden"></div>
+          <hr class="s">
+          <div>
+            <label class="lbl" for="revise">Ask for changes</label>
+            <div class="row">
+              <input class="grow" type="text" id="revise" placeholder="e.g. make it shorter; more on safeguarding; warmer opening">
+              <button class="btn" id="reviseBtn">Revise</button>
+            </div>
+            <p class="hint" style="margin-top:5px">Your edits above are kept unless you ask otherwise.</p>
+          </div>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="panel hidden" id="reqCard">
+          <div class="panel-title">What they're asking for</div>
+          <ul class="reqs" id="reqList"></ul>
+        </div>
+        <div class="panel hidden" id="gapCard">
+          <div class="panel-title">Gaps to fill yourself</div>
+          <p class="hint" style="margin-bottom:10px">None of her letters cover these, so the draft leaves them out instead of making something up.</p>
+          <div id="gapList"></div>
+        </div>
+        <div class="panel hidden" id="saveBackCard">
+          <div class="panel-title">Finished?</div>
+          <p class="hint" style="margin-bottom:10px">Add the final version to the library so future letters can reuse the new wording.</p>
+          <button class="btn small" data-action="draft-to-library">Add this letter to the library</button>
+        </div>
+        <div class="panel" id="tipsCard">
+          <div class="panel-title">How it works</div>
+          <p class="hint">Claude reads the job, lists what they want, then builds the letter mostly out of her own paragraphs, adapting names and wording to fit. It won't invent experience. Anything she hasn't written about shows up under <b>Gaps</b>.</p>
+        </div>
+      </aside>
+    </div>
+
+    <!-- LIBRARY -->
+    <div id="tab-library" class="grid hidden">
+      <div class="stack">
+        <div class="panel stack">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div class="panel-title" style="margin:0">Paragraph library · <span id="libCount"></span></div>
+            <button class="btn small primary hidden" id="libSave">Save changes</button>
+          </div>
+          <div class="row">
+            <input class="grow" type="search" id="libSearch" placeholder="Search text…">
+            <select id="libSource" style="width:auto;max-width:100%"></select>
+          </div>
+          <div class="chips" id="libTags"></div>
+        </div>
+        <div id="libList" class="stack"></div>
+      </div>
+      <aside class="side">
+        <div class="panel stack">
+          <div class="panel-title" style="margin:0">Add from a letter</div>
+          <p class="hint">Paste a letter or statement she's written. Claude splits it into paragraphs and tags them, and you check them before anything is added.</p>
+          <input type="text" id="addRole" placeholder="Role it was for">
+          <textarea id="addText" rows="7" placeholder="Paste the letter here…"></textarea>
+          <div id="addErr" class="msg err hidden"></div>
+          <button class="btn" id="splitBtn">Split &amp; tag</button>
+        </div>
+        <div class="panel stack">
+          <div class="panel-title" style="margin:0">Add one paragraph</div>
+          <button class="btn small" data-action="add-blank" style="width:fit-content">New blank paragraph</button>
+        </div>
+      </aside>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="tab-settings" class="hidden" style="max-width:640px">
+      <div class="stack">
+        <div class="panel stack">
+          <div class="panel-title" style="margin:0">Writing</div>
+          <div>
+            <label class="lbl" for="setModel">Claude model</label>
+            <select id="setModel"></select>
+            <p class="hint" style="margin-top:4px">Sonnet is the sweet spot. Each draft shows what it actually cost.</p>
+          </div>
+          <div class="row">
+            <div class="grow"><label class="lbl" for="setSignoff">Sign-off line</label><input type="text" id="setSignoff" placeholder="Yours sincerely,"></div>
+            <div class="grow"><label class="lbl" for="setName">Name</label><input type="text" id="setName"></div>
+          </div>
+          <button class="btn primary" style="width:fit-content" data-action="save-settings">Save</button>
+        </div>
+        <div class="panel stack">
+          <div class="panel-title" style="margin:0">Backup</div>
+          <p class="hint">The library lives on Netlify and saves automatically. Netlify also keeps a daily backup. Download a copy here if you want one of your own.</p>
+          <button class="btn" style="width:fit-content" data-action="export-library">Download library backup</button>
+        </div>
+        <div class="panel stack">
+          <div class="panel-title" style="margin:0">This device</div>
+          <button class="btn" style="width:fit-content" data-action="lock">Lock &amp; forget password</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <div class="dh" id="dlgTitle"></div>
+  <div class="db" id="dlgBody"></div>
+  <div class="df" id="dlgFoot"></div>
+</dialog>
+
+<script>
+"use strict";
+/* ============================================================
+   Config
+   ============================================================ */
+const FN = "/.netlify/functions/cover-letter";
+const PW_KEY = "bubs_letters_pw";
+const DRAFT_KEY = "bubs_letters_draft";
+const HANDOFF_KEY = "bubs_letter_job";
+// USD per million tokens: input, output, cache write (5 min), cache read
+const MODELS = {
+  "claude-sonnet-5-5": { label: "Claude Sonnet 5.5: best balance (about 3p a letter)", i: 2, o: 10, cw: 2.5, cr: 0.1 },
+  "claude-haiku-5-5":  { label: "Claude Haiku 5.5: cheapest, plainer writing (under 1p)", i: 0.1, o: 0.5, cw: 0.125, cr: 0.01 },
+  "claude-opus-5-5":   { label: "Claude Opus 5.5: most careful (about 6p)", i: 4, o: 20, cw: 5, cr: 0.2 },
+};
+const DEFAULT_MODEL = "claude-sonnet-5-5";
+const USD_TO_GBP = 0.76; // rough, only used for the cost hint
+
+const S = { pw: null, lib: null, draft: null, jdFile: null, libFilter: { tags: new Set(), q: "", source: "" }, libDirty: false, editing: new Set() };
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return el;
+}
+function show(el, on = true) { (typeof el === "string" ? $(el) : el).classList.toggle("hidden", !on); }
+function toast(m) { const t = h("div", { class: "toast" }, m); document.body.append(t); setTimeout(() => t.remove(), 2400); }
+function err(el, m) { el = typeof el === "string" ? $(el) : el; el.textContent = m || ""; show(el, !!m); }
+function download(name, text, type = "application/json") {
+  const a = h("a", { href: URL.createObjectURL(new Blob([text], { type })), download: name });
+  document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+const store = {
+  get(k, session) { try { return (session ? sessionStorage : localStorage).getItem(k); } catch { return null; } },
+  set(k, v, session) { try { (session ? sessionStorage : localStorage).setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch {} },
+};
+function wordCount(s) { return (String(s).trim().match(/\S+/g) || []).length; }
+function sourceLabel(src) { return (S.lib.sources || {})[src] || src || "Unknown"; }
+function shortSource(src) { const l = sourceLabel(src); const p = l.split(" – "); return p.length > 1 ? p[p.length - 1] : l.slice(0, 32); }
+function itemById(id) { return S.lib.items.find(i => i.id === id); }
+function b64(buf) { const b = new Uint8Array(buf); let s = ""; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); }
+function pence(usd) { const p = usd * USD_TO_GBP * 100; return p < 1 ? "under 1p" : "about " + Math.round(p) + "p"; }
+
+/* ---------- Dark mode (shared with jobs page) ---------- */
+function syncDarkIcon() { $("#dark-toggle").textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙"; }
+$("#dark-toggle").addEventListener("click", () => {
+  const d = document.documentElement.classList.toggle("dark");
+  store.set("bubs_dark", d ? "1" : "0"); syncDarkIcon();
+});
+syncDarkIcon();
+
+/* ============================================================
+   Server calls
+   ============================================================ */
+async function api(action, extra = {}) {
+  let res;
+  try {
+    res = await fetch(FN, { method: "POST", headers: { "content-type": "application/json", "x-app-password": S.pw || "" }, body: JSON.stringify({ action, ...extra }) });
+  } catch { throw new Error("Couldn't reach the site's server. Check your connection."); }
+  if (res.status === 401) { const e = new Error("Wrong password"); e.code = 401; throw e; }
+  const ct = res.headers.get("content-type") || "";
+  if (!res.ok) {
+    let m = "HTTP " + res.status;
+    try { const j = await res.json(); m = j.error || m; } catch {}
+    throw friendlyError(res.status, m);
+  }
+  return ct.includes("text/event-stream") ? res : res.json();
+}
+function friendlyError(status, m) {
+  if (status === 404) return new Error("The cover-letter function isn't deployed yet (404). Check the Netlify deploy.");
+  if (status === 429) return new Error("Claude rate limit or out of credit. Wait a minute, or top up at platform.claude.com. (" + m + ")");
+  if (status === 529 || status === 503) return new Error("Claude is busy right now. Try again in a moment.");
+  if (status === 401 || /api.key|x-api-key/i.test(m)) return new Error("The Claude API key was rejected. Check ANTHROPIC_API_KEY in Netlify. (" + m + ")");
+  return new Error(m);
+}
+
+// Calls Claude through the function and reads the streamed tool call.
+async function callClaude({ system, messages, tool, maxTokens = 6000, onProgress }) {
+  const res = await api("claude", { payload: {
+    model: S.lib.settings.model, max_tokens: maxTokens, system, messages,
+    tools: [tool], tool_choice: { type: "tool", name: tool.name },
+  } });
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = "", json = "", usage = {}, stop = null;
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let i;
+    while ((i = buf.indexOf("\n\n")) >= 0) {
+      const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+      const data = chunk.split("\n").filter(l => l.startsWith("data:")).map(l => l.slice(5).trim()).join("");
+      if (!data) continue;
+      let ev; try { ev = JSON.parse(data); } catch { continue; }
+      if (ev.type === "message_start") Object.assign(usage, ev.message.usage || {});
+      else if (ev.type === "content_block_delta" && ev.delta.type === "input_json_delta") { json += ev.delta.partial_json; onProgress && onProgress(json); }
+      else if (ev.type === "message_delta") { Object.assign(usage, ev.usage || {}); stop = ev.delta && ev.delta.stop_reason; }
+      else if (ev.type === "error") throw friendlyError(ev.error && ev.error.type === "overloaded_error" ? 529 : 500, (ev.error && ev.error.message) || "Claude error");
+    }
+  }
+  if (stop === "max_tokens") throw new Error("The draft was cut off. Try a shorter length.");
+  if (!json) throw new Error("Claude didn't return anything. Try again.");
+  let input; try { input = JSON.parse(json); } catch { throw new Error("The response was incomplete (the connection may have timed out). Try again, or pick a shorter length."); }
+  return { input, usage };
+}
+function costUsd(u) {
+  const m = MODELS[S.lib.settings.model];
+  return ((u.input_tokens || 0) * m.i + (u.output_tokens || 0) * m.o + (u.cache_creation_input_tokens || 0) * m.cw + (u.cache_read_input_tokens || 0) * m.cr) / 1e6;
+}
+async function saveLibrary() {
+  S.lib.tags = allTags();
+  await api("library-put", { library: S.lib });
+}
+
+/* ============================================================
+   Boot / unlock
+   ============================================================ */
+function view(name) { ["lock", "setup", "app"].forEach(v => show("#view-" + v, v === name)); }
+function normalise(lib) {
+  lib = lib || {};
+  lib.items = lib.items || []; lib.sources = lib.sources || {}; lib.tags = lib.tags || [];
+  lib.settings = Object.assign({ model: DEFAULT_MODEL, name: lib.signoff || "", signoffLine: "Yours sincerely," }, lib.settings || {});
+  if (!MODELS[lib.settings.model]) lib.settings.model = DEFAULT_MODEL;
+  return lib;
+}
+async function tryUnlock(pw, remember) {
+  S.pw = pw;
+  const r = await api("library-get");
+  if (remember) store.set(PW_KEY, pw); else store.set(PW_KEY, pw, true);
+  if (!r.library) { view("setup"); return; }
+  S.lib = normalise(r.library);
+  enterApp();
+}
+async function boot() {
+  const saved = store.get(PW_KEY) || store.get(PW_KEY, true);
+  if (saved) {
+    try { await tryUnlock(saved, !!store.get(PW_KEY)); return; }
+    catch (e) { store.del(PW_KEY); if (e.code !== 401) { view("lock"); err("#unlockErr", e.message); return; } }
+  }
+  view("lock"); setTimeout(() => $("#unlockPass").focus(), 30);
+}
+$("#unlockForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const pw = $("#unlockPass").value; if (!pw) return;
+  const btn = $("#unlockBtn"); btn.disabled = true; btn.textContent = "Checking…"; err("#unlockErr");
+  try { await tryUnlock(pw, $("#remember").checked); $("#unlockPass").value = ""; }
+  catch (ex) { err("#unlockErr", ex.code === 401 ? "That password didn't work." : ex.message); }
+  finally { btn.disabled = false; btn.textContent = "Unlock"; }
+});
+$("#setupBtn").addEventListener("click", async () => {
+  err("#setupErr");
+  const f = $("#setupFile").files[0]; if (!f) return err("#setupErr", "Choose library.json first.");
+  let j; try { j = JSON.parse(await f.text()); if (!Array.isArray(j.items)) throw 0; } catch { return err("#setupErr", "That doesn't look like a library file."); }
+  S.lib = normalise(j);
+  try { await saveLibrary(); toast(`Imported ${S.lib.items.length} paragraphs`); enterApp(); } catch (ex) { err("#setupErr", ex.message); }
+});
+$("#setupEmpty").addEventListener("click", async () => {
+  S.lib = normalise({});
+  try { await saveLibrary(); enterApp(); } catch (ex) { err("#setupErr", ex.message); }
+});
+
+function enterApp() {
+  view("app");
+  $("#libTabCount").textContent = S.lib.items.length;
+  try { const d = store.get(DRAFT_KEY, true); if (d) { S.draft = JSON.parse(d); restoreDraftInputs(); renderDraft(); } } catch {}
+  takeHandoff();
+  renderModelHint();
+  switchTab("write");
+}
+
+/* ---------- Job handed over from the jobs page ---------- */
+function takeHandoff() {
+  let job = null; try { job = JSON.parse(store.get(HANDOFF_KEY) || "null"); } catch {}
+  if (!job) return;
+  store.del(HANDOFF_KEY);
+  const head = [job.title && "Job title: " + job.title, job.org && "Employer: " + job.org, job.location && "Location: " + job.location, job.salary && "Salary: " + job.salary].filter(Boolean).join("\n");
+  $("#jd").value = head + "\n\n" + (job.description || "").trim();
+  S.jdFile = null; renderJdChip();
+  const note = $("#jobNote"); note.replaceChildren(
+    "Job boards only give a short preview of the description. For a much better letter, open the ",
+    h("a", { href: job.url, target: "_blank", rel: "noopener" }, "full listing"),
+    " and paste the whole job description and person specification above, or upload the PDF.");
+  show(note, true);
+}
+
+/* ============================================================
+   Tabs
+   ============================================================ */
+function switchTab(name) {
+  $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+  ["write", "library", "settings"].forEach(t => show("#tab-" + t, t === name));
+  if (name === "library") renderLibrary();
+  if (name === "settings") renderSettings();
+  if (name === "write") renderModelHint();
+}
+$$(".tab").forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+
+/* ============================================================
+   Writing
+   ============================================================ */
+function libraryText() {
+  return S.lib.items.map(it => `[${it.id}] kind: ${it.kind || "body"} | tags: ${(it.tags || []).join(", ")} | originally for: ${sourceLabel(it.source)}\n${it.text}`).join("\n\n");
+}
+const DRAFT_TOOL = {
+  name: "draft_letter",
+  description: "Return the analysed requirements and the drafted letter.",
+  input_schema: {
+    type: "object",
+    properties: {
+      role_title: { type: "string", description: "Job title as advertised" },
+      organisation: { type: "string", description: "Employer name, or empty if unknown" },
+      requirements: {
+        type: "array", description: "What the employer is asking for, most important first (max ~14).",
+        items: { type: "object", properties: {
+          requirement: { type: "string", description: "Short paraphrase, under 12 words" },
+          priority: { type: "string", enum: ["essential", "desirable"] },
+          covered: { type: "boolean", description: "True if the draft gives real evidence from her library" },
+          library_ids: { type: "array", items: { type: "string" } },
+        }, required: ["requirement", "priority", "covered", "library_ids"] },
+      },
+      paragraphs: {
+        type: "array",
+        items: { type: "object", properties: {
+          text: { type: "string" },
+          origin: { type: "string", enum: ["reused", "adapted", "new", "heading"] },
+          library_ids: { type: "array", items: { type: "string" } },
+        }, required: ["text", "origin", "library_ids"] },
+      },
+      gaps: {
+        type: "array", description: "Requirements with no evidence in her library. Empty if none.",
+        items: { type: "object", properties: {
+          requirement: { type: "string" },
+          suggestion: { type: "string", description: "One or two sentences prompting her on what she could write. Do not invent facts." },
+        }, required: ["requirement", "suggestion"] },
+      },
+    },
+    required: ["role_title", "organisation", "requirements", "paragraphs", "gaps"],
+  },
+};
+function draftSystem(fmt, words) {
+  const name = S.lib.settings.name || "the applicant";
+  const kind = fmt === "statement" ? "supporting statement" : "cover letter";
+  const text = `You help ${name} write job applications. She has a library of paragraphs from her previous cover letters and supporting statements (below). Build a new ${kind} for the job she gives you, made mostly out of her own words.
+
+How to do it:
+1. Read the job description and person specification. List what the employer is asking for, essential criteria first.
+2. For each requirement, find her strongest evidence in the library. Prefer specific examples with outcomes.
+3. Write the ${kind} by reusing her paragraphs and sentences. Keep her wording wherever it fits. Change only what's needed: role and organisation names, the employer's own terminology, linking sentences, and trimming parts that don't apply. You may combine sentences from different paragraphs.
+4. Never invent experience, achievements, figures, qualifications, systems, quotes, or claims about the organisation that aren't in her library or the job description. If the job asks for something she has no evidence for, leave it out and list it under gaps with a short prompt for what she could write.
+5. Use each story or example at most once (e.g. the family she supported, the language-development checklists, the Little Wandle implementation).
+6. If a library paragraph refers to a specific past employer, programme or role (e.g. Twinkl, Little Wandle, Edinburgh Learns, the Church of England) in a way that only fits that old application, rewrite or drop that part. Keep it only if it's real experience relevant to this job.
+7. British English. Warm, professional, plain first person, matching her voice.
+8. ${fmt === "statement"
+    ? "Supporting statement format: you may group content under short headings mirroring the person specification (each heading is its own paragraph with origin \"heading\"). No greeting or sign-off."
+    : "Cover letter format: an opening paragraph naming the role and organisation and why she wants it; body paragraphs each leading with what the employer needs; a short closing paragraph. No greeting, date, address or sign-off; the app adds them."}
+9. Aim for about ${words} words in total.
+10. Mark each paragraph's origin: "reused" = mostly her original wording with light edits; "adapted" = substantially reworked from her material; "new" = written fresh (only short linking, opening or closing text). List the library ids each paragraph draws on.
+
+Call the draft_letter tool with the result.`;
+  return [
+    { type: "text", text },
+    { type: "text", text: "HER PARAGRAPH LIBRARY\n\n" + libraryText(), cache_control: { type: "ephemeral" } },
+  ];
+}
+function jobContent(extra) {
+  const parts = [], pasted = $("#jd").value.trim();
+  if (S.jdFile && S.jdFile.kind === "pdf") parts.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: S.jdFile.data }, title: S.jdFile.name });
+  let t = "";
+  if (S.jdFile && S.jdFile.kind === "pdf") t += "The job description is in the attached PDF.\n\n";
+  if (S.jdFile && S.jdFile.kind === "text") t += `JOB DESCRIPTION (from ${S.jdFile.name}):\n${S.jdFile.data}\n\n`;
+  if (pasted) t += `JOB DESCRIPTION${S.jdFile ? " (pasted)" : ""}:\n${pasted}\n\n`;
+  const notes = $("#notes").value.trim();
+  if (notes) t += `Her notes for this application: ${notes}\n\n`;
+  t += extra || "Write the draft.";
+  parts.push({ type: "text", text: t });
+  return parts;
+}
+
+$("#genBtn").addEventListener("click", () => generate());
+$("#reviseBtn").addEventListener("click", () => { const v = $("#revise").value.trim(); v ? generate(v) : $("#revise").focus(); });
+$("#revise").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#reviseBtn").click(); } });
+$("#fmt").addEventListener("change", () => show("#addrWrap", $("#fmt").value === "letter"));
+
+async function generate(revision) {
+  err("#genErr");
+  if (!$("#jd").value.trim() && !S.jdFile) return err("#genErr", "Paste a job description or upload one first.");
+  if (!S.lib.items.length) return err("#genErr", "The library is empty. Add some paragraphs in the Library tab first.");
+  const fmt = $("#fmt").value, words = $("#len").value;
+  let extra;
+  if (revision) {
+    syncDraftFromDom();
+    extra = `Here is the current draft (she may have edited it by hand; keep her edits unless the instruction says otherwise):\n\n${S.draft.paragraphs.map(p => p.text).join("\n\n")}\n\nRevise it with this instruction: ${revision}\n\nReturn the full revised draft, requirements and gaps.`;
+  }
+  show("#loading"); $("#loadingMsg").textContent = revision ? "Revising…" : "Reading the job and picking her best paragraphs…";
+  $("#genBtn").disabled = $("#reviseBtn").disabled = true;
+  try {
+    const { input, usage } = await callClaude({
+      system: draftSystem(fmt, words), messages: [{ role: "user", content: jobContent(extra) }], tool: DRAFT_TOOL,
+      onProgress: j => { $("#loadingMsg").textContent = `Writing… (${Math.round(j.length / 6)} words so far)`; },
+    });
+    const prev = revision && S.draft ? S.draft.costUsd || 0 : 0;
+    S.draft = { ...input, fmt, addr: $("#addr").value.trim(), jd: $("#jd").value, costUsd: prev + costUsd(usage) };
+    S.draft.paragraphs = (S.draft.paragraphs || []).map(p => ({ ...p, library_ids: p.library_ids || [] }));
+    if (revision) $("#revise").value = "";
+    renderDraft();
+    $("#result").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (ex) { err("#genErr", ex.message); }
+  finally { show("#loading", false); $("#genBtn").disabled = $("#reviseBtn").disabled = false; }
+}
+
+/* ---------- Draft rendering ---------- */
+function saveDraft() { if (S.draft) store.set(DRAFT_KEY, JSON.stringify(S.draft), true); }
+function syncDraftFromDom() {
+  if (!S.draft) return;
+  $$("#paras .para").forEach((el, i) => { if (S.draft.paragraphs[i]) S.draft.paragraphs[i].text = el.querySelector(".txt").innerText.trim(); });
+  saveDraft();
+}
+function restoreDraftInputs() {
+  const d = S.draft;
+  if (d.jd && !$("#jd").value) $("#jd").value = d.jd;
+  if (d.fmt) { $("#fmt").value = d.fmt; show("#addrWrap", d.fmt === "letter"); }
+  if (d.addr) $("#addr").value = d.addr;
+}
+function renderDraft() {
+  const d = S.draft; if (!d) return;
+  show("#result"); show("#reqCard"); show("#saveBackCard"); show("#tipsCard", false);
+  $("#resTitle").textContent = [d.role_title, d.organisation].filter(Boolean).join(" · ") || "Draft";
+  renderResMeta();
+  const isLetter = d.fmt !== "statement";
+  $("#greetingOut").textContent = d.addr || ""; show("#greetingOut", isLetter && !!d.addr);
+  $("#signoffOut").textContent = `${S.lib.settings.signoffLine}\n${S.lib.settings.name || ""}`; show("#signoffOut", isLetter);
+  $("#paras").replaceChildren(...d.paragraphs.map(paraEl));
+  $("#reqList").replaceChildren(...(d.requirements || []).map(r => h("li", { class: r.covered ? "yes" : "no" }, h("div", {}, r.requirement), h("div", { class: "pri" }, r.priority))));
+  $("#gapList").replaceChildren(...(d.gaps || []).map(g => h("div", { class: "gap" }, h("b", {}, g.requirement), h("div", { class: "hint" }, g.suggestion))));
+  show("#gapCard", (d.gaps || []).length > 0);
+  saveDraft();
+}
+function renderResMeta() {
+  const d = S.draft, body = d.paragraphs.filter(p => p.origin !== "heading");
+  const words = body.reduce((n, p) => n + wordCount(p.text), 0);
+  const fromLib = body.filter(p => p.origin === "reused" || p.origin === "adapted").length;
+  $("#resMeta").textContent = `${words} words · ${fromLib} of ${body.length} paragraphs built from her library · cost ${pence(d.costUsd || 0)}`;
+}
+let _rm; const renderResMetaSoon = () => { clearTimeout(_rm); _rm = setTimeout(renderResMeta, 300); };
+function paraEl(p, idx) {
+  const txt = h("div", { class: "txt" + (p.origin === "heading" ? " heading" : ""), contenteditable: "true", spellcheck: "true" });
+  txt.textContent = p.text;
+  txt.addEventListener("input", () => { S.draft.paragraphs[idx].text = txt.innerText; saveDraft(); renderResMetaSoon(); });
+  txt.addEventListener("paste", e => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text/plain")); });
+  const label = { reused: "Her words", adapted: "Adapted", new: "New", heading: "Heading" }[p.origin] || p.origin;
+  const chips = (p.library_ids || []).map(id => { const it = itemById(id); return h("button", { class: "chip", title: it ? sourceLabel(it.source) : "Not in library", onclick: () => showSource(id, idx) }, id + (it ? " · " + shortSource(it.source) : "")); });
+  return h("div", { class: "para" }, txt,
+    h("div", { class: "meta" }, h("span", { class: "badge " + p.origin }, label), ...chips,
+      h("span", { class: "sp" },
+        h("button", { class: "btn small ghost", title: "Move up", "aria-label": "Move up", onclick: () => movePara(idx, -1) }, "↑"),
+        h("button", { class: "btn small ghost", title: "Move down", "aria-label": "Move down", onclick: () => movePara(idx, 1) }, "↓"),
+        h("button", { class: "btn small ghost", title: "Remove", "aria-label": "Remove paragraph", onclick: () => { syncDraftFromDom(); S.draft.paragraphs.splice(idx, 1); renderDraft(); } }, "✕"))));
+}
+function movePara(i, d) { syncDraftFromDom(); const a = S.draft.paragraphs, j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; renderDraft(); }
+function showSource(id, idx) {
+  const it = itemById(id);
+  if (!it) return openDialog(id, [h("p", {}, "That paragraph isn't in the library any more.")], [h("button", { class: "btn", onclick: closeDialog }, "Close")]);
+  openDialog(`${id}: original paragraph`,
+    [h("p", { class: "hint", style: "margin-bottom:8px" }, "Written for: " + sourceLabel(it.source)), h("div", { class: "letter-line" }, it.text)],
+    [h("button", { class: "btn", onclick: () => { navigator.clipboard.writeText(it.text); toast("Copied"); } }, "Copy"),
+     h("button", { class: "btn", onclick: () => { syncDraftFromDom(); S.draft.paragraphs.splice(idx + 1, 0, { text: it.text, origin: "reused", library_ids: [id] }); renderDraft(); closeDialog(); } }, "Insert below"),
+     h("button", { class: "btn primary", onclick: () => { syncDraftFromDom(); Object.assign(S.draft.paragraphs[idx], { text: it.text, origin: "reused", library_ids: [id] }); renderDraft(); closeDialog(); } }, "Replace with original")]);
+}
+function letterText() {
+  syncDraftFromDom();
+  const d = S.draft, isLetter = d.fmt !== "statement", out = [];
+  if (isLetter && d.addr) out.push(d.addr);
+  out.push(...d.paragraphs.map(p => p.text));
+  if (isLetter) out.push(`${S.lib.settings.signoffLine}\n${S.lib.settings.name || ""}`.trim());
+  return out.join("\n\n");
+}
+function renderModelHint() { $("#modelHint").textContent = "Using " + MODELS[S.lib.settings.model].label.split(":")[0]; }
+
+/* ---------- Job description file ---------- */
+const drop = $("#drop");
+drop.addEventListener("click", () => $("#jdFile").click());
+drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#jdFile").click(); } });
+drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); if (e.dataTransfer.files[0]) loadJdFile(e.dataTransfer.files[0]); });
+$("#jdFile").addEventListener("change", e => { if (e.target.files[0]) loadJdFile(e.target.files[0]); e.target.value = ""; });
+async function loadJdFile(f) {
+  err("#genErr");
+  const ext = f.name.split(".").pop().toLowerCase();
+  try {
+    if (ext === "pdf") {
+      if (f.size > 3.5e6) throw new Error("That PDF is too big to send (max about 3.5 MB). Copy and paste the text instead.");
+      S.jdFile = { name: f.name, kind: "pdf", data: b64(await f.arrayBuffer()) };
+    } else if (ext === "docx") {
+      await loadScript("https://cdn.jsdelivr.net/npm/mammoth@1.11.0/mammoth.browser.min.js");
+      const r = await window.mammoth.extractRawText({ arrayBuffer: await f.arrayBuffer() });
+      S.jdFile = { name: f.name, kind: "text", data: r.value.trim() };
+    } else if (ext === "txt" || ext === "md") {
+      S.jdFile = { name: f.name, kind: "text", data: (await f.text()).trim() };
+    } else throw new Error("Please use a PDF, Word (.docx) or text file, or paste the text.");
+    renderJdChip();
+  } catch (ex) { err("#genErr", ex.message || "Couldn't read that file."); }
+}
+function renderJdChip() {
+  const box = $("#jdFileChip");
+  if (!S.jdFile) { box.replaceChildren(); return show(box, false); }
+  box.replaceChildren(h("span", { class: "chip" }, "📄 " + S.jdFile.name, h("button", { class: "x", "aria-label": "Remove file", onclick: () => { S.jdFile = null; renderJdChip(); } }, "✕")),
+    S.jdFile.kind === "text" ? h("span", { class: "hint" }, wordCount(S.jdFile.data) + " words read") : null);
+  show(box, true);
+}
+const _scripts = {};
+function loadScript(src) { return _scripts[src] ||= new Promise((res, rej) => { const s = h("script", { src }); s.onload = res; s.onerror = () => rej(new Error("Couldn't load the Word reader. Paste the text instead.")); document.head.append(s); }); }
+
+/* ============================================================
+   Library
+   ============================================================ */
+function allTags() { const s = new Set(S.lib.tags || []); S.lib.items.forEach(i => (i.tags || []).forEach(t => s.add(t))); return [...s].sort((a, b) => a.localeCompare(b)); }
+function nextId() { let n = 0; S.lib.items.forEach(i => { const m = /^p(\d+)$/.exec(i.id); if (m) n = Math.max(n, +m[1]); }); return "p" + String(n + 1).padStart(2, "0"); }
+function setLibDirty(v = true) { S.libDirty = v; show("#libSave", v); }
+function commitOpenEdits() { $$("#libList textarea[data-id]").forEach(ta => { const it = itemById(ta.dataset.id); if (it) it.text = ta.value.trim(); }); }
+$("#libSave").addEventListener("click", async () => {
+  const b = $("#libSave"); b.disabled = true; b.textContent = "Saving…";
+  commitOpenEdits(); S.editing.clear();
+  try { await saveLibrary(); setLibDirty(false); renderLibrary(); toast("Library saved"); }
+  catch (ex) { toast("Save failed: " + ex.message); }
+  finally { b.disabled = false; b.textContent = "Save changes"; }
+});
+$("#libSearch").addEventListener("input", e => { S.libFilter.q = e.target.value.toLowerCase(); renderLibList(); });
+$("#libSource").addEventListener("change", e => { S.libFilter.source = e.target.value; renderLibList(); });
+
+function renderLibrary() {
+  const items = S.lib.items, counts = {};
+  items.forEach(i => (i.tags || []).forEach(t => counts[t] = (counts[t] || 0) + 1));
+  $("#libTabCount").textContent = items.length;
+  $("#libTags").replaceChildren(...allTags().map(t => h("button", { class: "chip" + (S.libFilter.tags.has(t) ? " on" : ""), onclick: () => { S.libFilter.tags.has(t) ? S.libFilter.tags.delete(t) : S.libFilter.tags.add(t); renderLibrary(); } }, `${t} ${counts[t] || 0}`)));
+  const cur = S.libFilter.source;
+  $("#libSource").replaceChildren(h("option", { value: "" }, "All letters"), ...[...new Set(items.map(i => i.source))].map(s => h("option", { value: s, selected: s === cur }, shortSource(s))));
+  renderLibList();
+}
+function renderLibList() {
+  const f = S.libFilter;
+  const items = S.lib.items.filter(i => (!f.tags.size || [...f.tags].every(t => (i.tags || []).includes(t))) && (!f.source || i.source === f.source) && (!f.q || i.text.toLowerCase().includes(f.q)));
+  $("#libCount").textContent = `${items.length} of ${S.lib.items.length}`;
+  if (!$("#dl-tags")) document.body.append(h("datalist", { id: "dl-tags" }));
+  $("#dl-tags").replaceChildren(...allTags().map(t => h("option", { value: t })));
+  $("#libList").replaceChildren(...(items.length ? items.map(libCard) : [h("div", { class: "panel hint" }, "No paragraphs match.")]));
+}
+function libCard(it) {
+  const editing = S.editing.has(it.id);
+  const addTag = v => { v = v.trim(); if (v && !(it.tags || []).includes(v)) { it.tags = [...(it.tags || []), v]; setLibDirty(); renderLibrary(); } };
+  const tagInput = h("input", { type: "text", class: "tagadd", placeholder: "+ add tag", list: "dl-tags", "aria-label": "Add tag" });
+  tagInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addTag(tagInput.value); } });
+  tagInput.addEventListener("change", () => { if (allTags().includes(tagInput.value.trim())) addTag(tagInput.value); });
+  return h("div", { class: "panel libcard" },
+    h("div", { class: "libtop" },
+      h("span", { class: "id" }, it.id), h("span", {}, sourceLabel(it.source)),
+      h("select", { "aria-label": "Paragraph type", onchange: e => { it.kind = e.target.value; setLibDirty(); } }, ...["opening", "body", "closing"].map(k => h("option", { value: k, selected: (it.kind || "body") === k }, k))),
+      h("span", { class: "sp" },
+        h("button", { class: "btn small ghost", onclick: () => { if (editing) { it.text = $(`textarea[data-id="${it.id}"]`).value.trim(); S.editing.delete(it.id); } else S.editing.add(it.id); renderLibList(); } }, editing ? "Done" : "Edit"),
+        h("button", { class: "btn small ghost danger", onclick: () => openDialog(`Delete ${it.id}?`, [h("p", {}, "This removes the paragraph from the library once you press Save changes.")],
+          [h("button", { class: "btn", onclick: closeDialog }, "Cancel"), h("button", { class: "btn primary", onclick: () => { S.lib.items = S.lib.items.filter(x => x !== it); setLibDirty(); closeDialog(); renderLibrary(); } }, "Delete")]) }, "Delete"))),
+    editing ? h("textarea", { "data-id": it.id, oninput: () => setLibDirty() }, it.text) : h("div", { class: "txt" }, it.text),
+    h("div", { class: "chips" }, ...(it.tags || []).map(t => h("span", { class: "chip" }, t, h("button", { class: "x", "aria-label": "Remove tag " + t, onclick: () => { it.tags = it.tags.filter(x => x !== t); setLibDirty(); renderLibrary(); } }, "✕"))), tagInput));
+}
+
+/* ---------- Split & tag a new letter ---------- */
+const SPLIT_TOOL = {
+  name: "add_paragraphs", description: "Return the letter split into tagged library paragraphs.",
+  input_schema: { type: "object", properties: { items: { type: "array", items: { type: "object", properties: {
+    text: { type: "string", description: "The paragraph, word for word" },
+    kind: { type: "string", enum: ["opening", "body", "closing"] },
+    tags: { type: "array", items: { type: "string" }, description: "1–5 tags" },
+    duplicate_of: { type: "string", description: "Library id if nearly identical to an existing paragraph, else empty" },
+  }, required: ["text", "kind", "tags", "duplicate_of"] } } }, required: ["items"] },
+};
+$("#splitBtn").addEventListener("click", async () => {
+  err("#addErr");
+  const text = $("#addText").value.trim(), role = $("#addRole").value.trim(), btn = $("#splitBtn");
+  if (!text) return err("#addErr", "Paste a letter first.");
+  btn.disabled = true; btn.textContent = "Working…";
+  try {
+    const sys = [{ type: "text", text: `You maintain a library of paragraphs from ${S.lib.settings.name || "the applicant"}'s job applications. Split the letter she gives you into library paragraphs.
+Rules:
+- Keep each paragraph's text exactly as written. Do not rewrite, fix or summarise.
+- Drop greetings, sign-offs, "thank you for considering my application", section headings and contact details.
+- If a paragraph covers two clearly separate topics, you may split it at a sentence boundary.
+- Give each 1–5 tags. Use these existing tags wherever they fit: ${allTags().join("; ")}. Add a new tag only if none fit.
+- kind: opening (why this role/organisation), closing (wrap-up), or body.
+- duplicate_of: the id of an existing library paragraph if this one is nearly identical, else "".
+
+EXISTING LIBRARY
+${libraryText()}` }];
+    const { input, usage } = await callClaude({ system: sys, messages: [{ role: "user", content: [{ type: "text", text: `Letter (written for: ${role || "unknown role"}):\n\n${text}` }] }], tool: SPLIT_TOOL, maxTokens: 8000 });
+    reviewSplit(input.items || [], role, pence(costUsd(usage)));
+  } catch (ex) { err("#addErr", ex.message); }
+  finally { btn.disabled = false; btn.textContent = "Split & tag"; }
+});
+function reviewSplit(items, role, cost) {
+  const rows = items.map(it => {
+    const cb = h("input", { type: "checkbox", style: "margin-top:4px;flex:none" }); cb.checked = !it.duplicate_of;
+    const tags = h("input", { type: "text", value: (it.tags || []).join(", "), style: "font-size:12px;padding:4px 8px;margin-top:6px" });
+    return { it, cb, tags, el: h("label", { class: "split-item" }, cb, h("div", { style: "flex:1;min-width:0" },
+      h("div", { class: "hint" }, it.kind + (it.duplicate_of ? ` · looks like a duplicate of ${it.duplicate_of}` : "")), h("div", { class: "t" }, it.text), tags)) };
+  });
+  openDialog(`Add ${items.length} paragraph${items.length === 1 ? "" : "s"}?`,
+    [h("p", { class: "hint" }, `Untick any you don't want. Tags are comma-separated. (This cost ${cost}.)`), ...rows.map(r => r.el)],
+    [h("button", { class: "btn", onclick: closeDialog }, "Cancel"),
+     h("button", { class: "btn primary", onclick: async e => {
+       e.target.disabled = true;
+       commitOpenEdits();
+       const src = "s" + Date.now().toString(36);
+       S.lib.sources[src] = role || "Added " + new Date().toLocaleDateString("en-GB");
+       const chosen = rows.filter(r => r.cb.checked);
+       chosen.forEach(r => S.lib.items.push({ id: nextId(), text: r.it.text.trim(), kind: r.it.kind, tags: r.tags.value.split(",").map(s => s.trim()).filter(Boolean), source: src }));
+       try { await saveLibrary(); setLibDirty(false); closeDialog(); $("#addText").value = ""; $("#addRole").value = ""; toast(`Added ${chosen.length} paragraph${chosen.length === 1 ? "" : "s"}`); renderLibrary(); }
+       catch (ex) { e.target.disabled = false; toast("Save failed: " + ex.message); }
+     } }, "Add selected")]);
+}
+
+/* ============================================================
+   Settings
+   ============================================================ */
+function renderSettings() {
+  $("#setModel").replaceChildren(...Object.entries(MODELS).map(([id, m]) => h("option", { value: id, selected: id === S.lib.settings.model }, m.label)));
+  $("#setName").value = S.lib.settings.name || "";
+  $("#setSignoff").value = S.lib.settings.signoffLine || "";
+}
+
+/* ============================================================
+   Dialog & actions
+   ============================================================ */
+function openDialog(title, body, foot) { $("#dlgTitle").textContent = title; $("#dlgBody").replaceChildren(...body); $("#dlgFoot").replaceChildren(...foot); $("#dlg").showModal(); }
+function closeDialog() { $("#dlg").close(); }
+$("#dlg").addEventListener("click", e => { if (e.target === $("#dlg")) closeDialog(); });
+
+const ACTIONS = {
+  "copy-letter": async () => { await navigator.clipboard.writeText(letterText()); toast("Letter copied"); },
+  "download-txt": () => { const d = S.draft; download(((d.role_title || "cover-letter") + (d.organisation ? " - " + d.organisation : "")).replace(/[\\/:*?"<>|]+/g, "").slice(0, 80) + ".txt", letterText(), "text/plain"); },
+  "draft-to-library": () => {
+    const d = S.draft; syncDraftFromDom();
+    $("#addRole").value = [d.role_title, d.organisation].filter(Boolean).join(" – ");
+    $("#addText").value = d.paragraphs.filter(p => p.origin !== "heading").map(p => p.text).join("\n\n");
+    switchTab("library"); setTimeout(() => $("#addText").scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    toast("Check it, then press Split & tag");
+  },
+  "add-blank": () => {
+    S.lib.sources.manual = S.lib.sources.manual || "Written directly in the library";
+    const it = { id: nextId(), text: "", kind: "body", tags: [], source: "manual" };
+    S.lib.items.unshift(it); S.editing.add(it.id); setLibDirty();
+    S.libFilter = { tags: new Set(), q: "", source: "" }; $("#libSearch").value = "";
+    renderLibrary(); setTimeout(() => $(`textarea[data-id="${it.id}"]`)?.focus(), 30);
+  },
+  "save-settings": async () => {
+    Object.assign(S.lib.settings, { model: $("#setModel").value, name: $("#setName").value.trim(), signoffLine: $("#setSignoff").value.trim() || "Yours sincerely," });
+    try { await saveLibrary(); toast("Saved"); renderModelHint(); if (S.draft) renderDraft(); } catch (ex) { toast("Save failed: " + ex.message); }
+  },
+  "export-library": () => download(`library-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(S.lib, null, 1)),
+  "lock": () => { store.del(PW_KEY); store.del(DRAFT_KEY); location.reload(); },
+};
+document.addEventListener("click", e => { const a = e.target.closest("[data-action]"); if (a && ACTIONS[a.dataset.action]) ACTIONS[a.dataset.action](e); });
+window.addEventListener("beforeunload", e => { if (S.libDirty) { e.preventDefault(); e.returnValue = ""; } });
+
+boot();
+</script>
+</body>
+</html>
