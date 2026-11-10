@@ -62,7 +62,7 @@
   @media (max-width: 860px) { .side { position: static; } }
   .lbl { display: block; font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 5px; }
   .hint { font-size: 12px; color: var(--muted); line-height: 1.55; }
-  input[type=text], input[type=password], input[type=search], select, textarea {
+  input[type=text], input[type=password], input[type=search], input[type=number], select, textarea {
     width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--rs); font-size: 14px; background: var(--surface); color: var(--text);
   }
   select { appearance: none; cursor: pointer; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 15px) 55%, calc(100% - 10px) 55%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 28px; }
@@ -106,6 +106,7 @@
   .badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; }
   .badge.reused { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
   .badge.adapted { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); }
+  .badge.trimmed { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
   .badge.new { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
   .badge.heading { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
 
@@ -123,6 +124,14 @@
   .para .meta { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 6px 10px 8px; border-top: 1px dashed var(--border); }
   .para .meta .sp { margin-left: auto; display: flex; gap: 0; }
   .letter-line { font: 16px/1.65 var(--serif); white-space: pre-wrap; padding: 0 2px; }
+  .qrow { border: 1px solid var(--border); border-radius: var(--rs); padding: 10px; background: var(--bg); }
+  .qsection + .qsection { border-top: 1px solid var(--border); padding-top: 16px; }
+  .qhead { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
+  .qtitle { font-weight: 600; font-size: 14px; flex: 1 1 240px; }
+  .count { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
+  .count.ok { color: var(--green); background: var(--green-bg); border-color: var(--green-border); }
+  .count.over { color: var(--red); background: var(--red-bg); border-color: var(--red-border); }
+  mark.newword { background: var(--amber-bg); color: var(--amber); border-bottom: 2px solid var(--amber); border-radius: 2px; padding: 0 1px; }
   .reqs { list-style: none; display: flex; flex-direction: column; gap: 7px; }
   .reqs li { padding-left: 24px; position: relative; font-size: 13px; line-height: 1.4; }
   .reqs li::before { position: absolute; left: 0; top: 0; width: 17px; height: 17px; border-radius: 50%; font-size: 10px; display: grid; place-items: center; font-weight: 700; }
@@ -164,7 +173,7 @@
   <div class="header-inner">
     <a class="brand" href="index.html">
       <div class="brand-icon"><svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="6.5" stroke="white" stroke-width="1.5"/><path d="M5.5 8.8L7.5 10.8L11.5 6.2" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div><div class="brand-name">Bubs jobs</div><div class="brand-sub">Cover letters, in her own words</div></div>
+      <div><div class="brand-name">Bubs jobs</div><div class="brand-sub">Cover letters, in your own words</div></div>
     </a>
     <div class="head-right">
       <nav class="site-nav">
@@ -182,7 +191,7 @@
   <section id="view-lock" class="hidden">
     <div class="panel center stack">
       <div class="panel-title">Cover letters</div>
-      <p class="hint">This bit is private. Enter the password to open her letter library.</p>
+      <p class="hint">This bit is private. Enter the password to open your letter library.</p>
       <form id="unlockForm" class="stack">
         <input type="password" id="unlockPass" placeholder="Password" autocomplete="current-password">
         <label class="hint" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="remember" checked> Remember on this device</label>
@@ -196,7 +205,7 @@
   <section id="view-setup" class="hidden">
     <div class="panel center stack" style="max-width:480px">
       <div class="panel-title">First-time setup</div>
-      <p class="hint">The library is empty. Import <b>library.json</b> (her paragraphs from her old letters) to get started. It's stored privately on Netlify, not in the code.</p>
+      <p class="hint">The library is empty. Import <b>library.json</b> (your paragraphs from your old letters) to get started. It's stored privately on Netlify, not in the code.</p>
       <input type="file" id="setupFile" accept=".json,application/json">
       <div id="setupErr" class="msg err hidden"></div>
       <button class="btn primary wide" id="setupBtn">Import library</button>
@@ -226,10 +235,14 @@
           <div id="jdFileChip" class="chips hidden"></div>
           <div class="row">
             <div class="grow">
-              <label class="lbl" for="fmt">Type</label>
-              <select id="fmt"><option value="letter">Cover letter</option><option value="statement">Supporting statement</option></select>
+              <label class="lbl" for="fmt">What are you writing?</label>
+              <select id="fmt">
+                <option value="letter">Cover letter</option>
+                <option value="statement">Supporting statement</option>
+                <option value="questions">Application form questions</option>
+              </select>
             </div>
-            <div class="grow">
+            <div class="grow" id="lenWrap">
               <label class="lbl" for="len">Length</label>
               <select id="len">
                 <option value="350">Short (~350 words)</option>
@@ -241,6 +254,18 @@
               <label class="lbl" for="addr">Greeting (optional)</label>
               <input type="text" id="addr" placeholder="Dear Hiring Manager,">
             </div>
+          </div>
+          <div id="qWrap" class="stack hidden">
+            <div id="qList" class="stack"></div>
+            <button class="btn small" id="addQ" type="button" style="width:fit-content">+ Add another question</button>
+            <p class="hint">Paste each question from the form and its limit. Character limits normally include spaces. Answers come out close to the limit, and the counter under each one shows exactly where you are.</p>
+          </div>
+          <div>
+            <label class="lbl" for="wording">Wording</label>
+            <select id="wording">
+              <option value="strict">Your sentences only: picks and trims them, no rewording (recommended)</option>
+              <option value="light">Allow light rewording to fit the job</option>
+            </select>
           </div>
           <div>
             <label class="lbl" for="notes">Anything to emphasise or avoid? (optional)</label>
@@ -262,19 +287,20 @@
               <div class="hint" id="resMeta"></div>
             </div>
             <div class="row">
-              <button class="btn small" data-action="copy-letter">Copy letter</button>
+              <button class="btn small" data-action="copy-letter" id="copyAllBtn">Copy letter</button>
               <button class="btn small" data-action="download-txt">Download .txt</button>
             </div>
           </div>
-          <p class="hint">Click a paragraph to edit it. The chips show which of her old paragraphs it came from. Click one to see the original.</p>
-          <div id="greetingOut" class="letter-line hidden"></div>
-          <div id="paras" class="stack"></div>
-          <div id="signoffOut" class="letter-line hidden"></div>
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <p class="hint" style="flex:1 1 260px">Click a paragraph to edit it. The chips show which of your old paragraphs it came from. Click one to see the original.</p>
+            <label class="hint" style="display:flex;gap:6px;align-items:center;white-space:nowrap"><input type="checkbox" id="hl"> Highlight words that aren't yours</label>
+          </div>
+          <div id="sections" class="stack"></div>
           <hr class="s">
           <div>
             <label class="lbl" for="revise">Ask for changes</label>
             <div class="row">
-              <input class="grow" type="text" id="revise" placeholder="e.g. make it shorter; more on safeguarding; warmer opening">
+              <input class="grow" type="text" id="revise" placeholder="e.g. make it shorter; more on safeguarding; use the family example in answer 2">
               <button class="btn" id="reviseBtn">Revise</button>
             </div>
             <p class="hint" style="margin-top:5px">Your edits above are kept unless you ask otherwise.</p>
@@ -289,17 +315,17 @@
         </div>
         <div class="panel hidden" id="gapCard">
           <div class="panel-title">Gaps to fill yourself</div>
-          <p class="hint" style="margin-bottom:10px">None of her letters cover these, so the draft leaves them out instead of making something up.</p>
+          <p class="hint" style="margin-bottom:10px">None of your old letters cover these, so the draft leaves them out instead of making something up.</p>
           <div id="gapList"></div>
         </div>
         <div class="panel hidden" id="saveBackCard">
           <div class="panel-title">Finished?</div>
-          <p class="hint" style="margin-bottom:10px">Add the final version to the library so future letters can reuse the new wording.</p>
-          <button class="btn small" data-action="draft-to-library">Add this letter to the library</button>
+          <p class="hint" style="margin-bottom:10px">Add the final version to your library so future letters can reuse any new wording.</p>
+          <button class="btn small" data-action="draft-to-library">Add this to the library</button>
         </div>
         <div class="panel" id="tipsCard">
           <div class="panel-title">How it works</div>
-          <p class="hint">Claude reads the job, lists what they want, then builds the letter mostly out of her own paragraphs, adapting names and wording to fit. It won't invent experience. Anything she hasn't written about shows up under <b>Gaps</b>.</p>
+          <p class="hint">Claude reads the job and lists what they want. Then it picks the best sentences from your old letters and trims them to fit. With <b>Your sentences only</b> it doesn't reword anything, apart from swapping in the new role and employer names. Anything you haven't written about shows up under <b>Gaps</b>.</p>
         </div>
       </aside>
     </div>
@@ -323,7 +349,7 @@
       <aside class="side">
         <div class="panel stack">
           <div class="panel-title" style="margin:0">Add from a letter</div>
-          <p class="hint">Paste a letter or statement she's written. Claude splits it into paragraphs and tags them, and you check them before anything is added.</p>
+          <p class="hint">Paste a letter or statement you've written. Claude splits it into paragraphs and tags them, and you check them before anything is added.</p>
           <input type="text" id="addRole" placeholder="Role it was for">
           <textarea id="addText" rows="7" placeholder="Paste the letter here…"></textarea>
           <div id="addErr" class="msg err hidden"></div>
@@ -505,6 +531,7 @@ function costUsd(u) {
 }
 async function saveLibrary() {
   S.lib.tags = allTags();
+  _own = null; // library changed: rebuild the "your wording" check
   await api("library-put", { library: S.lib });
 }
 
@@ -597,9 +624,9 @@ $$(".tab").forEach(t => t.addEventListener("click", () => switchTab(t.dataset.ta
 function libraryText() {
   return S.lib.items.map(it => `[${it.id}] kind: ${it.kind || "body"} | tags: ${(it.tags || []).join(", ")} | originally for: ${sourceLabel(it.source)}\n${it.text}`).join("\n\n");
 }
+const ORIGIN = { type: "string", enum: ["reused", "trimmed", "adapted", "new", "heading"] };
 const DRAFT_TOOL = {
   name: "draft_letter",
-  description: "Return the analysed requirements and the drafted letter.",
   input_schema: {
     type: "object",
     properties: {
@@ -610,52 +637,81 @@ const DRAFT_TOOL = {
         items: { type: "object", properties: {
           requirement: { type: "string", description: "Short paraphrase, under 12 words" },
           priority: { type: "string", enum: ["essential", "desirable"] },
-          covered: { type: "boolean", description: "True if the draft gives real evidence from her library" },
+          covered: { type: "boolean", description: "True if the output gives real evidence from the library" },
           library_ids: { type: "array", items: { type: "string" } },
         }, required: ["requirement", "priority", "covered", "library_ids"] },
       },
-      paragraphs: {
-        type: "array",
+      sections: {
+        type: "array", description: "One section per question; a single section with an empty question for a cover letter or supporting statement.",
         items: { type: "object", properties: {
-          text: { type: "string" },
-          origin: { type: "string", enum: ["reused", "adapted", "new", "heading"] },
-          library_ids: { type: "array", items: { type: "string" } },
-        }, required: ["text", "origin", "library_ids"] },
+          question: { type: "string" },
+          paragraphs: { type: "array", items: { type: "object", properties: {
+            text: { type: "string" }, origin: ORIGIN, library_ids: { type: "array", items: { type: "string" } },
+          }, required: ["text", "origin", "library_ids"] } },
+        }, required: ["question", "paragraphs"] },
       },
       gaps: {
-        type: "array", description: "Requirements with no evidence in her library. Empty if none.",
+        type: "array", description: "Requirements with no evidence in the library. Empty if none.",
         items: { type: "object", properties: {
           requirement: { type: "string" },
-          suggestion: { type: "string", description: "One or two sentences prompting her on what she could write. Do not invent facts." },
+          suggestion: { type: "string", description: "One or two sentences speaking directly to the applicant as 'you', prompting what they could write. Do not invent facts." },
         }, required: ["requirement", "suggestion"] },
       },
     },
-    required: ["role_title", "organisation", "requirements", "paragraphs", "gaps"],
+    required: ["role_title", "organisation", "requirements", "sections", "gaps"],
   },
 };
-function draftSystem(fmt, words) {
-  const name = S.lib.settings.name || "the applicant";
-  const kind = fmt === "statement" ? "supporting statement" : "cover letter";
-  const text = `You help ${name} write job applications. She has a library of paragraphs from her previous cover letters and supporting statements (below). Build a new ${kind} for the job she gives you, made mostly out of her own words.
 
-How to do it:
+const CHARS_PER_WORD = 6.3; // rough average incl. spaces, for converting limits
+function limitText(q) {
+  if (!q.limit) return "no limit given: about 250 words";
+  return q.unit === "words"
+    ? `hard limit ${q.limit} words`
+    : `hard limit ${q.limit} characters including spaces (roughly ${Math.round(q.limit / CHARS_PER_WORD)} words)`;
+}
+function draftSystem(o) {
+  const rules = o.wording === "strict" ? `WORDING RULES (strict). The applicant wants their own writing, not AI writing, so you assemble rather than write:
+- Every sentence must come from the library, copied word for word.
+- You may only: choose which sentences to use and in what order; delete whole sentences; delete words or clauses inside a sentence so long as it still reads correctly; swap the name of a previous employer, school, programme or role for the new one (or remove it); and make tiny grammar fixes those edits force (a/an, plurals, tense).
+- Do not paraphrase, reword, add adjectives or adverbs, or write new sentences. Do not "improve" the style. Do not add dashes.
+- The only new words allowed are the new role and organisation names, plus at most two or three connecting words where two of their sentences are joined.
+- If a requirement can't be shown with their own sentences, leave it out and list it as a gap. Never fill it with your own writing.
+- Origin must be "reused" (copied, names swapped at most) or "trimmed" (parts deleted). Use "heading" only for supporting statement headings.`
+  : `WORDING RULES (light). The applicant wants this to read as their own writing:
+- Keep their sentences word for word wherever possible. You may lightly reword a sentence to fit the job and add short linking phrases, but keep new or reworded words well under 15% of the total.
+- Match their voice: plain, warm, first person. No flourishes, no clichés, no dashes, no "I am writing to apply".
+- Origin: "reused" (copied), "trimmed" (parts deleted), "adapted" (reworded), "new" (written fresh, only short linking text), "heading".`;
+
+  let format;
+  if (o.fmt === "questions") {
+    format = `FORMAT: application form questions. Output one section per question, in this order, copying the question text into "question":
+${o.questions.map((q, i) => `Q${i + 1}: "${q.q}" (${limitText(q)})`).join("\n")}
+Answer each question directly with the material most relevant to that question. Don't repeat the same example or sentence in two answers. Length limits are strict maximums: aim for 85 to 95% of each limit and never go over. Paragraph breaks count as 2 characters.`;
+  } else if (o.fmt === "statement") {
+    format = `FORMAT: supporting statement, one section with an empty question. You may group content under short headings that mirror the person specification (each heading is its own paragraph with origin "heading"; headings may reuse the person specification's own wording). No greeting or sign-off. About ${o.words} words.`;
+  } else {
+    format = `FORMAT: cover letter, one section with an empty question. Opening paragraph: use one of their existing opening paragraphs with the new role and organisation names swapped in. Body paragraphs each lead with something the employer needs. Short closing paragraph from their existing closings. No greeting, date, address or sign-off (added separately). About ${o.words} words.`;
+  }
+
+  const text = `You help a job applicant put together applications from a library of paragraphs they wrote for previous applications (below). They read your output directly, so anything addressed to them, such as gap suggestions, speaks to them as "you".
+
+STEPS
 1. Read the job description and person specification. List what the employer is asking for, essential criteria first.
-2. For each requirement, find her strongest evidence in the library. Prefer specific examples with outcomes.
-3. Write the ${kind} by reusing her paragraphs and sentences. Keep her wording wherever it fits. Change only what's needed: role and organisation names, the employer's own terminology, linking sentences, and trimming parts that don't apply. You may combine sentences from different paragraphs.
-4. Never invent experience, achievements, figures, qualifications, systems, quotes, or claims about the organisation that aren't in her library or the job description. If the job asks for something she has no evidence for, leave it out and list it under gaps with a short prompt for what she could write.
-5. Use each story or example at most once (e.g. the family she supported, the language-development checklists, the Little Wandle implementation).
-6. If a library paragraph refers to a specific past employer, programme or role (e.g. Twinkl, Little Wandle, Edinburgh Learns, the Church of England) in a way that only fits that old application, rewrite or drop that part. Keep it only if it's real experience relevant to this job.
-7. British English. Warm, professional, plain first person, matching her voice.
-8. ${fmt === "statement"
-    ? "Supporting statement format: you may group content under short headings mirroring the person specification (each heading is its own paragraph with origin \"heading\"). No greeting or sign-off."
-    : "Cover letter format: an opening paragraph naming the role and organisation and why she wants it; body paragraphs each leading with what the employer needs; a short closing paragraph. No greeting, date, address or sign-off; the app adds them."}
-9. Aim for about ${words} words in total.
-10. Mark each paragraph's origin: "reused" = mostly her original wording with light edits; "adapted" = substantially reworked from her material; "new" = written fresh (only short linking, opening or closing text). List the library ids each paragraph draws on.
+2. For each requirement, find their strongest evidence in the library. Prefer specific examples with outcomes.
+3. Build the output from their sentences following the wording rules and format below.
+4. Never invent experience, achievements, figures, qualifications, systems, quotes, or claims about the organisation.
+5. Use each story or example at most once in the whole output (e.g. the family they supported, the language-development checklists, the Little Wandle implementation).
+6. If a sentence names a past employer, programme or role in a way that only fits that old application, swap or remove the name, or skip the sentence.
+7. British English. List the library ids each paragraph draws on.
 
-Reply with the result as JSON matching the required schema.`;
+${rules}
+
+${format}
+
+Reply with JSON matching the required schema.`;
   return [
     { type: "text", text },
-    { type: "text", text: "HER PARAGRAPH LIBRARY\n\n" + libraryText(), cache_control: { type: "ephemeral" } },
+    { type: "text", text: "PARAGRAPH LIBRARY\n\n" + libraryText(), cache_control: { type: "ephemeral" } },
   ];
 }
 function jobContent(extra) {
@@ -666,108 +722,226 @@ function jobContent(extra) {
   if (S.jdFile && S.jdFile.kind === "text") t += `JOB DESCRIPTION (from ${S.jdFile.name}):\n${S.jdFile.data}\n\n`;
   if (pasted) t += `JOB DESCRIPTION${S.jdFile ? " (pasted)" : ""}:\n${pasted}\n\n`;
   const notes = $("#notes").value.trim();
-  if (notes) t += `Her notes for this application: ${notes}\n\n`;
-  t += extra || "Write the draft.";
+  if (notes) t += `The applicant's notes for this application: ${notes}\n\n`;
+  t += extra || "Put the draft together.";
   parts.push({ type: "text", text: t });
   return parts;
 }
 
+/* ---------- Form: type, questions ---------- */
+function qRow(q = {}) {
+  const ta = h("textarea", { class: "qtext", rows: "2", placeholder: "e.g. What experience do you have that makes you suitable for this role?" });
+  ta.value = q.q || "";
+  const lim = h("input", { type: "number", class: "qlimit", min: "0", step: "50", placeholder: "e.g. 2000", style: "width:120px" });
+  if (q.limit) lim.value = q.limit;
+  const unit = h("select", { class: "qunit", style: "width:auto" }, h("option", { value: "chars" }, "characters"), h("option", { value: "words" }, "words"));
+  unit.value = q.unit || "chars";
+  const row = h("div", { class: "qrow" },
+    h("div", { class: "row", style: "justify-content:space-between;align-items:center;margin-bottom:5px" },
+      h("span", { class: "lbl qnum", style: "margin:0" }, "Question"),
+      h("button", { class: "btn small ghost", type: "button", onclick: () => { row.remove(); renumberQs(); } }, "Remove")),
+    ta,
+    h("div", { class: "row", style: "margin-top:6px;align-items:center" }, h("span", { class: "hint" }, "Limit"), lim, unit));
+  return row;
+}
+function renumberQs() {
+  const rows = $$("#qList .qrow");
+  rows.forEach((r, i) => { r.querySelector(".qnum").textContent = "Question " + (i + 1); r.querySelector(".btn.ghost").classList.toggle("hidden", rows.length === 1); });
+}
+function setQuestions(qs) { $("#qList").replaceChildren(...(qs && qs.length ? qs : [{}, {}]).map(qRow)); renumberQs(); }
+function readQuestions() {
+  return $$("#qList .qrow").map(r => ({ q: r.querySelector(".qtext").value.trim(), limit: parseInt(r.querySelector(".qlimit").value, 10) || 0, unit: r.querySelector(".qunit").value })).filter(q => q.q);
+}
+function syncFormatUI() {
+  const f = $("#fmt").value;
+  show("#addrWrap", f === "letter"); show("#lenWrap", f !== "questions"); show("#qWrap", f === "questions");
+  if (f === "questions" && !$$("#qList .qrow").length) setQuestions();
+}
+$("#fmt").addEventListener("change", syncFormatUI);
+$("#addQ").addEventListener("click", () => { $("#qList").append(qRow()); renumberQs(); });
+function readOptions() {
+  return { fmt: $("#fmt").value, words: $("#len").value, wording: $("#wording").value, questions: readQuestions(), addr: $("#addr").value.trim() };
+}
+
+/* ---------- Generate / revise ---------- */
 $("#genBtn").addEventListener("click", () => generate());
 $("#reviseBtn").addEventListener("click", () => { const v = $("#revise").value.trim(); v ? generate(v) : $("#revise").focus(); });
 $("#revise").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#reviseBtn").click(); } });
-$("#fmt").addEventListener("change", () => show("#addrWrap", $("#fmt").value === "letter"));
 
+function draftAsText(d) {
+  return d.sections.map((s, i) => (s.question ? `QUESTION ${i + 1}: ${s.question}\n` : "") + s.paragraphs.map(p => p.text).join("\n\n")).join("\n\n---\n\n");
+}
 async function generate(revision) {
   err("#genErr");
   if (!$("#jd").value.trim() && !S.jdFile) return err("#genErr", "Paste a job description or upload one first.");
   if (!S.lib.items.length) return err("#genErr", "The library is empty. Add some paragraphs in the Library tab first.");
-  const fmt = $("#fmt").value, words = $("#len").value;
+  const o = readOptions();
+  if (o.fmt === "questions" && !o.questions.length) return err("#genErr", "Paste at least one question from the application form.");
   let extra;
   if (revision) {
     syncDraftFromDom();
-    extra = `Here is the current draft (she may have edited it by hand; keep her edits unless the instruction says otherwise):\n\n${S.draft.paragraphs.map(p => p.text).join("\n\n")}\n\nRevise it with this instruction: ${revision}\n\nReturn the full revised draft, requirements and gaps.`;
+    extra = `Here is the current draft. The applicant may have edited it by hand; keep their edits unless the instruction says otherwise.\n\n${draftAsText(S.draft)}\n\nRevise it with this instruction: ${revision}\n\nReturn the full result (every section, plus requirements and gaps), following the same wording rules.`;
   }
-  show("#loading"); $("#loadingMsg").textContent = revision ? "Revising…" : "Reading the job and picking her best paragraphs…";
+  show("#loading"); $("#loadingMsg").textContent = revision ? "Revising…" : "Reading the job and picking your best sentences…";
   $("#genBtn").disabled = $("#reviseBtn").disabled = true;
   try {
     const { input, usage } = await callClaude({
-      system: draftSystem(fmt, words), messages: [{ role: "user", content: jobContent(extra) }], tool: DRAFT_TOOL,
-      onProgress: j => { $("#loadingMsg").textContent = `Writing… (${Math.round(j.length / 6)} words so far)`; },
+      system: draftSystem(o), messages: [{ role: "user", content: jobContent(extra) }], tool: DRAFT_TOOL,
+      onProgress: j => { $("#loadingMsg").textContent = `Putting it together… (${Math.round(j.length / 6)} words so far)`; },
     });
     const prev = revision && S.draft ? S.draft.costUsd || 0 : 0;
-    S.draft = { ...input, fmt, addr: $("#addr").value.trim(), jd: $("#jd").value, costUsd: prev + costUsd(usage) };
-    S.draft.paragraphs = (S.draft.paragraphs || []).map(p => ({ ...p, library_ids: p.library_ids || [] }));
+    S.draft = { ...input, ...o, jd: $("#jd").value, costUsd: prev + costUsd(usage) };
+    S.draft.sections = (S.draft.sections || []).map((s, i) => ({
+      question: s.question || "",
+      limit: o.fmt === "questions" && o.questions[i] ? o.questions[i].limit : 0,
+      unit: o.fmt === "questions" && o.questions[i] ? o.questions[i].unit : "words",
+      paragraphs: (s.paragraphs || []).map(p => ({ ...p, library_ids: p.library_ids || [] })),
+    }));
     if (revision) $("#revise").value = "";
     renderDraft();
     $("#result").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (ex) { err("#genErr", ex.message); }
   finally { show("#loading", false); $("#genBtn").disabled = $("#reviseBtn").disabled = false; }
 }
+function fitSection(si) {
+  const s = S.draft.sections[si], c = sectionCount(si);
+  const target = Math.round(s.limit * 0.92);
+  generate(`Answer ${si + 1}${s.question ? ` ("${s.question}")` : ""} is ${c} ${s.unit === "words" ? "words" : "characters"} but the limit is ${s.limit}. Shorten only that answer to about ${target} ${s.unit === "words" ? "words" : "characters"} by deleting sentences, clauses or words. Don't reword or add anything. Leave every other section exactly as it is.`);
+}
+
+/* ---------- "Is this your wording?" check ----------
+   A word counts as yours if it sits in a two-word sequence that also appears in
+   your library (or the job description / question, for names). Everything else is
+   new wording and gets highlighted. */
+const normTok = w => w.toLowerCase().replace(/[’‘]/g, "'");
+const TOK_RE = /[A-Za-z0-9À-ÿ'’‘]+/g;
+let _own = null;
+function ownSets() {
+  const key = S.lib.items.length + "|" + (S.lib.updated || 0) + "|" + ($("#jd").value.length);
+  if (_own && _own.key === key) return _own;
+  const bi = new Set(), uni = new Set();
+  const add = t => { const w = (t.match(TOK_RE) || []).map(normTok); w.forEach((x, i) => { uni.add(x); if (i) bi.add(w[i - 1] + " " + x); }); };
+  S.lib.items.forEach(i => add(i.text));
+  add($("#jd").value || ""); if (S.jdFile && S.jdFile.kind === "text") add(S.jdFile.data);
+  if (S.draft) S.draft.sections.forEach(s => add(s.question || ""));
+  return (_own = { key, bi, uni });
+}
+function ownership(text) {
+  const { bi, uni } = ownSets(), toks = [...String(text).matchAll(TOK_RE)];
+  const w = toks.map(m => normTok(m[0]));
+  const own = w.map((x, i) => (i > 0 && bi.has(w[i - 1] + " " + x)) || (i < w.length - 1 && bi.has(x + " " + w[i + 1])) || (w.length === 1 && uni.has(x)));
+  return { toks, own, total: w.length, ownCount: own.filter(Boolean).length };
+}
 
 /* ---------- Draft rendering ---------- */
 function saveDraft() { if (S.draft) store.set(DRAFT_KEY, JSON.stringify(S.draft), true); }
 function syncDraftFromDom() {
-  if (!S.draft) return;
-  $$("#paras .para").forEach((el, i) => { if (S.draft.paragraphs[i]) S.draft.paragraphs[i].text = el.querySelector(".txt").innerText.trim(); });
+  if (!S.draft || S.highlight) return;
+  $$("#sections .para").forEach(el => { const p = S.draft.sections[el.dataset.si]?.paragraphs[el.dataset.pi]; if (p) p.text = el.querySelector(".txt").innerText.trim(); });
   saveDraft();
 }
 function restoreDraftInputs() {
   const d = S.draft;
   if (d.jd && !$("#jd").value) $("#jd").value = d.jd;
-  if (d.fmt) { $("#fmt").value = d.fmt; show("#addrWrap", d.fmt === "letter"); }
+  if (d.fmt) $("#fmt").value = d.fmt;
+  if (d.words) $("#len").value = d.words;
+  if (d.wording) $("#wording").value = d.wording;
   if (d.addr) $("#addr").value = d.addr;
+  if (d.fmt === "questions") setQuestions(d.questions);
+  syncFormatUI();
+}
+function sectionAnswer(si) { return S.draft.sections[si].paragraphs.map(p => p.text.trim()).join("\n\n"); }
+function sectionCount(si) { const s = S.draft.sections[si], t = sectionAnswer(si); return s.unit === "words" ? wordCount(t) : t.length; }
+function countLabel(si) {
+  const s = S.draft.sections[si], n = sectionCount(si), u = s.unit === "words" ? "words" : "characters";
+  return s.limit ? `${n.toLocaleString()} / ${s.limit.toLocaleString()} ${u}` : `${n.toLocaleString()} ${u}`;
 }
 function renderDraft() {
   const d = S.draft; if (!d) return;
+  if (!d.sections && d.paragraphs) d.sections = [{ question: "", limit: 0, unit: "words", paragraphs: d.paragraphs }]; // older saved drafts
   show("#result"); show("#reqCard"); show("#saveBackCard"); show("#tipsCard", false);
   $("#resTitle").textContent = [d.role_title, d.organisation].filter(Boolean).join(" · ") || "Draft";
+  $("#copyAllBtn").textContent = d.fmt === "questions" ? "Copy all answers" : d.fmt === "statement" ? "Copy statement" : "Copy letter";
+  const isLetter = d.fmt === "letter" || !d.fmt;
+  const blocks = d.sections.map((s, si) => {
+    const isQ = d.fmt === "questions";
+    const over = s.limit && sectionCount(si) > s.limit;
+    const head = isQ ? h("div", { class: "qhead" },
+      h("div", { class: "qtitle" }, `${si + 1}. ${s.question}`),
+      h("div", { class: "row", style: "align-items:center;gap:6px" },
+        h("span", { class: "count" + (over ? " over" : s.limit ? " ok" : ""), "data-count": si }, countLabel(si)),
+        over ? h("button", { class: "btn small", onclick: () => fitSection(si) }, "Trim to fit") : null,
+        h("button", { class: "btn small", onclick: async () => { syncDraftFromDom(); await navigator.clipboard.writeText(sectionAnswer(si)); toast(`Answer ${si + 1} copied`); } }, "Copy answer"))) : null;
+    return h("div", { class: isQ ? "qsection stack" : "stack" },
+      head,
+      isLetter && si === 0 && d.addr ? h("div", { class: "letter-line" }, d.addr) : null,
+      ...s.paragraphs.map((p, pi) => paraEl(p, si, pi)),
+      isLetter && si === d.sections.length - 1 ? h("div", { class: "letter-line" }, `${S.lib.settings.signoffLine}\n${S.lib.settings.name || ""}`) : null);
+  });
+  $("#sections").replaceChildren(...blocks);
   renderResMeta();
-  const isLetter = d.fmt !== "statement";
-  $("#greetingOut").textContent = d.addr || ""; show("#greetingOut", isLetter && !!d.addr);
-  $("#signoffOut").textContent = `${S.lib.settings.signoffLine}\n${S.lib.settings.name || ""}`; show("#signoffOut", isLetter);
-  $("#paras").replaceChildren(...d.paragraphs.map(paraEl));
   $("#reqList").replaceChildren(...(d.requirements || []).map(r => h("li", { class: r.covered ? "yes" : "no" }, h("div", {}, r.requirement), h("div", { class: "pri" }, r.priority))));
   $("#gapList").replaceChildren(...(d.gaps || []).map(g => h("div", { class: "gap" }, h("b", {}, g.requirement), h("div", { class: "hint" }, g.suggestion))));
   show("#gapCard", (d.gaps || []).length > 0);
   saveDraft();
 }
 function renderResMeta() {
-  const d = S.draft, body = d.paragraphs.filter(p => p.origin !== "heading");
-  const words = body.reduce((n, p) => n + wordCount(p.text), 0);
-  const fromLib = body.filter(p => p.origin === "reused" || p.origin === "adapted").length;
-  $("#resMeta").textContent = `${words} words · ${fromLib} of ${body.length} paragraphs built from her library · cost ${pence(d.costUsd || 0)}`;
+  const d = S.draft;
+  const body = d.sections.flatMap(s => s.paragraphs).filter(p => p.origin !== "heading");
+  let total = 0, own = 0; body.forEach(p => { const o = ownership(p.text); total += o.total; own += o.ownCount; });
+  const pct = total ? Math.round(own / total * 100) : 100;
+  $("#resMeta").textContent = `${total.toLocaleString()} words · ${pct}% your own wording · cost ${pence(d.costUsd || 0)}`;
+  $$("[data-count]").forEach(el => {
+    const si = +el.dataset.count, s = d.sections[si], over = s.limit && sectionCount(si) > s.limit;
+    el.textContent = countLabel(si); el.className = "count" + (over ? " over" : s.limit ? " ok" : "");
+  });
 }
-let _rm; const renderResMetaSoon = () => { clearTimeout(_rm); _rm = setTimeout(renderResMeta, 300); };
-function paraEl(p, idx) {
-  const txt = h("div", { class: "txt" + (p.origin === "heading" ? " heading" : ""), contenteditable: "true", spellcheck: "true" });
-  txt.textContent = p.text;
-  txt.addEventListener("input", () => { S.draft.paragraphs[idx].text = txt.innerText; saveDraft(); renderResMetaSoon(); });
+let _rm; const renderResMetaSoon = () => { clearTimeout(_rm); _rm = setTimeout(renderResMeta, 250); };
+function highlighted(text) {
+  const { toks, own } = ownership(text), frag = document.createDocumentFragment();
+  let last = 0;
+  toks.forEach((m, i) => {
+    frag.append(text.slice(last, m.index));
+    frag.append(own[i] ? m[0] : h("mark", { class: "newword" }, m[0]));
+    last = m.index + m[0].length;
+  });
+  frag.append(text.slice(last));
+  return frag;
+}
+function paraEl(p, si, pi) {
+  const txt = h("div", { class: "txt" + (p.origin === "heading" ? " heading" : ""), contenteditable: S.highlight ? "false" : "true", spellcheck: "true" });
+  if (S.highlight && p.origin !== "heading") txt.append(highlighted(p.text)); else txt.textContent = p.text;
+  txt.addEventListener("input", () => { p.text = txt.innerText; saveDraft(); renderResMetaSoon(); });
   txt.addEventListener("paste", e => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text/plain")); });
-  const label = { reused: "Her words", adapted: "Adapted", new: "New", heading: "Heading" }[p.origin] || p.origin;
-  const chips = (p.library_ids || []).map(id => { const it = itemById(id); return h("button", { class: "chip", title: it ? sourceLabel(it.source) : "Not in library", onclick: () => showSource(id, idx) }, id + (it ? " · " + shortSource(it.source) : "")); });
-  return h("div", { class: "para" }, txt,
+  const label = { reused: "Your words", trimmed: "Trimmed", adapted: "Reworded", new: "New", heading: "Heading" }[p.origin] || p.origin;
+  const chips = (p.library_ids || []).map(id => { const it = itemById(id); return h("button", { class: "chip", title: it ? sourceLabel(it.source) : "Not in library", onclick: () => showSource(id, si, pi) }, id + (it ? " · " + shortSource(it.source) : "")); });
+  return h("div", { class: "para", "data-si": si, "data-pi": pi }, txt,
     h("div", { class: "meta" }, h("span", { class: "badge " + p.origin }, label), ...chips,
       h("span", { class: "sp" },
-        h("button", { class: "btn small ghost", title: "Move up", "aria-label": "Move up", onclick: () => movePara(idx, -1) }, "↑"),
-        h("button", { class: "btn small ghost", title: "Move down", "aria-label": "Move down", onclick: () => movePara(idx, 1) }, "↓"),
-        h("button", { class: "btn small ghost", title: "Remove", "aria-label": "Remove paragraph", onclick: () => { syncDraftFromDom(); S.draft.paragraphs.splice(idx, 1); renderDraft(); } }, "✕"))));
+        h("button", { class: "btn small ghost", title: "Move up", "aria-label": "Move up", onclick: () => movePara(si, pi, -1) }, "↑"),
+        h("button", { class: "btn small ghost", title: "Move down", "aria-label": "Move down", onclick: () => movePara(si, pi, 1) }, "↓"),
+        h("button", { class: "btn small ghost", title: "Remove", "aria-label": "Remove paragraph", onclick: () => { syncDraftFromDom(); S.draft.sections[si].paragraphs.splice(pi, 1); renderDraft(); } }, "✕"))));
 }
-function movePara(i, d) { syncDraftFromDom(); const a = S.draft.paragraphs, j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; renderDraft(); }
-function showSource(id, idx) {
+$("#hl").addEventListener("change", e => { syncDraftFromDom(); S.highlight = e.target.checked; renderDraft(); });
+function movePara(si, i, d) { syncDraftFromDom(); const a = S.draft.sections[si].paragraphs, j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; renderDraft(); }
+function showSource(id, si, pi) {
   const it = itemById(id);
   if (!it) return openDialog(id, [h("p", {}, "That paragraph isn't in the library any more.")], [h("button", { class: "btn", onclick: closeDialog }, "Close")]);
+  const paras = S.draft.sections[si].paragraphs;
   openDialog(`${id}: original paragraph`,
     [h("p", { class: "hint", style: "margin-bottom:8px" }, "Written for: " + sourceLabel(it.source)), h("div", { class: "letter-line" }, it.text)],
     [h("button", { class: "btn", onclick: () => { navigator.clipboard.writeText(it.text); toast("Copied"); } }, "Copy"),
-     h("button", { class: "btn", onclick: () => { syncDraftFromDom(); S.draft.paragraphs.splice(idx + 1, 0, { text: it.text, origin: "reused", library_ids: [id] }); renderDraft(); closeDialog(); } }, "Insert below"),
-     h("button", { class: "btn primary", onclick: () => { syncDraftFromDom(); Object.assign(S.draft.paragraphs[idx], { text: it.text, origin: "reused", library_ids: [id] }); renderDraft(); closeDialog(); } }, "Replace with original")]);
+     h("button", { class: "btn", onclick: () => { syncDraftFromDom(); paras.splice(pi + 1, 0, { text: it.text, origin: "reused", library_ids: [id] }); renderDraft(); closeDialog(); } }, "Insert below"),
+     h("button", { class: "btn primary", onclick: () => { syncDraftFromDom(); Object.assign(paras[pi], { text: it.text, origin: "reused", library_ids: [id] }); renderDraft(); closeDialog(); } }, "Replace with original")]);
 }
 function letterText() {
   syncDraftFromDom();
-  const d = S.draft, isLetter = d.fmt !== "statement", out = [];
-  if (isLetter && d.addr) out.push(d.addr);
-  out.push(...d.paragraphs.map(p => p.text));
-  if (isLetter) out.push(`${S.lib.settings.signoffLine}\n${S.lib.settings.name || ""}`.trim());
+  const d = S.draft;
+  if (d.fmt === "questions") return d.sections.map((s, i) => `${i + 1}. ${s.question}\n\n${sectionAnswer(i)}`).join("\n\n\n");
+  const out = [];
+  if (d.fmt === "letter" && d.addr) out.push(d.addr);
+  out.push(...d.sections.map((s, i) => sectionAnswer(i)));
+  if (d.fmt === "letter") out.push(`${S.lib.settings.signoffLine}\n${S.lib.settings.name || ""}`.trim());
   return out.join("\n\n");
 }
 function renderModelHint() { $("#modelHint").textContent = "Using " + MODELS[S.lib.settings.model].label.split(":")[0]; }
@@ -875,7 +1049,7 @@ $("#splitBtn").addEventListener("click", async () => {
   if (!text) return err("#addErr", "Paste a letter first.");
   btn.disabled = true; btn.textContent = "Working…";
   try {
-    const sys = [{ type: "text", text: `You maintain a library of paragraphs from ${S.lib.settings.name || "the applicant"}'s job applications. Split the letter she gives you into library paragraphs.
+    const sys = [{ type: "text", text: `You maintain a library of paragraphs from ${S.lib.settings.name || "the applicant"}'s job applications. Split the letter below into library paragraphs.
 Rules:
 - Keep each paragraph's text exactly as written. Do not rewrite, fix or summarise.
 - Drop greetings, sign-offs, "thank you for considering my application", section headings and contact details.
@@ -930,12 +1104,12 @@ function closeDialog() { $("#dlg").close(); }
 $("#dlg").addEventListener("click", e => { if (e.target === $("#dlg")) closeDialog(); });
 
 const ACTIONS = {
-  "copy-letter": async () => { await navigator.clipboard.writeText(letterText()); toast("Letter copied"); },
+  "copy-letter": async () => { await navigator.clipboard.writeText(letterText()); toast("Copied"); },
   "download-txt": () => { const d = S.draft; download(((d.role_title || "cover-letter") + (d.organisation ? " - " + d.organisation : "")).replace(/[\\/:*?"<>|]+/g, "").slice(0, 80) + ".txt", letterText(), "text/plain"); },
   "draft-to-library": () => {
     const d = S.draft; syncDraftFromDom();
     $("#addRole").value = [d.role_title, d.organisation].filter(Boolean).join(" – ");
-    $("#addText").value = d.paragraphs.filter(p => p.origin !== "heading").map(p => p.text).join("\n\n");
+    $("#addText").value = d.sections.flatMap(s => s.paragraphs).filter(p => p.origin !== "heading").map(p => p.text).join("\n\n");
     switchTab("library"); setTimeout(() => $("#addText").scrollIntoView({ behavior: "smooth", block: "center" }), 50);
     toast("Check it, then press Split & tag");
   },
