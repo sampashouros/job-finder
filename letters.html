@@ -464,7 +464,7 @@ function friendlyError(status, m) {
 async function callClaude({ system, messages, tool, maxTokens = 6000, onProgress }) {
   const res = await api("claude", { payload: {
     model: S.lib.settings.model, max_tokens: maxTokens, system, messages,
-    tools: [tool], tool_choice: { type: "tool", name: tool.name },
+    output_config: { format: { type: "json_schema", schema: strictSchema(tool.input_schema) } },
   } });
   const reader = res.body.getReader(), dec = new TextDecoder();
   let buf = "", json = "", usage = {}, stop = null;
@@ -479,15 +479,25 @@ async function callClaude({ system, messages, tool, maxTokens = 6000, onProgress
       if (!data) continue;
       let ev; try { ev = JSON.parse(data); } catch { continue; }
       if (ev.type === "message_start") Object.assign(usage, ev.message.usage || {});
-      else if (ev.type === "content_block_delta" && ev.delta.type === "input_json_delta") { json += ev.delta.partial_json; onProgress && onProgress(json); }
+      else if (ev.type === "content_block_delta" && ev.delta.type === "text_delta") { json += ev.delta.text; onProgress && onProgress(json); }
       else if (ev.type === "message_delta") { Object.assign(usage, ev.usage || {}); stop = ev.delta && ev.delta.stop_reason; }
       else if (ev.type === "error") throw friendlyError(ev.error && ev.error.type === "overloaded_error" ? 529 : 500, (ev.error && ev.error.message) || "Claude error");
     }
   }
   if (stop === "max_tokens") throw new Error("The draft was cut off. Try a shorter length.");
+  if (stop === "refusal") throw new Error("Claude declined to write this one. Try rewording the notes.");
   if (!json) throw new Error("Claude didn't return anything. Try again.");
   let input; try { input = JSON.parse(json); } catch { throw new Error("The response was incomplete (the connection may have timed out). Try again, or pick a shorter length."); }
   return { input, usage };
+}
+// Structured outputs need additionalProperties:false on every object
+function strictSchema(s) {
+  if (Array.isArray(s)) return s.map(strictSchema);
+  if (!s || typeof s !== "object") return s;
+  const out = {};
+  for (const [k, v] of Object.entries(s)) out[k] = strictSchema(v);
+  if (out.type === "object") out.additionalProperties = false;
+  return out;
 }
 function costUsd(u) {
   const m = MODELS[S.lib.settings.model];
@@ -642,7 +652,7 @@ How to do it:
 9. Aim for about ${words} words in total.
 10. Mark each paragraph's origin: "reused" = mostly her original wording with light edits; "adapted" = substantially reworked from her material; "new" = written fresh (only short linking, opening or closing text). List the library ids each paragraph draws on.
 
-Call the draft_letter tool with the result.`;
+Reply with the result as JSON matching the required schema.`;
   return [
     { type: "text", text },
     { type: "text", text: "HER PARAGRAPH LIBRARY\n\n" + libraryText(), cache_control: { type: "ephemeral" } },

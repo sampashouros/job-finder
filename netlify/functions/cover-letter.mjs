@@ -69,8 +69,7 @@ export default async (req) => {
           max_tokens: Math.min(Number(p.max_tokens) || 4000, MAX_TOKENS_CAP),
           system: p.system,
           messages: p.messages,
-          tools: p.tools,
-          tool_choice: p.tool_choice,
+          output_config: p.output_config, // JSON schema for structured output
           stream: true,
         }),
       });
