@@ -344,7 +344,7 @@ function formatDate(str){if(!str)return null;const d=new Date(str);if(isNaN(d))r
 // --- API CALLS ---
 async function adzunaOne(what,where,sal){try{const p=new URLSearchParams({what,where,salary:sal});const r=await fetch(`${ADZUNA_PROXY}?${p}`);if(!r.ok){log(`Adzuna "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Adzuna "${what}" err: ${d.error}`,'error');return[];}log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',title:j.title,org:j.company?.display_name||'',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));}catch(e){log(`Adzuna "${what}" err: ${e.message}`,'error');return[];}}
 async function reedOne(what,loc,sal,remote){try{const p=new URLSearchParams({keywords:what,minimumSalary:sal,...(remote?{remote:'true'}:{location:loc,distance:'20'})});const r=await fetch(`${REED_PROXY}?${p}`);if(!r.ok){log(`Reed "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Reed "${what}" err: ${d.error}`,'error');return[];}log(`Reed "${what}" → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',title:j.jobTitle,org:j.employerName||'',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,salaryMin:j.minimumSalary,url:j.jobUrl,created:j.date}));}catch(e){log(`Reed "${what}" err: ${e.message}`,'error');return[];}}
-async function joobleOne(what,loc,sal){try{const remote=loc==='remote';const p=new URLSearchParams({keywords:what,location:remote?'':loc,minimumSalary:sal||35000,remote:remote?'true':'false'});const r=await fetch(`${JOOBLE_PROXY}?${p}`);if(!r.ok){log(`Jooble "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Jooble "${what}" err: ${d.error}`,'error');return[];}const jobs=d.jobs||[];
+async function joobleOne(what,loc,sal){try{const remote=loc==='remote';const p=new URLSearchParams({keywords:what,location:remote?'':loc,minimumSalary:sal||35000,remote:remote?'true':'false'});const r=await fetch(`${JOOBLE_PROXY}?${p}`);if(r.status===429){let detail='';try{detail=(await r.json()).detail||'';}catch(_){}const e=new Error('429');e.code=429;e.detail=String(detail).slice(0,150);throw e;}if(!r.ok){log(`Jooble "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Jooble "${what}" err: ${d.error}`,'error');return[];}const jobs=d.jobs||[];
   // Jooble returns 30 regardless of quality — pre-filter: at least one meaningful keyword must appear in title or snippet
   const kwWords=what.toLowerCase().replace(' remote','').split(' ').filter(w=>w.length>3);
   const relevant=jobs.filter(j=>{const txt=((j.title||'')+' '+(j.snippet||'')).toLowerCase();return kwWords.some(w=>txt.includes(w));});
@@ -352,7 +352,34 @@ async function joobleOne(what,loc,sal){try{const remote=loc==='remote';const p=n
   return relevant.map(j=>{
     const cleanTitle=(j.title||'').replace(/\s*-\s*\d+_\d+\s*$/, '').replace(/\s*-\s*\d{5,}\s*$/, '').trim();
     return {id:'jooble-'+(j.id||Math.random()),source:'jooble',title:cleanTitle,org:j.company||'',location:j.location||'',description:j.snippet||'',salary:j.salary||null,url:j.link||'#',created:j.updated||null};
-  });}catch(e){log(`Jooble "${what}" err: ${e.message}`,'error');return[];}}
+  });}catch(e){if(e.code===429)throw e;log(`Jooble "${what}" err: ${e.message}`,'error');return[];}}
+
+// Jooble rate-limits bursts (every request came back 429 when ~50 fired at once).
+// Run at most 2 at a time with a pause, retry a 429 once after a wait, and give up
+// on the rest if Jooble keeps refusing, so the search doesn't hang.
+async function runJoobleQueue(items,concurrency=2,gapMs=500){
+  const seen=new Set(),queue=items.filter(([q,l])=>{const k=(q+'|'+l).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
+  log(`Jooble: ${queue.length} searches, ${concurrency} at a time`,'info');
+  const results=[];let strikes=0,stopped=false;
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  async function one([q,l]){
+    for(let attempt=0;attempt<2;attempt++){
+      try{const jobs=await joobleOne(q,l,items.sal);strikes=0;return jobs;}
+      catch(e){
+        if(e.code!==429)return[];
+        if(attempt===0){log(`Jooble "${q}" → 429, retrying in 2s${e.detail?' ('+e.detail+')':''}`,'warn');await wait(2000);}
+      }
+    }
+    strikes++;log(`Jooble "${q}" → 429 again`,'error');return[];
+  }
+  for(let i=0;i<queue.length&&!stopped;i+=concurrency){
+    const batch=queue.slice(i,i+concurrency);
+    (await Promise.all(batch.map(one))).forEach(r=>results.push(...r));
+    if(strikes>=3){stopped=true;log(`Jooble keeps refusing (rate limit or daily quota), so the other ${queue.length-i-batch.length} Jooble searches were skipped`,'error');break;}
+    if(i+concurrency<queue.length)await wait(gapMs);
+  }
+  return results;
+}
 
 // --- SEARCH ---
 async function runSearch(){
@@ -374,26 +401,28 @@ async function runSearch(){
 
   log(`${queries.length} unique queries across 3 sources`,'info');
 
-  // Run Reed + Jooble in parallel (they handle it fine)
-  // Run Adzuna in small batches of 3 to avoid 429s
+  // Reed runs in parallel (it copes fine). Jooble goes through a slow queue (see runJoobleQueue).
+  // Adzuna runs in small batches to avoid 429s.
   const reedJooblePromises=[];
+  const joobleItems=[];joobleItems.sal=salMin;
   queries.forEach(q=>{
     if(locMode==='both'||locMode==='edinburgh'){
       reedJooblePromises.push(reedOne(q,'Edinburgh',salMin,false));
-      reedJooblePromises.push(joobleOne(q,'Edinburgh',salMin));
+      joobleItems.push([q,'Edinburgh']);
     }
     if(locMode==='both'||locMode==='remote'){
       reedJooblePromises.push(reedOne(q,'Edinburgh',salMin,true));
-      reedJooblePromises.push(joobleOne(q,'remote',salMin));
+      joobleItems.push([q,'remote']);
     }
   });
   // Extra remote SENCO queries
   if(roles.includes('senco')||roles.length===Object.keys(SEARCH_QUERIES).length){
     ['SENCO remote','SEND coordinator'].forEach(q=>{
       reedJooblePromises.push(reedOne(q,'',salMin,true));
-      reedJooblePromises.push(joobleOne(q,'remote',salMin));
+      joobleItems.push([q,'remote']);
     });
   }
+  reedJooblePromises.push(runJoobleQueue(joobleItems));
 
   // Adzuna in batches of 4 with a small delay between batches
   const adzunaQueries=[];
