@@ -365,8 +365,9 @@ async function joobleOne(it,sal){const remote=it.loc==='remote',what=remote?with
 // --- SEARCH BUDGETS & MEMORY ---
 // Limits: Jooble 100 requests/day. Adzuna 25/minute, 250/day, 1,000/week, 2,500/month. Reed doesn't publish one.
 const CACHE_KEY='bubs_search_cache_v1', SEEN_KEY='bubs_seen_v1', YIELD_KEY='bubs_query_yield_v1', JOOBLE_USE_KEY='bubs_jooble_used_v1';
-const CACHE_HOURS=12;           // reopening the page within this time shows saved results (0 requests)
-const JOOBLE_DAILY=100, JOOBLE_PER_SEARCH=15;
+const CACHE_HOURS=6;            // reopening the page within this time *on the same day* shows saved results (0 requests)
+const JOOBLE_DAILY=100, JOOBLE_FIRST_OF_DAY=40, JOOBLE_PER_SEARCH=15; // first search of the day covers almost all of Jooble's searches, refreshes get 15
+const localDay=t=>new Date(t).toDateString();
 const ADZUNA_PER_SEARCH=24;     // under Adzuna's 25/minute, so a search never trips it
 const kv={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
 const todayUTC=()=>new Date().toISOString().slice(0,10);
@@ -468,7 +469,8 @@ async function runSearch(force=false){
 
   // 1. Saved results: same settings, searched recently → show them, no requests
   const cache=kv.get(CACHE_KEY,null);
-  if(!force&&cache&&cache.key===key&&Date.now()-cache.at<CACHE_HOURS*3600000){
+  // Only reuse results from today and under 6 hours old, so the first visit each morning always searches fresh
+  if(!force&&cache&&cache.key===key&&localDay(cache.at)===localDay(Date.now())&&Date.now()-cache.at<CACHE_HOURS*3600000){
     document.getElementById('debug-panel').innerHTML='';
     const archivedIds=new Set(loadArchive());
     archived=cache.jobs.filter(j=>archivedIds.has(j.id));
@@ -494,8 +496,9 @@ async function runSearch(force=false){
   const y=kv.get(YIELD_KEY,{});
   const reedItems=plan('reed');
   const adzunaItems=pickBudget(plan('adzuna'),ADZUNA_PER_SEARCH,y);
-  const joobleLeft=JOOBLE_DAILY-joobleUsedToday();
-  const joobleItems=pickBudget(plan('jooble'),Math.min(JOOBLE_PER_SEARCH,joobleLeft),y);
+  const joobleUsed=joobleUsedToday(),joobleLeft=JOOBLE_DAILY-joobleUsed;
+  const joobleBudget=joobleUsed===0?JOOBLE_FIRST_OF_DAY:JOOBLE_PER_SEARCH; // Jooble's allowance resets at midnight UTC
+  const joobleItems=pickBudget(plan('jooble'),Math.min(joobleBudget,joobleLeft),y);
   log(`${queries.length} search terms → Reed ${reedItems.length} · Adzuna ${adzunaItems.length} of ${plan('adzuna').length} · Jooble ${joobleItems.length} of ${plan('jooble').length} (about ${Math.max(0,joobleLeft)} Jooble requests left today)`,'info');
 
   // 2. Run all three sources at once, each at its own safe pace, showing results as they arrive
