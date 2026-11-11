@@ -459,12 +459,24 @@ function findHours(t){
   m=t.match(/(0?\.\d+)\s*fte\b/);if(m)return parseFloat(m[1])*FT_HOURS;
   return null;
 }
+// Is a small figure (e.g. 193.95) per hour or per day? Reed's own salary type first, then what the advert
+// says right after that figure ("£193.95 per day"), then a sensible guess (under £60 is almost always hourly).
+function rateBasis(job,v,text){
+  const st=String(job._salaryType||'').toLowerCase();
+  if(/day/.test(st))return'day';if(/hour/.test(st))return'hour';
+  const nums=[String(v),v.toFixed(2),String(Math.round(v))].map(n=>n.replace('.','\\.'));
+  const m=text.match(new RegExp(`£?\\s*(?:${nums.join('|')})\\b(.{0,25})`));
+  if(m){if(/day|daily|p\/d|per diem/.test(m[1]))return'day';if(/hour|hourly|\bhr\b|p\/h|\bph\b/.test(m[1]))return'hour';}
+  if(/per day|a day\b|daily rate|day rate|\/day/.test(text))return'day';
+  if(/per hour|an hour\b|hourly|\/hr\b/.test(text))return'hour';
+  return v<60?'hour':'day';
+}
 function payInfo(job){
   if(job._pay!==undefined)return job._pay;
   const text=((job.title||'')+' '+(job.description||'')+' '+(job.salary||'')).replace(/<[^>]+>/g,' ').toLowerCase();
   // Pay as given
   let pay=null;
-  if(job.salaryMin){pay=job.salaryMin<200?{rate:job.salaryMin,basis:'hour'}:job.salaryMin<1000?{rate:job.salaryMin,basis:'day'}:{rate:job.salaryMin,basis:'year'};}
+  if(job.salaryMin){const v=job.salaryMin;pay={rate:v,basis:v>=1000?'year':rateBasis(job,v,text)};}
   else pay=parsePay(job.salary);
   // Part-time?
   const hours=findHours(text);
@@ -508,7 +520,7 @@ function annotateAndFilter(jobs){
   const min=+document.getElementById('salary-min').value||0,noSal=includeNoSalary();
   const det=kv.get(DETAIL_KEY,{});
   return jobs.filter(j=>{
-    const d=det[j.id];if(d){j.description=d.text;j._full=true;if(d.pt)j._ptFlag=true;} // full Reed advert
+    const d=det[j.id];if(d){j.description=d.text;j._full=true;if(d.pt)j._ptFlag=true;if(d.st)j._salaryType=d.st;} // full Reed advert
     const c=closesInfo(j);if(c&&c.expired)return false;
     j._pay=undefined; // recalculate
     if(hasSalary(j)){if(salaryNum(j)<min*0.98)return false;} else if(!noSal)return false; // no salary, or part-time with hours not stated: only kept when the tick box is on
@@ -572,7 +584,7 @@ async function loadReedDetails(jobs){
     await Promise.all(todo.slice(i,i+3).map(async j=>{
       try{
         const r=await fetch(`${REED_PROXY}?jobId=${encodeURIComponent(j.id.replace('reed-',''))}`);
-        if(r.ok){const d=await r.json();if(d.jobDescription)det[j.id]={t:Date.now(),text:htmlToText(d.jobDescription).slice(0,8000),pt:!!d.partTime&&!d.fullTime};}
+        if(r.ok){const d=await r.json();if(d.jobDescription)det[j.id]={t:Date.now(),text:htmlToText(d.jobDescription).slice(0,8000),pt:!!d.partTime&&!d.fullTime,st:d.salaryType||''};}
         else log(`Reed advert ${j.id} → ${r.status}`,'warn');
       }catch(e){}
       searchMeta.details.done++;
