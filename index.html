@@ -128,6 +128,11 @@
   .apply-link:hover { background: var(--accent-bg); border-color: var(--accent-border); }
   .apply-link svg { width: 11px; height: 11px; }
   .letter-link { margin-left: 6px; cursor: pointer; font-family: inherit; }
+  .new-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: var(--accent); color: #fff; letter-spacing: .03em; }
+  .new-count { color: var(--accent); font-weight: 600; }
+  .search-status { font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .search-status a { color: var(--accent); font-weight: 500; }
+  .spinner-sm { width: 11px; height: 11px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .75s linear infinite; display: inline-block; }
 
   /* SITE NAV (jobs ↔ cover letters) */
   .site-nav { display: flex; gap: 2px; }
@@ -342,146 +347,204 @@ function guessRole(job){const t=(job.title||'').toLowerCase();if(t.includes('saf
 function formatDate(str){if(!str)return null;const d=new Date(str);if(isNaN(d))return null;const now=new Date();const days=Math.floor((now-d)/86400000);if(days===0)return'Today';if(days===1)return'Yesterday';if(days<7)return`${days}d ago`;if(days<30)return`${Math.floor(days/7)}w ago`;return`${Math.floor(days/30)}mo ago`;}
 
 // --- API CALLS ---
-async function adzunaOne(what,where,sal){try{const p=new URLSearchParams({what,where,salary:sal});const r=await fetch(`${ADZUNA_PROXY}?${p}`);if(!r.ok){log(`Adzuna "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Adzuna "${what}" err: ${d.error}`,'error');return[];}log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',title:j.title,org:j.company?.display_name||'',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));}catch(e){log(`Adzuna "${what}" err: ${e.message}`,'error');return[];}}
-async function reedOne(what,loc,sal,remote){try{const p=new URLSearchParams({keywords:what,minimumSalary:sal,...(remote?{remote:'true'}:{location:loc,distance:'20'})});const r=await fetch(`${REED_PROXY}?${p}`);if(!r.ok){log(`Reed "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Reed "${what}" err: ${d.error}`,'error');return[];}log(`Reed "${what}" → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',title:j.jobTitle,org:j.employerName||'',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,salaryMin:j.minimumSalary,url:j.jobUrl,created:j.date}));}catch(e){log(`Reed "${what}" err: ${e.message}`,'error');return[];}}
-async function joobleOne(what,loc,sal){try{const remote=loc==='remote';const p=new URLSearchParams({keywords:what,location:remote?'':loc,minimumSalary:sal||35000,remote:remote?'true':'false'});const r=await fetch(`${JOOBLE_PROXY}?${p}`);if(r.status===429){let detail='';try{detail=(await r.json()).detail||'';}catch(_){}const e=new Error('429');e.code=429;e.detail=String(detail).slice(0,150);throw e;}if(!r.ok){log(`Jooble "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Jooble "${what}" err: ${d.error}`,'error');return[];}const jobs=d.jobs||[];
+// Each one returns jobs tagged with _q (which search found them), so we can track which searches are worth running.
+const withRemote=q=>/remote/i.test(q)?q:q+' remote';
+async function adzunaOne(it,sal){const what=it.loc==='remote'?withRemote(it.q):it.q,where=it.loc==='remote'?'uk':'edinburgh';try{const p=new URLSearchParams({what,where,salary:sal});const r=await fetch(`${ADZUNA_PROXY}?${p}`);if(!r.ok){log(`Adzuna "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Adzuna "${what}" err: ${d.error}`,'error');return[];}log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',_q:it.key,title:j.title,org:j.company?.display_name||'',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));}catch(e){log(`Adzuna "${what}" err: ${e.message}`,'error');return[];}}
+// Remote: Reed has no remote filter, so put "remote" in the search words (previously it searched the whole UK and ~90% got thrown away)
+async function reedOne(it,sal){const remote=it.loc==='remote',what=remote?withRemote(it.q):it.q;try{const p=new URLSearchParams({keywords:what,minimumSalary:sal,...(remote?{remote:'true'}:{location:'Edinburgh',distance:'20'})});const r=await fetch(`${REED_PROXY}?${p}`);if(!r.ok){log(`Reed "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Reed "${what}" err: ${d.error}`,'error');return[];}log(`Reed "${what}"${remote?'':' @ Edinburgh'} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',_q:it.key,title:j.jobTitle,org:j.employerName||'',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,salaryMin:j.minimumSalary,url:j.jobUrl,created:j.date}));}catch(e){log(`Reed "${what}" err: ${e.message}`,'error');return[];}}
+async function joobleOne(it,sal){const remote=it.loc==='remote',what=remote?withRemote(it.q):it.q;try{const p=new URLSearchParams({keywords:what,location:remote?'':'Edinburgh',minimumSalary:sal||35000,remote:remote?'true':'false'});const r=await fetch(`${JOOBLE_PROXY}?${p}`);if(r.status===429){let detail='';try{detail=(await r.json()).detail||'';}catch(_){}const e=new Error('429');e.code=429;e.detail=String(detail).slice(0,150);throw e;}if(!r.ok){log(`Jooble "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Jooble "${what}" err: ${d.error}`,'error');return[];}const jobs=d.jobs||[];
   // Jooble returns 30 regardless of quality — pre-filter: at least one meaningful keyword must appear in title or snippet
-  const kwWords=what.toLowerCase().replace(' remote','').split(' ').filter(w=>w.length>3);
+  const kwWords=it.q.toLowerCase().replace(' remote','').split(' ').filter(w=>w.length>3);
   const relevant=jobs.filter(j=>{const txt=((j.title||'')+' '+(j.snippet||'')).toLowerCase();return kwWords.some(w=>txt.includes(w));});
-  log(`Jooble "${what}" → ${jobs.length} (${relevant.length} relevant)`,relevant.length?'ok':'warn');
+  log(`Jooble "${what}"${remote?'':' @ Edinburgh'} → ${jobs.length} (${relevant.length} relevant)`,relevant.length?'ok':'warn');
   return relevant.map(j=>{
     const cleanTitle=(j.title||'').replace(/\s*-\s*\d+_\d+\s*$/, '').replace(/\s*-\s*\d{5,}\s*$/, '').trim();
-    return {id:'jooble-'+(j.id||Math.random()),source:'jooble',title:cleanTitle,org:j.company||'',location:j.location||'',description:j.snippet||'',salary:j.salary||null,url:j.link||'#',created:j.updated||null};
+    return {id:'jooble-'+(j.id||Math.random()),source:'jooble',_q:it.key,title:cleanTitle,org:j.company||'',location:j.location||'',description:j.snippet||'',salary:j.salary||null,url:j.link||'#',created:j.updated||null};
   });}catch(e){if(e.code===429)throw e;log(`Jooble "${what}" err: ${e.message}`,'error');return[];}}
 
-// Jooble rate-limits bursts (every request came back 429 when ~50 fired at once).
-// Run at most 2 at a time with a pause, retry a 429 once after a wait, and give up
-// on the rest if Jooble keeps refusing, so the search doesn't hang.
-async function runJoobleQueue(items,concurrency=2,gapMs=500){
-  const seen=new Set(),queue=items.filter(([q,l])=>{const k=(q+'|'+l).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
-  log(`Jooble: ${queue.length} searches, ${concurrency} at a time`,'info');
-  const results=[];let strikes=0,stopped=false;
-  const wait=ms=>new Promise(r=>setTimeout(r,ms));
-  async function one([q,l]){
+// --- SEARCH BUDGETS & MEMORY ---
+// Limits: Jooble 100 requests/day. Adzuna 25/minute, 250/day, 1,000/week, 2,500/month. Reed doesn't publish one.
+const CACHE_KEY='bubs_search_cache_v1', SEEN_KEY='bubs_seen_v1', YIELD_KEY='bubs_query_yield_v1', JOOBLE_USE_KEY='bubs_jooble_used_v1';
+const CACHE_HOURS=12;           // reopening the page within this time shows saved results (0 requests)
+const JOOBLE_DAILY=100, JOOBLE_PER_SEARCH=15;
+const ADZUNA_PER_SEARCH=24;     // under Adzuna's 25/minute, so a search never trips it
+const kv={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+const todayUTC=()=>new Date().toISOString().slice(0,10);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+// Which searches to spend a limited budget on: never-tried ones first, then the ones that have
+// actually produced jobs (after filtering), with a small boost for ones not tried recently.
+function queryPriority(key,y){const r=y[key];if(!r||!r.hist.length)return 1000;const avg=r.hist.reduce((a,b)=>a+b,0)/r.hist.length;return avg*10+Math.min((Date.now()-r.last)/86400000,7);}
+function pickBudget(items,budget,y){return [...items].sort((a,b)=>queryPriority(b.key,y)-queryPriority(a.key,y)).slice(0,Math.max(0,budget));}
+function joobleUsedToday(){const u=kv.get(JOOBLE_USE_KEY,{});return u.date===todayUTC()?u.n:0;}
+function addJoobleUse(n){kv.set(JOOBLE_USE_KEY,{date:todayUTC(),n:joobleUsedToday()+n});}
+
+// --- SOURCE RUNNERS (each hands results over as they arrive, so the page fills in progressively) ---
+async function runReed(items,sal,onJobs,progress){
+  await Promise.all(items.map(async it=>{onJobs(await reedOne(it,sal));progress.reed++;}));
+}
+async function runAdzuna(items,sal,onJobs,progress,batchSize=4,gapMs=300){
+  for(let i=0;i<items.length;i+=batchSize){
+    const batch=items.slice(i,i+batchSize);
+    await Promise.all(batch.map(async it=>{onJobs(await adzunaOne(it,sal));progress.adzuna++;}));
+    if(i+batchSize<items.length)await wait(gapMs);
+  }
+}
+// Jooble rate-limits bursts and has a 100/day cap: 2 at a time with a pause, retry a 429 once,
+// stop for the day on "daily request limit", stop the run after 3 refusals.
+async function runJooble(items,sal,onJobs,progress,concurrency=2,gapMs=500){
+  const today=todayUTC();
+  let quotaDay=null;try{quotaDay=localStorage.getItem('bubs_jooble_quota');}catch(_){}
+  if(quotaDay===today){log(`Jooble skipped: its daily request limit was used up earlier today. It should work again tomorrow.`,'warn');progress.joobleTotal=0;return;}
+  let strikes=0,stopped=false;
+  async function one(it){
     for(let attempt=0;attempt<2;attempt++){
-      try{const jobs=await joobleOne(q,l,items.sal);strikes=0;return jobs;}
+      if(stopped)return[];
+      addJoobleUse(1);
+      try{const jobs=await joobleOne(it,sal);strikes=0;return jobs;}
       catch(e){
         if(e.code!==429)return[];
-        if(attempt===0){log(`Jooble "${q}" → 429, retrying in 2s${e.detail?' ('+e.detail+')':''}`,'warn');await wait(2000);}
+        if(/daily request limit/i.test(e.detail||'')){
+          if(!stopped){stopped=true;try{localStorage.setItem('bubs_jooble_quota',today);}catch(_){}
+            log(`Jooble's daily request limit is used up, so Jooble is skipped until tomorrow`,'error');}
+          return[];
+        }
+        if(attempt===0){log(`Jooble "${it.q}" → 429, retrying in 2s${e.detail?' ('+e.detail+')':''}`,'warn');await wait(2000);}
       }
     }
-    strikes++;log(`Jooble "${q}" → 429 again`,'error');return[];
+    strikes++;log(`Jooble "${it.q}" → 429 again`,'error');return[];
   }
-  for(let i=0;i<queue.length&&!stopped;i+=concurrency){
-    const batch=queue.slice(i,i+concurrency);
-    (await Promise.all(batch.map(one))).forEach(r=>results.push(...r));
-    if(strikes>=3){stopped=true;log(`Jooble keeps refusing (rate limit or daily quota), so the other ${queue.length-i-batch.length} Jooble searches were skipped`,'error');break;}
-    if(i+concurrency<queue.length)await wait(gapMs);
+  for(let i=0;i<items.length&&!stopped;i+=concurrency){
+    const batch=items.slice(i,i+concurrency);
+    (await Promise.all(batch.map(one))).forEach(r=>onJobs(r));
+    progress.jooble+=batch.length;
+    if(stopped)break;
+    if(strikes>=3){stopped=true;log(`Jooble keeps refusing (rate limit or daily quota), so the other ${items.length-i-batch.length} Jooble searches were skipped`,'error');break;}
+    if(i+concurrency<items.length)await wait(gapMs);
   }
-  return results;
+  if(stopped)progress.joobleTotal=progress.jooble;
 }
 
 // --- SEARCH ---
-async function runSearch(){
-  const btn=document.getElementById('search-btn');
-  const locMode=document.getElementById('location-type').value;
-  const salMin=document.getElementById('salary-min').value;
-  const salLabel=document.getElementById('salary-min').selectedOptions[0].text;
-  const roles=getSelectedRoles();
+let searchMeta={salLabel:'',at:null,fromCache:false,running:false,progress:null,newCount:0};
+let rawJobs=[], seenBefore=new Set(), firstEverSearch=false, _renderTimer=null;
 
-  document.getElementById('debug-panel').innerHTML='';
-  btn.disabled=true;btn.textContent='Searching…';
-  document.getElementById('results-area').innerHTML='<div class="loading-state"><div class="spinner"></div><span>Searching Adzuna, Reed and Jooble…</span></div>';
+function settingsKey(roles,locMode,salMin){return JSON.stringify([...roles].sort())+'|'+locMode+'|'+salMin;}
 
-  log(`Roles: ${roles.join(', ')} | ${locMode} | ${salLabel}`,'info');
-
-  const querySet=new Set();
-  roles.forEach(r=>(SEARCH_QUERIES[r]||[]).forEach(q=>querySet.add(q)));
-  const queries=[...querySet];
-
-  log(`${queries.length} unique queries across 3 sources`,'info');
-
-  // Reed runs in parallel (it copes fine). Jooble goes through a slow queue (see runJoobleQueue).
-  // Adzuna runs in small batches to avoid 429s.
-  const reedJooblePromises=[];
-  const joobleItems=[];joobleItems.sal=salMin;
-  queries.forEach(q=>{
-    if(locMode==='both'||locMode==='edinburgh'){
-      reedJooblePromises.push(reedOne(q,'Edinburgh',salMin,false));
-      joobleItems.push([q,'Edinburgh']);
-    }
-    if(locMode==='both'||locMode==='remote'){
-      reedJooblePromises.push(reedOne(q,'Edinburgh',salMin,true));
-      joobleItems.push([q,'remote']);
-    }
-  });
-  // Extra remote SENCO queries
-  if(roles.includes('senco')||roles.length===Object.keys(SEARCH_QUERIES).length){
-    ['SENCO remote','SEND coordinator'].forEach(q=>{
-      reedJooblePromises.push(reedOne(q,'',salMin,true));
-      joobleItems.push([q,'remote']);
-    });
-  }
-  reedJooblePromises.push(runJoobleQueue(joobleItems));
-
-  // Adzuna in batches of 4 with a small delay between batches
-  const adzunaQueries=[];
-  queries.forEach(q=>{
-    if(locMode==='both'||locMode==='edinburgh') adzunaQueries.push([q,'edinburgh',salMin]);
-    if(locMode==='both'||locMode==='remote')    adzunaQueries.push([q+' remote','uk',salMin]);
-  });
-
-  async function runAdzunaBatches(items,batchSize=4,delayMs=300){
-    const results=[];
-    for(let i=0;i<items.length;i+=batchSize){
-      const batch=items.slice(i,i+batchSize);
-      const batchResults=await Promise.allSettled(batch.map(([q,w,s])=>adzunaOne(q,w,s)));
-      results.push(...batchResults);
-      if(i+batchSize<items.length) await new Promise(r=>setTimeout(r,delayMs));
-    }
-    return results;
-  }
-
-  const [rjResults,azResults]=await Promise.all([
-    Promise.allSettled(reedJooblePromises),
-    runAdzunaBatches(adzunaQueries),
-  ]);
-
-  const allRaw=[...rjResults,...azResults].flatMap(r=>r.status==='fulfilled'?r.value:[]);
-
+// Turn the raw results into the job lists: dedupe, sector + location filters, archive, scores, "new" flags
+function processRaw(locMode){
   const seenId=new Set(),seenKey=new Set();
-  const deduped=allRaw.filter(j=>{
+  const deduped=rawJobs.filter(j=>{
     if(seenId.has(j.id))return false;seenId.add(j.id);
     const k=(j.title+j.org).toLowerCase().replace(/\s/g,'');
     if(seenKey.has(k))return false;seenKey.add(k);
     return true;
   });
-
   let jobs=deduped.filter(j=>isRelevantJob(j));
-  log(`Sector filter: ${deduped.length} → ${jobs.length}`,'info');
-
-  const before=jobs.length;
+  const sectorCount=jobs.length;
   if(locMode==='edinburgh') jobs=jobs.filter(j=>jobIsEdinburgh(j));
   else if(locMode==='remote') jobs=jobs.filter(j=>jobIsRemote(j));
   else jobs=jobs.filter(j=>jobIsEdinburgh(j)||jobIsRemote(j));
-  log(`Location filter: ${before} → ${jobs.length}`,'info');
-
-  // Load archived IDs and filter them out
+  jobs.forEach(j=>{j._score=scoreJob(j);j._role=guessRole(j);j._new=!firstEverSearch&&!seenBefore.has(j.id);});
   const archivedIds=new Set(loadArchive());
   archived=jobs.filter(j=>archivedIds.has(j.id));
   allJobs=jobs.filter(j=>!archivedIds.has(j.id));
+  searchMeta.newCount=allJobs.filter(j=>j._new).length;
+  return {raw:rawJobs.length,deduped:deduped.length,sector:sectorCount,kept:jobs};
+}
+function scheduleRender(locMode){
+  if(_renderTimer)return;
+  _renderTimer=setTimeout(()=>{_renderTimer=null;processRaw(locMode);if(allJobs.length||archived.length)render();},400);
+}
 
-  // Stamp role + score on every job
-  [...allJobs,...archived].forEach(j=>{j._score=scoreJob(j);j._role=guessRole(j);});
+async function runSearch(force=false){
+  const btn=document.getElementById('search-btn');
+  const locMode=document.getElementById('location-type').value;
+  const salMin=document.getElementById('salary-min').value;
+  const salLabel=document.getElementById('salary-min').selectedOptions[0].text;
+  const roles=getSelectedRoles();
+  const key=settingsKey(roles,locMode,salMin);
+  if(searchMeta.running)return;
 
-  const az=allJobs.filter(j=>j.source==='adzuna').length;
-  const rd=allJobs.filter(j=>j.source==='reed').length;
-  const jb=allJobs.filter(j=>j.source==='jooble').length;
-  log(`Done: ${allJobs.length} active + ${archived.length} archived — Adzuna ${az} · Reed ${rd} · Jooble ${jb}`,allJobs.length?'ok':'warn');
+  // 1. Saved results: same settings, searched recently → show them, no requests
+  const cache=kv.get(CACHE_KEY,null);
+  if(!force&&cache&&cache.key===key&&Date.now()-cache.at<CACHE_HOURS*3600000){
+    document.getElementById('debug-panel').innerHTML='';
+    const archivedIds=new Set(loadArchive());
+    archived=cache.jobs.filter(j=>archivedIds.has(j.id));
+    allJobs=cache.jobs.filter(j=>!archivedIds.has(j.id));
+    searchMeta={salLabel,at:cache.at,fromCache:true,running:false,progress:null,newCount:allJobs.filter(j=>j._new).length};
+    log(`Showing saved results from ${new Date(cache.at).toLocaleTimeString()} (no requests used). Press Refresh for a new search.`,'ok');
+    currentTab='active';render();return;
+  }
 
+  document.getElementById('debug-panel').innerHTML='';
+  btn.disabled=true;btn.textContent='Searching…';
+  document.getElementById('results-area').innerHTML='<div class="loading-state"><div class="spinner"></div><span>Searching Reed, Adzuna and Jooble…</span></div>';
+  log(`Roles: ${roles.join(', ')} | ${locMode} | ${salLabel}`,'info');
+
+  const querySet=new Set();
+  roles.forEach(r=>(SEARCH_QUERIES[r]||[]).forEach(q=>querySet.add(q)));
+  const queries=[...querySet];
+  if(roles.includes('senco')&&locMode!=='edinburgh')['SEND coordinator'].forEach(q=>querySet.add(q));
+
+  // One list of searches per source: each search term × (Edinburgh and/or remote)
+  const locs=locMode==='both'?['edinburgh','remote']:[locMode];
+  const plan=src=>[...querySet].flatMap(q=>locs.map(loc=>({source:src,q,loc,key:`${src}|${q}|${loc}`})));
+  const y=kv.get(YIELD_KEY,{});
+  const reedItems=plan('reed');
+  const adzunaItems=pickBudget(plan('adzuna'),ADZUNA_PER_SEARCH,y);
+  const joobleLeft=JOOBLE_DAILY-joobleUsedToday();
+  const joobleItems=pickBudget(plan('jooble'),Math.min(JOOBLE_PER_SEARCH,joobleLeft),y);
+  log(`${queries.length} search terms → Reed ${reedItems.length} · Adzuna ${adzunaItems.length} of ${plan('adzuna').length} · Jooble ${joobleItems.length} of ${plan('jooble').length} (about ${Math.max(0,joobleLeft)} Jooble requests left today)`,'info');
+
+  // 2. Run all three sources at once, each at its own safe pace, showing results as they arrive
+  seenBefore=new Set(kv.get(SEEN_KEY,[]).map(s=>s.id));
+  firstEverSearch=seenBefore.size===0;
+  rawJobs=[];
+  const progress={reed:0,adzuna:0,jooble:0,reedTotal:reedItems.length,adzunaTotal:adzunaItems.length,joobleTotal:joobleItems.length};
+  searchMeta={salLabel,at:Date.now(),fromCache:false,running:true,progress,newCount:0};
   currentTab='active';
-  render(salLabel,az,rd,jb);
+  const onJobs=jobs=>{rawJobs.push(...jobs);scheduleRender(locMode);};
+  await Promise.all([
+    runReed(reedItems,salMin,onJobs,progress),
+    runAdzuna(adzunaItems,salMin,onJobs,progress),
+    runJooble(joobleItems,salMin,onJobs,progress),
+  ]);
+  clearTimeout(_renderTimer);_renderTimer=null;
+
+  // 3. Final pass
+  const r=processRaw(locMode);
+  log(`Sector filter: ${r.deduped} → ${r.sector}`,'info');
+  log(`Location filter: ${r.sector} → ${r.kept.length}`,'info');
+  searchMeta.running=false;searchMeta.at=Date.now();
+
+  // 4. Remember: which jobs she's seen (for "New" badges), the results (cache), and which searches produced jobs
+  const seenList=kv.get(SEEN_KEY,[]).filter(s=>Date.now()-s.t<30*86400000);
+  const seenIds=new Set(seenList.map(s=>s.id));
+  r.kept.forEach(j=>{if(!seenIds.has(j.id))seenList.push({id:j.id,t:Date.now()});});
+  kv.set(SEEN_KEY,seenList.slice(-3000));
+  kv.set(CACHE_KEY,{key,at:searchMeta.at,jobs:r.kept});
+  recordYield([...reedItems,...adzunaItems,...joobleItems.slice(0,progress.jooble)],r.kept,y);
+
+  const az=allJobs.filter(j=>j.source==='adzuna').length,rd=allJobs.filter(j=>j.source==='reed').length,jb=allJobs.filter(j=>j.source==='jooble').length;
+  log(`Done: ${allJobs.length} active + ${archived.length} archived — Adzuna ${az} · Reed ${rd} · Jooble ${jb}${firstEverSearch?'':` · ${searchMeta.newCount} new`}`,allJobs.length?'ok':'warn');
+  render();
   btn.disabled=false;btn.textContent='Search jobs';
+}
+
+// Track how many jobs each search actually contributed after filtering (last 5 runs),
+// then log which searches earn their place and which never do.
+function recordYield(tried,kept,y){
+  const counts={};kept.forEach(j=>{if(j._q)counts[j._q]=(counts[j._q]||0)+1;});
+  tried.forEach(it=>{const r=y[it.key]||{hist:[],last:0};r.hist=[...r.hist,counts[it.key]||0].slice(-5);r.last=Date.now();y[it.key]=r;});
+  kv.set(YIELD_KEY,y);
+  const rows=Object.entries(y).map(([k,r])=>({k,avg:r.hist.reduce((a,b)=>a+b,0)/r.hist.length,runs:r.hist.length}));
+  const label=k=>{const[s,q,l]=k.split('|');return `${s[0].toUpperCase()+s.slice(1)} "${q}" (${l})`;};
+  const best=rows.filter(r=>r.avg>0).sort((a,b)=>b.avg-a.avg).slice(0,8);
+  const dead=rows.filter(r=>r.avg===0&&r.runs>=3);
+  if(best.length)log(`Most useful searches (avg jobs kept): ${best.map(r=>`${label(r.k)} ${r.avg.toFixed(1)}`).join(' · ')}`,'ok');
+  if(dead.length)log(`Never useful in their last ${3}+ runs (candidates to drop): ${dead.map(r=>label(r.k)).join(' · ')}`,'warn');
 }
 
 // --- DISMISS / RESTORE ---
@@ -506,9 +569,7 @@ function restore(id){
 function clearArchive(){archived=[];saveArchive();render();}
 
 // --- RENDER ---
-let _salLabel='',_az=0,_rd=0,_jb=0;
-function render(salLabel,az,rd,jb){
-  if(salLabel!==undefined){_salLabel=salLabel;_az=az;_rd=rd;_jb=jb;}
+function render(){
   currentTab==='active'?renderActive():renderArchived();
   updateTabCounts();
 }
@@ -534,6 +595,7 @@ function getSorted(jobs){
   if(sort==='salary-high')j.sort((a,b)=>(salaryNum(b)||0)-(salaryNum(a)||0));
   else if(sort==='salary-low')j.sort((a,b)=>(salaryNum(a)||999999)-(salaryNum(b)||999999));
   else if(sort==='relevance')j.sort((a,b)=>b._score-a._score);
+  else if(sort==='new')j.sort((a,b)=>(b._new?1:0)-(a._new?1:0)||new Date(b.created||0)-new Date(a.created||0));
   else j.sort((a,b)=>new Date(b.created||0)-new Date(a.created||0)); // default: recent
   return j;
 }
@@ -541,7 +603,8 @@ function getSorted(jobs){
 function renderActive(){
   const area=document.getElementById('results-area');
   if(!allJobs.length){
-    area.innerHTML=tabsHTML()+'<div class="empty-state"><div class="big">😕</div><p>No results — try different filters or lower the salary.<br>Open <strong>🛠 Debug</strong> to diagnose.</p></div>';
+    if(searchMeta.running){area.innerHTML='<div class="loading-state"><div class="spinner"></div><span>Searching Reed, Adzuna and Jooble…</span></div>';return;}
+    area.innerHTML=tabsHTML()+`<div class="empty-state"><div class="big">😕</div><p>No results — try different filters or lower the salary.<br>Open <strong>🛠 Debug</strong> to diagnose.</p>${statusHTML()}</div>`;
     return;
   }
   const sortVal=document.getElementById('sort-select')?.value||'recent';
@@ -569,13 +632,16 @@ function renderActive(){
     sections=`<div class="job-list">${jobs.map((j,i)=>cardHTML(j,'a'+i,false)).join('')}</div>`;
   }
 
-  const countLine=`${allJobs.length} results · ${_salLabel} · Adzuna ${_az} · Reed ${_rd} · Jooble ${_jb}`;
+  const n=s=>allJobs.filter(j=>j.source===s).length;
+  const countLine=`${allJobs.length} results · ${searchMeta.salLabel} · Adzuna ${n('adzuna')} · Reed ${n('reed')} · Jooble ${n('jooble')}`;
+  const newLine=searchMeta.newCount?` · <span class="new-count">${searchMeta.newCount} new</span>`:'';
   area.innerHTML=`
     ${tabsHTML()}
     <div class="results-toolbar">
-      <div><div class="results-count">${allJobs.length} roles found</div><div class="status-bar">${countLine}</div></div>
+      <div><div class="results-count">${allJobs.length} roles found${newLine}</div><div class="status-bar">${countLine}</div>${statusHTML()}</div>
       <select class="sort-select" id="sort-select" onchange="render()">
         <option value="recent"${sortVal==='recent'?' selected':''}>Most recent</option>
+        <option value="new"${sortVal==='new'?' selected':''}>New first</option>
         <option value="group"${sortVal==='group'?' selected':''}>Group by role type</option>
         <option value="relevance"${sortVal==='relevance'?' selected':''}>Best match</option>
         <option value="salary-high"${sortVal==='salary-high'?' selected':''}>Salary: high → low</option>
@@ -620,6 +686,7 @@ function cardHTML(j,idx,isArchived){
       <div class="card-top">
         <div><div class="card-title">${j.title}</div><div class="card-org">${j.org}</div></div>
         <div class="card-top-right">
+          ${j._new&&!isArchived?'<span class="new-badge">New</span>':''}
           <span class="source-badge source-${j.source}">${src}</span>
           ${actionBtn}
         </div>
@@ -641,6 +708,18 @@ function cardHTML(j,idx,isArchived){
       <button class="apply-link letter-link" onclick="event.stopPropagation();writeLetter('${j.id}')">✍️ Write cover letter</button>
     </div>
   </div>`;
+}
+
+// "Searched 2h ago · Refresh" line, or live progress while a search is running
+function agoText(t){const m=Math.round((Date.now()-t)/60000);if(m<1)return'just now';if(m<60)return`${m} min ago`;const h=Math.round(m/60);return`${h} hour${h===1?'':'s'} ago`;}
+function statusHTML(){
+  const p=searchMeta.progress;
+  if(searchMeta.running&&p){
+    const part=(name,d,t)=>t?`${name} ${Math.min(d,t)}/${t}`:`${name} skipped`;
+    return `<div class="search-status"><span class="spinner-sm"></span>Still searching · ${part('Reed',p.reed,p.reedTotal)} · ${part('Adzuna',p.adzuna,p.adzunaTotal)} · ${part('Jooble',p.jooble,p.joobleTotal)}</div>`;
+  }
+  if(!searchMeta.at)return'';
+  return `<div class="search-status">${searchMeta.fromCache?'Saved results from':'Searched'} ${agoText(searchMeta.at)} · <a href="#" onclick="event.preventDefault();runSearch(true)">Refresh</a></div>`;
 }
 
 function toggleCard(idx){document.getElementById(`card-${idx}`)?.classList.toggle('expanded');}
@@ -688,7 +767,7 @@ function toggleDark(){
 }
 
 function clearAll(){
-  allJobs=[];archived=[];saveArchive();
+  allJobs=[];archived=[];saveArchive();kv.set(CACHE_KEY,null);
   document.querySelectorAll('#role-toggles input').forEach(cb=>{cb.checked=false;});
   document.getElementById('results-area').innerHTML='<div class="empty-state"><div class="big">🔍</div><p>Toggle some role types and hit <strong>Search jobs</strong>.</p></div>';
   document.getElementById('debug-panel').innerHTML='';

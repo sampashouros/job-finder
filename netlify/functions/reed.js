@@ -8,7 +8,7 @@ exports.handler = async function(event) {
   const minimumSalary = params.minimumSalary || '30000';
   const remoteOnly = params.remote === 'true';
 
-  let url = `https://www.reed.co.uk/api/1.0/search?keywords=${encodeURIComponent(keywords)}&minimumSalary=${minimumSalary}&resultsToTake=20`;
+  let url = `https://www.reed.co.uk/api/1.0/search?keywords=${encodeURIComponent(keywords)}&minimumSalary=${minimumSalary}&resultsToTake=100`; // max allowed; same request, 5x the jobs
   if (!remoteOnly) {
     url += `&locationName=${encodeURIComponent(location)}&distanceFromLocation=${distance}`;
   }

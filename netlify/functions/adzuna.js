@@ -9,7 +9,7 @@ exports.handler = async function(event) {
 
   const url = `https://api.adzuna.com/v1/api/jobs/gb/search/1`
     + `?app_id=${ADZUNA_APP_ID}&app_key=${ADZUNA_APP_KEY}`
-    + `&results_per_page=10`
+    + `&results_per_page=50`  // max allowed; same request, 5x the jobs
     + `&what=${encodeURIComponent(what)}`
     + `&where=${encodeURIComponent(where)}`
     + `&salary_min=${sal}`
