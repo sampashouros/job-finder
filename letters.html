@@ -108,6 +108,12 @@
   .badge.adapted { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); }
   .badge.trimmed { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
   .badge.new { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .badge.suggested { background: var(--amber-bg); color: var(--amber); border: 1px dashed var(--amber); }
+  .aiblock { margin-top: 6px; padding: 8px 10px; border: 1px dashed var(--amber-border); border-radius: var(--rs); background: var(--amber-bg); }
+  .aitext { font: 14px/1.55 var(--serif); color: var(--text); }
+  .gap .pri { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; }
+  .curpara { font: 14px/1.55 var(--serif); color: var(--muted); max-height: 140px; overflow: auto; padding: 8px 10px; background: var(--bg); border-radius: var(--rs); }
+  .optcard { border: 1px solid var(--border); border-radius: var(--r); padding: 10px 12px; }
   .badge.heading { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
 
   /* DROP ZONE */
@@ -270,8 +276,8 @@
           <div>
             <label class="lbl" for="wording">Wording</label>
             <select id="wording">
-              <option value="strict">Your sentences only: picks and trims them, no rewording (recommended)</option>
-              <option value="light">Allow light rewording to fit the job</option>
+              <option value="light" selected>Light rewording to fit the job</option>
+              <option value="strict">Your sentences only: picks and trims them, no rewording</option>
             </select>
           </div>
           <div>
@@ -321,8 +327,8 @@
           <ul class="reqs" id="reqList"></ul>
         </div>
         <div class="panel hidden" id="gapCard">
-          <div class="panel-title">Gaps to fill yourself</div>
-          <p class="hint" style="margin-bottom:10px">None of your old letters cover these, so the draft leaves them out instead of making something up.</p>
+          <div class="panel-title">Gaps: suggested extras</div>
+          <p class="hint" style="margin-bottom:10px">Your old letters don't cover these, so the draft leaves them out. Below each one is a suggestion <b>written by Claude</b> from what your letters do show. It isn't counted in the "% your own wording" figure unless you add it to the draft.</p>
           <div id="gapList"></div>
         </div>
         <div class="panel hidden" id="saveBackCard">
@@ -667,11 +673,14 @@ const DRAFT_TOOL = {
         }, required: ["question", "paragraphs"] },
       },
       gaps: {
-        type: "array", description: "Requirements with no evidence in the library. Empty if none.",
+        type: "array", description: "Essential or desirable criteria the main output doesn't evidence. Empty if none.",
         items: { type: "object", properties: {
           requirement: { type: "string" },
-          suggestion: { type: "string", description: "One or two sentences speaking directly to the applicant as 'you', prompting what they could write. Do not invent facts." },
-        }, required: ["requirement", "suggestion"] },
+          priority: { type: "string", enum: ["essential", "desirable"] },
+          suggested_text: { type: "string", description: "A short first-person paragraph (2-4 sentences) the applicant could add, built from transferable experience in the library. If prompt_only, a question to the applicant instead." },
+          based_on: { type: "array", items: { type: "string" }, description: "Library ids the suggestion draws on" },
+          prompt_only: { type: "boolean", description: "True when the library has nothing transferable, so suggested_text is a question rather than a paragraph" },
+        }, required: ["requirement", "priority", "suggested_text", "based_on", "prompt_only"] },
       },
     },
     required: ["role_title", "organisation", "requirements", "sections", "gaps"],
@@ -685,8 +694,8 @@ function limitText(q) {
     ? `hard limit ${q.limit} words`
     : `hard limit ${q.limit} characters including spaces (roughly ${Math.round(q.limit / CHARS_PER_WORD)} words)`;
 }
-function draftSystem(o) {
-  const rules = o.wording === "strict" ? `WORDING RULES (strict). The applicant wants their own writing, not AI writing, so you assemble rather than write:
+function wordingRules(mode) {
+  return mode === "strict" ? `WORDING RULES (strict). The applicant wants their own writing, not AI writing, so you assemble rather than write:
 - Every sentence must come from the library, copied word for word.
 - You may only: choose which sentences to use and in what order; delete whole sentences; delete words or clauses inside a sentence so long as it still reads correctly; swap the name of a previous employer, school, programme or role for the new one (or remove it); and make tiny grammar fixes those edits force (a/an, plurals, tense).
 - Do not paraphrase, reword, add adjectives or adverbs, or write new sentences. Do not "improve" the style. Do not add dashes.
@@ -697,6 +706,9 @@ function draftSystem(o) {
 - Keep their sentences word for word wherever possible. You may lightly reword a sentence to fit the job and add short linking phrases, but keep new or reworded words well under 15% of the total.
 - Match their voice: plain, warm, first person. No flourishes, no clichés, no dashes, no "I am writing to apply".
 - Origin: "reused" (copied), "trimmed" (parts deleted), "adapted" (reworded), "new" (written fresh, only short linking text), "heading".`;
+}
+function draftSystem(o) {
+  const rules = wordingRules(o.wording);
 
   let format;
   if (o.fmt === "questions") {
@@ -709,27 +721,30 @@ Answer each question directly with the material most relevant to that question. 
     format = `FORMAT: cover letter, one section with an empty question. Opening paragraph: use one of their existing opening paragraphs with the new role and organisation names swapped in. Body paragraphs each lead with something the employer needs. Short closing paragraph from their existing closings. No greeting, date, address or sign-off (added separately). About ${o.words} words.`;
   }
 
-  const text = `You help a job applicant put together applications from a library of paragraphs they wrote for previous applications (below). They read your output directly, so anything addressed to them, such as gap suggestions, speaks to them as "you".
+  const text = `You help a job applicant put together applications from a library of paragraphs they wrote for previous applications (above). They read your output directly, so anything addressed to them, such as gap suggestions, speaks to them as "you".
 
 STEPS
 1. Read the job description and person specification. List what the employer is asking for, essential criteria first.
 2. For each requirement, find their strongest evidence in the library. Prefer specific examples with outcomes.
-3. Build the output from their sentences following the wording rules and format below.
-4. Never invent experience, achievements, figures, qualifications, systems, quotes, or claims about the organisation.
-5. Use each story or example at most once in the whole output (e.g. the family they supported, the language-development checklists, the Little Wandle implementation).
-6. If a sentence names a past employer, programme or role in a way that only fits that old application, swap or remove the name, or skip the sentence.
-7. British English. List the library ids each paragraph draws on.
+3. RELEVANCE: only use material that genuinely shows what this employer asks for. Match on substance, not shared keywords. For example, a paragraph about running a programme is not evidence of building strategic partnerships just because both mention "programmes". A shorter output with strong matches is better than padding with loosely related paragraphs; uncovered criteria go to the gaps instead. Don't let one previous application dominate just because its wording is close to the advert; check whether other paragraphs evidence the requirements better.
+4. Build the main output from their sentences following the wording rules and format below.
+5. Never invent experience, achievements, figures, qualifications, systems, quotes, or claims about the organisation.
+6. Use each story or example at most once in the whole output (e.g. the family they supported, the language-development checklists, the Little Wandle implementation).
+7. If a sentence names a past employer, programme or role in a way that only fits that old application, swap or remove the name, or skip the sentence.
+8. British English. List the library ids each paragraph draws on.
 
 ${rules}
 
 ${format}
 
+GAPS (separate from the main output, and shown to the applicant clearly labelled as written by you)
+For each essential or desirable criterion the main output doesn't evidence, add a gap entry. In suggested_text, write a short first-person paragraph (2-4 sentences) they could add, in their plain, warm voice. Build it from transferable experience that is genuinely in their library (cite the ids in based_on) and explain how that experience applies to this criterion. The wording rules above do NOT apply here; you may write freely. You still must not invent specifics: no employers, roles, qualifications, numbers, named projects or events that aren't in the library. If the library has nothing transferable at all, set prompt_only to true and make suggested_text a question to the applicant (as "you") about what they could write.
+
 Reply with JSON matching the required schema.`;
-  return [
-    { type: "text", text },
-    { type: "text", text: "PARAGRAPH LIBRARY\n\n" + libraryText(), cache_control: { type: "ephemeral" } },
-  ];
+  return [libraryBlock(), { type: "text", text }];
 }
+// The library goes first and is cached, so drafts and paragraph rewrites reuse it cheaply
+function libraryBlock() { return { type: "text", text: "PARAGRAPH LIBRARY\n\n" + libraryText(), cache_control: { type: "ephemeral" } }; }
 function jobContent(extra) {
   const parts = [], pasted = $("#jd").value.trim();
   if (S.jdFile && S.jdFile.kind === "pdf") parts.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: S.jdFile.data }, title: S.jdFile.name });
@@ -897,7 +912,7 @@ function renderDraft() {
   $("#sections").replaceChildren(...blocks);
   renderResMeta();
   $("#reqList").replaceChildren(...(d.requirements || []).map(r => h("li", { class: r.covered ? "yes" : "no" }, h("div", {}, r.requirement), h("div", { class: "pri" }, r.priority))));
-  $("#gapList").replaceChildren(...(d.gaps || []).map(g => h("div", { class: "gap" }, h("b", {}, g.requirement), h("div", { class: "hint" }, g.suggestion))));
+  $("#gapList").replaceChildren(...(d.gaps || []).map(gapEl));
   show("#gapCard", (d.gaps || []).length > 0);
   saveDraft();
 }
@@ -929,15 +944,133 @@ function paraEl(p, si, pi) {
   if (S.highlight && p.origin !== "heading") txt.append(highlighted(p.text)); else txt.textContent = p.text;
   txt.addEventListener("input", () => { p.text = txt.innerText; saveDraft(); renderResMetaSoon(); });
   txt.addEventListener("paste", e => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text/plain")); });
-  const label = { reused: "Your words", trimmed: "Trimmed", adapted: "Reworded", new: "New", heading: "Heading" }[p.origin] || p.origin;
+  const label = { reused: "Your words", trimmed: "Trimmed", adapted: "Reworded", new: "New", heading: "Heading", suggested: "Written by Claude" }[p.origin] || p.origin;
   const chips = (p.library_ids || []).map(id => { const it = itemById(id); return h("button", { class: "chip", title: it ? sourceLabel(it.source) : "Not in library", onclick: () => showSource(id, si, pi) }, id + (it ? " · " + shortSource(it.source) : "")); });
   return h("div", { class: "para", "data-si": si, "data-pi": pi }, txt,
     h("div", { class: "meta" }, h("span", { class: "badge " + p.origin }, label), ...chips,
       h("span", { class: "sp" },
+        p.origin !== "heading" ? h("button", { class: "btn small ghost", title: "Rewrite this paragraph or see alternatives", onclick: () => openRewrite(si, pi) }, "✎ Rewrite") : null,
         h("button", { class: "btn small ghost", title: "Move up", "aria-label": "Move up", onclick: () => movePara(si, pi, -1) }, "↑"),
         h("button", { class: "btn small ghost", title: "Move down", "aria-label": "Move down", onclick: () => movePara(si, pi, 1) }, "↓"),
         h("button", { class: "btn small ghost", title: "Remove", "aria-label": "Remove paragraph", onclick: () => { syncDraftFromDom(); S.draft.sections[si].paragraphs.splice(pi, 1); renderDraft(); } }, "✕"))));
 }
+/* ---------- Gaps: Claude-written suggestions, kept apart from the draft ---------- */
+function gapEl(g) {
+  const head = h("div", {}, h("b", {}, g.requirement), g.priority ? h("span", { class: "pri" }, " · " + g.priority) : null);
+  const text = g.suggested_text || g.suggestion || "";
+  if (g.prompt_only || !text) return h("div", { class: "gap" }, head, h("div", { class: "hint" }, text));
+  const d = S.draft;
+  let target = null;
+  if (d.fmt === "questions" && d.sections.length > 1) {
+    target = h("select", { style: "width:auto;padding:3px 24px 3px 8px;font-size:12px", "aria-label": "Which answer" },
+      ...d.sections.map((s, i) => h("option", { value: i }, "Answer " + (i + 1))));
+  }
+  const addBtn = g.added
+    ? h("span", { class: "hint" }, "✓ Added to draft")
+    : h("button", { class: "btn small", onclick: () => addGapToDraft(g, target ? +target.value : 0) }, "Add to draft");
+  return h("div", { class: "gap" }, head,
+    h("div", { class: "aiblock" },
+      h("div", { class: "row", style: "align-items:center;gap:6px;margin-bottom:5px" },
+        h("span", { class: "badge suggested" }, "Written by Claude"),
+        ...(g.based_on || []).map(id => { const it = itemById(id); return h("span", { class: "chip", title: it ? it.text.slice(0, 200) + "…" : "" }, "from " + id); })),
+      h("div", { class: "aitext" }, text),
+      h("div", { class: "row", style: "gap:6px;margin-top:7px;align-items:center" },
+        h("button", { class: "btn small ghost", onclick: () => { navigator.clipboard.writeText(text); toast("Copied"); } }, "Copy"),
+        target, addBtn)));
+}
+function addGapToDraft(g, si) {
+  syncDraftFromDom();
+  const d = S.draft, paras = d.sections[si].paragraphs;
+  const para = { text: g.suggested_text, origin: "suggested", library_ids: g.based_on || [] };
+  // letters: slot in before the closing paragraph; otherwise add to the end
+  const at = d.fmt === "letter" && paras.length > 1 ? paras.length - 1 : paras.length;
+  paras.splice(at, 0, para);
+  g.added = true;
+  renderDraft();
+  toast("Added. It's marked \"Written by Claude\" and counts towards the wording figure");
+}
+
+/* ---------- Rewrite one paragraph (with an optional instruction) ---------- */
+const REWRITE_TOOL = {
+  name: "rewrite_options",
+  input_schema: { type: "object", properties: { options: { type: "array", items: { type: "object", properties: {
+    text: { type: "string" },
+    origin: ORIGIN,
+    library_ids: { type: "array", items: { type: "string" } },
+    focus: { type: "string", description: "Under 12 words: what this option leads on, for the applicant, e.g. 'Stakeholder work with families and agencies'" },
+  }, required: ["text", "origin", "library_ids", "focus"] } } }, required: ["options"] },
+};
+function openRewrite(si, pi) {
+  syncDraftFromDom();
+  const d = S.draft, p = d.sections[si].paragraphs[pi];
+  const ins = h("input", { type: "text", placeholder: "e.g. talk less about programmes, more about stakeholders (optional)" });
+  const results = h("div", { class: "stack", style: "margin-top:12px" });
+  const msg = h("div", { class: "msg err hidden" });
+  const go = h("button", { class: "btn primary" }, "Get 3 options");
+  const quick = ["Use a different example", "More about stakeholders", "Shorter", "More specific to this job"].map(t =>
+    h("button", { class: "chip", type: "button", onclick: () => { ins.value = t; ins.focus(); } }, t));
+  const run = async () => {
+    err(msg); go.disabled = true; go.textContent = "Thinking…";
+    results.replaceChildren(h("div", { class: "loading" }, h("span", { class: "spinner" }), "Finding options…"));
+    try {
+      const sys = [libraryBlock(), { type: "text", text:
+`You help a job applicant improve one paragraph of an application draft, using the library of paragraphs they wrote for previous applications (above).
+Give exactly 3 distinct options to replace the paragraph they point to. Each option must fit the same place in the draft and do the same job (opening, body point, closing, or part of the answer to the same question). Keep each roughly the same length as the current paragraph (about ${wordCount(p.text)} words) unless their instruction says otherwise.
+- If they give an instruction, follow it in every option, each in a different way or with different material.
+- If they don't, offer alternatives that make a similar point with different material, ideally from different letters than the current paragraph uses.
+- Only use material that genuinely fits this job: match on substance, not shared keywords. Don't reuse material that's already used elsewhere in the draft.
+- Never invent experience, achievements, figures, qualifications, systems, quotes, or claims about the organisation.
+- British English. List the library ids each option draws on. "focus" is a short label for the applicant.
+
+${wordingRules(d.wording || "light")}
+
+Reply with JSON matching the required schema.` }];
+      const reqs = (d.requirements || []).map(r => `- ${r.requirement} (${r.priority})`).join("\n");
+      const jd = (d.jd || "").slice(0, 8000);
+      const user = `JOB: ${[d.role_title, d.organisation].filter(Boolean).join(" at ")}
+WHAT THE EMPLOYER IS ASKING FOR:
+${reqs}
+${jd ? "\nJOB DESCRIPTION:\n" + jd + "\n" : ""}
+CURRENT DRAFT (for context):
+${draftAsText(d)}
+
+${d.sections[si].question ? `This paragraph is part of the answer to: "${d.sections[si].question}"\n` : ""}PARAGRAPH TO REPLACE:
+${p.text}
+
+INSTRUCTION: ${ins.value.trim() || "(none: offer alternatives using different material)"}`;
+      const { input, usage } = await callClaude({ system: sys, messages: [{ role: "user", content: [{ type: "text", text: user }] }], tool: REWRITE_TOOL });
+      d.costUsd = (d.costUsd || 0) + costUsd(usage); saveDraft(); renderResMeta();
+      results.replaceChildren(
+        h("p", { class: "hint" }, `Cost ${pence(costUsd(usage))}. Pick one to swap it into the draft.`),
+        ...(input.options || []).map(o => {
+          const own = ownership(o.text), pct = own.total ? Math.round(own.ownCount / own.total * 100) : 100;
+          const label = { reused: "Your words", trimmed: "Trimmed", adapted: "Reworded", new: "New" }[o.origin] || o.origin;
+          return h("div", { class: "optcard" },
+            h("div", { class: "row", style: "align-items:center;gap:6px;margin-bottom:6px" },
+              h("span", { class: "badge " + o.origin }, label),
+              h("span", { class: "hint" }, `${pct}% your wording`),
+              ...(o.library_ids || []).map(id => { const it = itemById(id); return h("span", { class: "chip" }, id + (it ? " · " + shortSource(it.source) : "")); })),
+            o.focus ? h("div", { class: "lbl", style: "margin-bottom:4px" }, o.focus) : null,
+            h("div", { class: "letter-line", style: "font-size:15px" }, o.text),
+            h("button", { class: "btn small primary", style: "margin-top:8px", onclick: () => {
+              Object.assign(p, { text: o.text, origin: o.origin, library_ids: o.library_ids || [] });
+              renderDraft(); closeDialog(); toast("Paragraph replaced");
+            } }, "Use this"));
+        }));
+    } catch (ex) { results.replaceChildren(); err(msg, ex.message); }
+    finally { go.disabled = false; go.textContent = "Get 3 options"; }
+  };
+  go.addEventListener("click", run);
+  ins.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); run(); } });
+  openDialog("Rewrite this paragraph", [
+    h("div", { class: "hint", style: "margin-bottom:4px" }, "Current paragraph"),
+    h("div", { class: "curpara" }, p.text),
+    h("label", { class: "lbl", style: "margin-top:12px" }, "What should change? Leave blank for alternatives from your other letters."),
+    ins, h("div", { class: "chips", style: "margin-top:6px" }, ...quick), msg, results,
+  ], [h("button", { class: "btn", onclick: closeDialog }, "Close"), go]);
+  setTimeout(() => ins.focus(), 30);
+}
+
 $("#hl").addEventListener("change", e => { syncDraftFromDom(); S.highlight = e.target.checked; renderDraft(); });
 function movePara(si, i, d) { syncDraftFromDom(); const a = S.draft.sections[si].paragraphs, j = i + d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; renderDraft(); }
 function showSource(id, si, pi) {
