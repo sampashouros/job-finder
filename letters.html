@@ -162,6 +162,13 @@
   .split-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .split-item:last-child { border: 0; }
   .split-item .t { font: 14px/1.55 var(--serif); }
+  .dupe-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .dupe-row:last-child { border: 0; }
+  .dupe-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 600px) { .dupe-pair { grid-template-columns: 1fr; } }
+  .dupe-side { border: 1px solid var(--border); border-radius: var(--rs); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+  .dupe-side .t { font: 13px/1.5 var(--serif); flex: 1; max-height: 180px; overflow: auto; }
+  .dupe-side .btn { align-self: flex-start; }
   .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 16px; border-radius: 20px; font-size: 13px; z-index: 50; }
   hr.s { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
   details summary { cursor: pointer; font-size: 12px; color: var(--muted); }
@@ -349,11 +356,19 @@
       <aside class="side">
         <div class="panel stack">
           <div class="panel-title" style="margin:0">Add from a letter</div>
-          <p class="hint">Paste a letter or statement you've written. Claude splits it into paragraphs and tags them, and you check them before anything is added.</p>
+          <p class="hint">Upload or paste a letter or statement you've written. Claude splits it into paragraphs and tags them, and you check them before anything is added.</p>
           <input type="text" id="addRole" placeholder="Role it was for">
-          <textarea id="addText" rows="7" placeholder="Paste the letter here…"></textarea>
+          <div class="drop" id="addDrop" tabindex="0"><u>Upload a file</u> (Word, PDF or text), or drop it here</div>
+          <input type="file" id="addFile" accept=".docx,.pdf,.txt,.md" hidden>
+          <div id="addFileChip" class="chips hidden"></div>
+          <textarea id="addText" rows="7" placeholder="…or paste the letter here"></textarea>
           <div id="addErr" class="msg err hidden"></div>
           <button class="btn" id="splitBtn">Split &amp; tag</button>
+        </div>
+        <div class="panel stack">
+          <div class="panel-title" style="margin:0">Check for duplicates</div>
+          <p class="hint">Finds paragraphs that are the same or nearly the same, so you can delete the spares. No AI, and it's free.</p>
+          <button class="btn small" data-action="find-dupes" style="width:fit-content">Check library</button>
         </div>
         <div class="panel stack">
           <div class="panel-title" style="margin:0">Add one paragraph</div>
@@ -1044,10 +1059,47 @@ const SPLIT_TOOL = {
     duplicate_of: { type: "string", description: "Library id if nearly identical to an existing paragraph, else empty" },
   }, required: ["text", "kind", "tags", "duplicate_of"] } } }, required: ["items"] },
 };
+/* Upload for "Add from a letter": Word and text files are read in the browser and dropped
+   into the box so you can check them; PDFs are sent to Claude as they are. */
+let addPdf = null;
+const addDrop = $("#addDrop");
+addDrop.addEventListener("click", () => $("#addFile").click());
+addDrop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#addFile").click(); } });
+addDrop.addEventListener("dragover", e => { e.preventDefault(); addDrop.classList.add("over"); });
+addDrop.addEventListener("dragleave", () => addDrop.classList.remove("over"));
+addDrop.addEventListener("drop", e => { e.preventDefault(); addDrop.classList.remove("over"); if (e.dataTransfer.files[0]) loadAddFile(e.dataTransfer.files[0]); });
+$("#addFile").addEventListener("change", e => { if (e.target.files[0]) loadAddFile(e.target.files[0]); e.target.value = ""; });
+async function loadAddFile(f) {
+  err("#addErr");
+  const ext = f.name.split(".").pop().toLowerCase();
+  try {
+    if (ext === "docx") {
+      await loadScript("https://cdn.jsdelivr.net/npm/mammoth@1.11.0/mammoth.browser.min.js");
+      $("#addText").value = (await window.mammoth.extractRawText({ arrayBuffer: await f.arrayBuffer() })).value.trim().replace(/\n{3,}/g, "\n\n");
+      addPdf = null;
+    } else if (ext === "txt" || ext === "md") {
+      $("#addText").value = (await f.text()).trim(); addPdf = null;
+    } else if (ext === "pdf") {
+      if (f.size > 3.5e6) throw new Error("That PDF is too big (max about 3.5 MB). Copy and paste the text instead.");
+      addPdf = { name: f.name, data: b64(await f.arrayBuffer()) };
+      $("#addText").value = "";
+    } else throw new Error("Please use a Word (.docx), PDF or text file.");
+    if (!$("#addRole").value.trim()) $("#addRole").value = f.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim();
+    renderAddChip();
+  } catch (ex) { err("#addErr", ex.message || "Couldn't read that file."); }
+}
+function renderAddChip() {
+  const box = $("#addFileChip");
+  if (!addPdf) { box.replaceChildren(); return show(box, false); }
+  box.replaceChildren(h("span", { class: "chip" }, "📄 " + addPdf.name, h("button", { class: "x", "aria-label": "Remove file", onclick: () => { addPdf = null; renderAddChip(); } }, "✕")),
+    h("span", { class: "hint" }, "Claude reads the PDF directly"));
+  show(box, true);
+}
+
 $("#splitBtn").addEventListener("click", async () => {
   err("#addErr");
   const text = $("#addText").value.trim(), role = $("#addRole").value.trim(), btn = $("#splitBtn");
-  if (!text) return err("#addErr", "Paste a letter first.");
+  if (!text && !addPdf) return err("#addErr", "Upload or paste a letter first.");
   btn.disabled = true; btn.textContent = "Working…";
   try {
     const sys = [{ type: "text", text: `You maintain a library of paragraphs from ${S.lib.settings.name || "the applicant"}'s job applications. Split the letter below into library paragraphs.
@@ -1061,8 +1113,18 @@ Rules:
 
 EXISTING LIBRARY
 ${libraryText()}` }];
-    const { input, usage } = await callClaude({ system: sys, messages: [{ role: "user", content: [{ type: "text", text: `Letter (written for: ${role || "unknown role"}):\n\n${text}` }] }], tool: SPLIT_TOOL });
-    reviewSplit(input.items || [], role, pence(costUsd(usage)));
+    const content = text
+      ? [{ type: "text", text: `Letter (written for: ${role || "unknown role"}):\n\n${text}` }]
+      : [{ type: "document", source: { type: "base64", media_type: "application/pdf", data: addPdf.data }, title: addPdf.name },
+         { type: "text", text: `The letter is in the attached PDF (written for: ${role || "unknown role"}). Copy its text exactly.` }];
+    const { input, usage } = await callClaude({ system: sys, messages: [{ role: "user", content }], tool: SPLIT_TOOL });
+    // Double-check duplicates locally too, in case Claude missed one
+    const items = (input.items || []).map(it => {
+      if (it.duplicate_of) return it;
+      const m = closestMatch(it.text);
+      return m && m.score >= DUPE_SIMILAR ? { ...it, duplicate_of: m.item.id } : it;
+    });
+    reviewSplit(items, role, pence(costUsd(usage)));
   } catch (ex) { err("#addErr", ex.message); }
   finally { btn.disabled = false; btn.textContent = "Split & tag"; }
 });
@@ -1083,9 +1145,82 @@ function reviewSplit(items, role, cost) {
        S.lib.sources[src] = role || "Added " + new Date().toLocaleDateString("en-GB");
        const chosen = rows.filter(r => r.cb.checked);
        chosen.forEach(r => S.lib.items.push({ id: nextId(), text: r.it.text.trim(), kind: r.it.kind, tags: r.tags.value.split(",").map(s => s.trim()).filter(Boolean), source: src }));
-       try { await saveLibrary(); setLibDirty(false); closeDialog(); $("#addText").value = ""; $("#addRole").value = ""; toast(`Added ${chosen.length} paragraph${chosen.length === 1 ? "" : "s"}`); renderLibrary(); }
+       try { await saveLibrary(); setLibDirty(false); closeDialog(); $("#addText").value = ""; $("#addRole").value = ""; addPdf = null; renderAddChip(); toast(`Added ${chosen.length} paragraph${chosen.length === 1 ? "" : "s"}`); renderLibrary(); }
        catch (ex) { e.target.disabled = false; toast("Save failed: " + ex.message); }
      } }, "Add selected")]);
+}
+
+/* ---------- Duplicate checker (runs in the browser, no AI) ----------
+   Compares every pair of paragraphs by their 3-word phrases. Score = share of the
+   shorter paragraph's phrases that also appear in the other, so a paragraph that
+   sits inside a longer one also scores high. */
+const DUPE_SAME = 0.9, DUPE_SIMILAR = 0.8; // below 80% is treated as a deliberate variant (e.g. same frame, different example)
+function shingles(text) {
+  const w = (String(text).toLowerCase().replace(/[’‘]/g, "'").match(/[a-z0-9']+/g) || []);
+  const s = new Set();
+  if (w.length < 3) { if (w.length) s.add(w.join(" ")); return s; }
+  for (let i = 0; i + 2 < w.length; i++) s.add(w[i] + " " + w[i + 1] + " " + w[i + 2]);
+  return s;
+}
+function similarity(a, b) {
+  if (!a.size || !b.size) return 0;
+  const [small, big] = a.size <= b.size ? [a, b] : [b, a];
+  let n = 0; small.forEach(x => { if (big.has(x)) n++; });
+  return n / small.size;
+}
+function closestMatch(text) {
+  const s = shingles(text); let best = null;
+  S.lib.items.forEach(item => { const sc = similarity(s, shingles(item.text)); if (!best || sc > best.score) best = { item, score: sc }; });
+  return best;
+}
+function findDupes() {
+  const ignore = new Set(S.lib.notDupes || []);
+  const sh = S.lib.items.map(i => shingles(i.text)), pairs = [];
+  for (let i = 0; i < sh.length; i++) for (let j = i + 1; j < sh.length; j++) {
+    const a = S.lib.items[i], b = S.lib.items[j];
+    if (ignore.has(pairKey(a.id, b.id))) continue;
+    const score = similarity(sh[i], sh[j]);
+    if (score >= DUPE_SIMILAR) pairs.push({ a, b, score });
+  }
+  return pairs.sort((x, y) => y.score - x.score);
+}
+function pairKey(x, y) { return [x, y].sort().join("|"); }
+function showDupes() {
+  commitOpenEdits();
+  const pairs = findDupes();
+  if (!pairs.length) return openDialog("No duplicates found", [h("p", { class: "hint" }, "Every paragraph in the library is distinct.")], [h("button", { class: "btn primary", onclick: closeDialog }, "Close")]);
+  let changed = false;
+  const card = (it, other, row) => h("div", { class: "dupe-side" },
+    h("div", { class: "libtop" }, h("span", { class: "id" }, it.id), h("span", {}, shortSource(it.source))),
+    h("div", { class: "t" }, it.text),
+    h("button", { class: "btn small danger", onclick: () => {
+      S.lib.items = S.lib.items.filter(x => x !== it); changed = true;
+      // any other pair involving this paragraph is now moot
+      $$(".dupe-row").forEach(r => { if (r.dataset.ids.split("|").includes(it.id)) r.replaceChildren(h("p", { class: "hint" }, `${it.id} deleted.`)); });
+    } }, "Delete " + it.id));
+  const rows = pairs.map(p => {
+    const row = h("div", { class: "dupe-row", "data-ids": p.a.id + "|" + p.b.id });
+    const la = wordCount(p.a.text), lb = wordCount(p.b.text), ratio = Math.min(la, lb) / Math.max(la, lb);
+    const label = p.score < DUPE_SAME ? "Very similar"
+      : ratio < 0.85 ? `${la < lb ? p.a.id : p.b.id} is inside ${la < lb ? p.b.id : p.a.id}, so keep the longer one`
+      : "Duplicate";
+    row.append(
+      h("div", { class: "row", style: "justify-content:space-between;align-items:center;margin-bottom:6px" },
+        h("span", { class: "badge " + (p.score >= DUPE_SAME ? "new" : "adapted") }, `${label} · ${Math.round(p.score * 100)}% overlap`),
+        h("button", { class: "btn small ghost", onclick: () => { S.lib.notDupes = [...(S.lib.notDupes || []), pairKey(p.a.id, p.b.id)]; changed = true; row.replaceChildren(h("p", { class: "hint" }, `Keeping both ${p.a.id} and ${p.b.id}. They won't be flagged again.`)); } }, "Keep both")),
+      h("div", { class: "dupe-pair" }, card(p.a, p.b, row), card(p.b, p.a, row)));
+    return row;
+  });
+  const done = async () => {
+    if (changed) {
+      try { await saveLibrary(); setLibDirty(false); toast("Library saved"); }
+      catch (ex) { toast("Save failed: " + ex.message); return; }
+    }
+    closeDialog(); renderLibrary();
+  };
+  openDialog(`${pairs.length} possible duplicate${pairs.length === 1 ? "" : "s"}`,
+    [h("p", { class: "hint", style: "margin-bottom:10px" }, "\"Duplicate\" means the same text, so delete one. \"Very similar\" usually means the same point worded differently for another job; keeping both gives Claude more wording to choose from."), ...rows],
+    [h("button", { class: "btn primary", onclick: done }, "Done")]);
 }
 
 /* ============================================================
@@ -1114,6 +1249,7 @@ const ACTIONS = {
     switchTab("library"); setTimeout(() => $("#addText").scrollIntoView({ behavior: "smooth", block: "center" }), 50);
     toast("Check it, then press Split & tag");
   },
+  "find-dupes": () => showDupes(),
   "add-blank": () => {
     S.lib.sources.manual = S.lib.sources.manual || "Written directly in the library";
     const it = { id: nextId(), text: "", kind: "body", tags: [], source: "manual" };
