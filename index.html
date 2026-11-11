@@ -119,17 +119,6 @@
   .chip-close-soon { color: #b45309; font-weight: 600; }
   .chip-close-urgent { color: #dc2626; font-weight: 600; }
   html.dark .chip-close-soon { color: #fbbf24; } html.dark .chip-close-urgent { color: #f87171; }
-  .fit-chip { font-weight: 600; padding: 1px 8px; border-radius: 20px; border: 1px solid transparent; }
-  .fit-strong { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
-  .fit-good { color: #1d4ed8; background: #eff4ff; border-color: #bfcffd; }
-  .fit-partial { color: #92400e; background: #fffbeb; border-color: #fde68a; }
-  html.dark .fit-strong { color: #4ade80; background: #0f2318; border-color: #1a4030; }
-  html.dark .fit-good { color: #93b4fb; background: #1a2540; border-color: #2a3d6e; }
-  html.dark .fit-partial { color: #fbbf24; background: #1f1a0e; border-color: #4a3b12; }
-  .fit-detail { font-size: 12px; line-height: 1.9; margin-bottom: 8px; color: var(--muted); }
-  .fit-detail-label { font-weight: 600; color: var(--text); margin-right: 4px; }
-  .fit-yes, .fit-no { display: inline-block; margin-right: 8px; white-space: nowrap; }
-  .fit-yes { color: var(--green); } .fit-no { color: var(--faint); }
   .nosal-toggle { display: flex; gap: 7px; align-items: center; font-size: 12px; color: var(--muted); margin-top: 8px; cursor: pointer; }
   .match-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
   .match-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
@@ -514,53 +503,16 @@ function closesInfo(j){
   return {days,text,cls:days<=3?'chip-close-urgent':days<=7?'chip-close-soon':'chip-close'};
 }
 
-// "How well do I fit?": which of her skill areas the advert mentions, and how many of those
-// her cover letter library has paragraphs for. Areas she has no paragraphs on count as gaps.
-const FIT_AREAS=[
-  {label:'Safeguarding',re:/safeguard|child protection|\bdsl\b|welfare of/,tag:/safeguard/},
-  {label:'SEND & inclusion',re:/\bsend\b|\bsen\b|senco|special educational|inclusi|additional support needs|\basn\b|neurodiver|disabilit/,tag:/send|inclusion/},
-  {label:'Working with families',re:/famil|parents|carers/,tag:/famil/},
-  {label:'Multi-agency working',re:/multi-agency|multi agency|partner agencies|external agencies|health and social care|social work/,tag:/multi-agency/},
-  {label:'Training & CPD',re:/deliver(ing)? training|training (to|for|sessions|programme)|\bcpd\b|professional (learning|development)|workshops?|coaching|mentor|facilitat/,tag:/training|presenting/},
-  {label:'Leadership',re:/leadership|line manag|lead(ing)? (a|the) team|manag(e|ing) (a |the )?(team|staff)|supervis/,tag:/leadership|team culture/},
-  {label:'Stakeholders & partnerships',re:/stakeholder|partnership|liais|collaborat|relationship/,tag:/stakeholder|multi-agency/},
-  {label:'Projects & programmes',re:/project|programme|implementation|milestone/,tag:/project/},
-  {label:'Data & reporting',re:/\bdata\b|reporting|reports\b|monitor(ing)? and evaluat|\bimpact\b|analys|\bkpis?\b/,tag:/data/},
-  {label:'Admin & organisation',re:/administrat|organisation(al)? skills|schedul|diary|record keeping|coordinat/,tag:/admin|organisation/},
-  {label:'Early years & literacy',re:/early years|\beyfs\b|nursery|literacy|phonics|early reading/,tag:/early/},
-  {label:'Wellbeing & relational',re:/wellbeing|well-being|mental health|trauma|nurtur|pastoral|attendance/,tag:/relational|wellbeing|attendance/},
-  {label:'Speech & language',re:/speech|language development|communication needs|\bslcn\b/,tag:/speech|language/},
-  {label:'Policy & improvement',re:/policy|policies|strateg|improvement plan|quality assurance|compliance|inspection/,tag:/strategy|improvement|policy/},
-  {label:'IT & systems',re:/\bcrm\b|database|microsoft|office 365|excel|\bit systems\b|digital tools/,tag:/\bit\b|systems/},
-  // Areas her letters don't cover yet. If she adds paragraphs tagged with these, they start counting as covered.
-  {label:'Fundraising & bids',re:/fundrais|bid writing|grant (applications|funding)|donors?/,tag:/fundrais|bid|grant/},
-  {label:'Budgets & finance',re:/budget|financial management|\bfinance\b/,tag:/budget|financ/},
-  {label:'Marketing & social media',re:/marketing|social media|campaigns?\b/,tag:/marketing|social media/},
-  {label:'Sales & business development',re:/business development|\bsales\b|commercial|income generation/,tag:/sales|business dev|commercial/},
-  {label:'Events',re:/event (management|planning)|organis\w* events|events? coordinat/,tag:/event/},
-];
-// Her library's tags as of Nov 2026. The cover letter page refreshes this list on this device whenever it loads.
-const DEFAULT_FIT_TAGS=["Administration","Attendance & wellbeing","Career change & transferable skills","Career overview","Confidentiality & sensitive situations","Data & reporting","Early Years","Early reading & phonics","Flexibility & resilience","IT & systems","Motivation & fit","Multi-agency working","Organisation & deadlines","Own professional development","Presenting","Project leadership","Qualifications","Relational & trauma-informed practice","SEND & inclusion","Safeguarding & child protection","School improvement & strategy","Scotland & relocation","Senior leadership","Speech, language & communication","Stakeholder communication","Teaching & pedagogy","Team culture & interpersonal","Training others","Values & Church of England","Working with families"];
-function myFitTags(){let t=null;try{t=JSON.parse(localStorage.getItem('bubs_fit_tags')||'null');}catch(e){}return (t&&t.length?t:DEFAULT_FIT_TAGS).map(x=>x.toLowerCase());}
-function fitFor(job,tags){
-  const txt=((job.title||'')+' '+(job.description||'')).replace(/<[^>]+>/g,' ').toLowerCase();
-  const asked=FIT_AREAS.filter(a=>a.re.test(txt));
-  const have=asked.filter(a=>tags.some(t=>a.tag.test(t)));
-  return {asked:asked.map(a=>a.label),have:have.map(a=>a.label)};
-}
-function fitInfo(j){
-  const f=j._fit;if(!f||f.asked.length<2)return null; // too little in the advert to judge
-  const r=f.have.length/f.asked.length;
-  return {r,text:`${r>=0.8?'Strong':r>=0.5?'Good':'Partial'} fit · ${f.have.length} of ${f.asked.length}`,cls:r>=0.8?'fit-strong':r>=0.5?'fit-good':'fit-partial'};
-}
-// Stamp score, role, fit and drop expired / below-salary jobs. Used for fresh and saved results.
+// Stamp score and role, and drop expired / below-salary jobs. Used for fresh and saved results.
 function annotateAndFilter(jobs){
-  const tags=myFitTags(),min=+document.getElementById('salary-min').value||0,noSal=includeNoSalary();
+  const min=+document.getElementById('salary-min').value||0,noSal=includeNoSalary();
+  const det=kv.get(DETAIL_KEY,{});
   return jobs.filter(j=>{
+    const d=det[j.id];if(d){j.description=d.text;j._full=true;if(d.pt)j._ptFlag=true;} // full Reed advert
     const c=closesInfo(j);if(c&&c.expired)return false;
     j._pay=undefined; // recalculate
     if(hasSalary(j)){if(salaryNum(j)<min*0.98)return false;} else if(!noSal)return false; // no salary, or part-time with hours not stated: only kept when the tick box is on
-    j._score=scoreJob(j);j._role=guessRole(j);j._fit=fitFor(j,tags);return true;
+    j._score=scoreJob(j);j._role=guessRole(j);return true;
   });
 }
 
@@ -584,13 +536,53 @@ function processRaw(locMode){
   if(locMode==='edinburgh') jobs=jobs.filter(j=>jobIsEdinburgh(j));
   else if(locMode==='remote') jobs=jobs.filter(j=>jobIsRemote(j));
   else jobs=jobs.filter(j=>jobIsEdinburgh(j)||jobIsRemote(j));
-  jobs=annotateAndFilter(jobs); // salary, closing date, fit
-  jobs.forEach(j=>{j._new=!firstEverSearch&&!seenBefore.has(j.id);});
+  jobs.forEach(j=>{if(j._new===undefined)j._new=!firstEverSearch&&!seenBefore.has(j.id);});
+  universe=jobs;
+  return {raw:rawJobs.length,deduped:deduped.length,sector:sectorCount,kept:finalizeJobs()};
+}
+// Last step, re-run whenever full adverts arrive: salary and closing dates, then split off archived jobs
+let universe=[];
+function finalizeJobs(){
+  const jobs=annotateAndFilter(universe);
   const archivedIds=new Set(loadArchive());
   archived=jobs.filter(j=>archivedIds.has(j.id));
   allJobs=jobs.filter(j=>!archivedIds.has(j.id));
   searchMeta.newCount=allJobs.filter(j=>j._new).length;
-  return {raw:rawJobs.length,deduped:deduped.length,sector:sectorCount,kept:jobs};
+  return jobs;
+}
+
+// --- FULL ADVERTS (Reed only) ---
+// Search results only carry a 2-3 line preview. Reed's official "job details" request returns the whole
+// advert, so part-time hours are caught and the cover letter page gets the full text.
+// Each job is fetched once and kept for 30 days, so after the first day only new jobs cost a request.
+const DETAIL_KEY='bubs_reed_details_v1';
+let detailsToken=0;
+function htmlToText(html){return new DOMParser().parseFromString(String(html||'').replace(/<(br|\/p|\/li|\/h\d|\/div)[^>]*>/gi,'$&\n'),'text/html').body.textContent.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();}
+async function loadReedDetails(jobs){
+  const token=++detailsToken;
+  const det=kv.get(DETAIL_KEY,{}),now=Date.now();
+  for(const k in det)if(now-det[k].t>30*86400000)delete det[k];
+  const todo=jobs.filter(j=>j.source==='reed'&&!det[j.id]);
+  kv.set(DETAIL_KEY,det);
+  if(!todo.length)return;
+  searchMeta.details={done:0,total:todo.length};render();
+  log(`Reading ${todo.length} full Reed advert${todo.length===1?'':'s'} so hours and cover letters use the whole advert…`,'info');
+  for(let i=0;i<todo.length;i+=3){
+    if(token!==detailsToken)return; // a newer search has started
+    await Promise.all(todo.slice(i,i+3).map(async j=>{
+      try{
+        const r=await fetch(`${REED_PROXY}?jobId=${encodeURIComponent(j.id.replace('reed-',''))}`);
+        if(r.ok){const d=await r.json();if(d.jobDescription)det[j.id]={t:Date.now(),text:htmlToText(d.jobDescription).slice(0,8000),pt:!!d.partTime&&!d.fullTime};}
+        else log(`Reed advert ${j.id} → ${r.status}`,'warn');
+      }catch(e){}
+      searchMeta.details.done++;
+    }));
+    kv.set(DETAIL_KEY,det);
+    finalizeJobs();render();
+    if(i+3<todo.length)await wait(250);
+  }
+  searchMeta.details=null;finalizeJobs();render();
+  log(`Full adverts read for ${todo.length} Reed job${todo.length===1?'':'s'}`,'ok');
 }
 function scheduleRender(locMode){
   if(_renderTimer)return;
@@ -612,12 +604,10 @@ async function runSearch(force=false){
   if(!force&&cache&&cache.key===key&&localDay(cache.at)===localDay(Date.now())&&Date.now()-cache.at<CACHE_HOURS*3600000){
     document.getElementById('debug-panel').innerHTML='';
     const archivedIds=new Set(loadArchive());
-    const fresh=annotateAndFilter(cache.jobs); // drops anything that has closed since
-    archived=fresh.filter(j=>archivedIds.has(j.id));
-    allJobs=fresh.filter(j=>!archivedIds.has(j.id));
-    searchMeta={salLabel,at:cache.at,fromCache:true,running:false,progress:null,newCount:allJobs.filter(j=>j._new).length};
-    log(`Showing saved results from ${new Date(cache.at).toLocaleTimeString()} (no requests used). Press Refresh for a new search.`,'ok');
-    currentTab='active';render();return;
+    searchMeta={salLabel,at:cache.at,fromCache:true,running:false,progress:null,newCount:0};
+    universe=cache.jobs;finalizeJobs(); // drops anything that has closed since
+    log(`Showing saved results from ${new Date(cache.at).toLocaleTimeString()} (no search requests used). Press Refresh for a new search.`,'ok');
+    currentTab='active';render();loadReedDetails(universe);return;
   }
 
   document.getElementById('debug-panel').innerHTML='';
@@ -669,13 +659,14 @@ async function runSearch(force=false){
   const seenIds=new Set(seenList.map(s=>s.id));
   r.kept.forEach(j=>{if(!seenIds.has(j.id))seenList.push({id:j.id,t:Date.now()});});
   kv.set(SEEN_KEY,seenList.slice(-3000));
-  kv.set(CACHE_KEY,{key,at:searchMeta.at,jobs:r.kept});
+  kv.set(CACHE_KEY,{key,at:searchMeta.at,jobs:universe});
   recordYield([...reedItems,...adzunaItems,...joobleItems.slice(0,progress.jooble)],r.kept,y);
 
   const az=allJobs.filter(j=>j.source==='adzuna').length,rd=allJobs.filter(j=>j.source==='reed').length,jb=allJobs.filter(j=>j.source==='jooble').length;
   log(`Done: ${allJobs.length} active + ${archived.length} archived — Adzuna ${az} · Reed ${rd} · Jooble ${jb}${firstEverSearch?'':` · ${searchMeta.newCount} new`}`,allJobs.length?'ok':'warn');
   render();
   btn.disabled=false;btn.textContent='Search jobs';
+  loadReedDetails(universe); // in the background: full adverts for hours and cover letters
 }
 
 // Track how many jobs each search actually contributed after filtering (last 5 runs),
@@ -742,7 +733,6 @@ function getSorted(jobs){
   else if(sort==='relevance')j.sort((a,b)=>b._score-a._score);
   else if(sort==='new')j.sort((a,b)=>(b._new?1:0)-(a._new?1:0)||dateVal(b.created)-dateVal(a.created));
   else if(sort==='closing')j.sort((a,b)=>(dateVal(a.closes)||9e15)-(dateVal(b.closes)||9e15));
-  else if(sort==='fit')j.sort((a,b)=>((fitInfo(b)||{r:-1}).r-(fitInfo(a)||{r:-1}).r)||((b._fit?b._fit.have.length:0)-(a._fit?a._fit.have.length:0)));
   else j.sort((a,b)=>dateVal(b.created)-dateVal(a.created)); // default: recent
   return j;
 }
@@ -789,7 +779,6 @@ function renderActive(){
       <select class="sort-select" id="sort-select" onchange="render()">
         <option value="recent"${sortVal==='recent'?' selected':''}>Most recent</option>
         <option value="new"${sortVal==='new'?' selected':''}>New first</option>
-        <option value="fit"${sortVal==='fit'?' selected':''}>Best fit</option>
         <option value="closing"${sortVal==='closing'?' selected':''}>Closing soonest</option>
         <option value="group"${sortVal==='group'?' selected':''}>Group by role type</option>
         <option value="relevance"${sortVal==='relevance'?' selected':''}>Best match</option>
@@ -826,7 +815,7 @@ function cardHTML(j,idx,isArchived){
   const snip=(j.description||'').replace(/<[^>]+>/g,'').slice(0,280)+'…';
   const src=j.source==='adzuna'?'Adzuna':j.source==='reed'?'Reed':'Jooble';
   const dateStr=formatDate(j.created);
-  const closes=closesInfo(j), fit=isArchived?null:fitInfo(j);
+  const closes=closesInfo(j);
 
   const actionBtn=isArchived
     ?`<button class="btn-restore" onclick="event.stopPropagation();restore('${j.id}')">↩ Restore</button>`
@@ -851,14 +840,12 @@ function cardHTML(j,idx,isArchived){
         ${!sal?'<span class="meta-chip chip-nosal">Salary not stated</span>':''}
         ${pt.partTime?`<span class="meta-chip chip-pt">Part-time${pt.hours?` · ${pt.hours} hrs/wk`:''}</span>`:''}
         ${closes&&!closes.expired?`<span class="meta-chip ${closes.cls}">${closes.text}</span>`:''}
-        ${fit?`<span class="meta-chip fit-chip ${fit.cls}" title="Areas in this advert that your cover letters cover">${fit.text}</span>`:''}
         ${dateStr?`<span class="meta-chip chip-date">${dateStr}</span>`:''}
       </div>
       ${tags.length?`<div class="match-badges">${tags.map(t=>`<span class="match-badge badge-${t.type}">${t.label}</span>`).join('')}</div>`:''}
       <button class="card-expand-btn">View details <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 4.5L6.5 8.5L10.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="card-detail">
-      ${fit?`<div class="fit-detail"><span class="fit-detail-label">What this advert asks for:</span> ${j._fit.asked.map(a=>j._fit.have.includes(a)?`<span class="fit-yes">✓ ${a}</span>`:`<span class="fit-no" title="None of your cover letter paragraphs cover this yet">✗ ${a}</span>`).join(' ')}</div>`:''}
       <p class="detail-snippet">${snip}</p>
       <a class="apply-link" href="${j.url}" target="_blank" rel="noopener">View full listing <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       <button class="apply-link letter-link" onclick="event.stopPropagation();writeLetter('${j.id}')">✍️ Write cover letter</button>
@@ -875,7 +862,8 @@ function statusHTML(){
     return `<div class="search-status"><span class="spinner-sm"></span>Still searching · ${part('Reed',p.reed,p.reedTotal)} · ${part('Adzuna',p.adzuna,p.adzunaTotal)} · ${part('Jooble',p.jooble,p.joobleTotal)}</div>`;
   }
   if(!searchMeta.at)return'';
-  return `<div class="search-status">${searchMeta.fromCache?'Saved results from':'Searched'} ${agoText(searchMeta.at)} · <a href="#" onclick="event.preventDefault();runSearch(true)">Refresh</a></div>`;
+  const det=searchMeta.details?` · <span class="spinner-sm"></span>Reading full adverts ${searchMeta.details.done}/${searchMeta.details.total}`:'';
+  return `<div class="search-status">${searchMeta.fromCache?'Saved results from':'Searched'} ${agoText(searchMeta.at)} · <a href="#" onclick="event.preventDefault();runSearch(true)">Refresh</a>${det}</div>`;
 }
 
 function toggleCard(idx){document.getElementById(`card-${idx}`)?.classList.toggle('expanded');}
@@ -885,7 +873,7 @@ function writeLetter(id){
   const j=[...allJobs,...archived].find(x=>x.id===id);
   if(!j)return;
   const text=new DOMParser().parseFromString(j.description||'','text/html').body.textContent||''; // inert parse, strips tags
-  const job={title:j.title,org:j.org,location:j.location,salary:salaryStr(j),url:j.url,description:text.trim()};
+  const job={title:j.title,org:j.org,location:j.location,salary:salaryStr(j),url:j.url,description:text.trim(),full:!!j._full};
   try{localStorage.setItem('bubs_letter_job',JSON.stringify(job));}catch(e){}
   location.href='letters.html';
 }

@@ -552,11 +552,8 @@ function costUsd(u) {
   const m = MODELS[S.lib.settings.model];
   return ((u.input_tokens || 0) * m.i + (u.output_tokens || 0) * m.o + (u.cache_creation_input_tokens || 0) * m.cw + (u.cache_read_input_tokens || 0) * m.cr) / 1e6;
 }
-// The jobs page's "fit" badge uses this list of tags that have at least one paragraph
-function shareFitTags() { try { localStorage.setItem("bubs_fit_tags", JSON.stringify([...new Set(S.lib.items.flatMap(i => i.tags || []))])); } catch {} }
 async function saveLibrary() {
   S.lib.tags = allTags();
-  shareFitTags();
   _own = null; // library changed: rebuild the "your wording" check
   await api("library-put", { library: S.lib });
 }
@@ -610,7 +607,6 @@ $("#setupEmpty").addEventListener("click", async () => {
 
 function enterApp() {
   view("app");
-  shareFitTags();
   $("#libTabCount").textContent = S.lib.items.length;
   try { const d = store.get(DRAFT_KEY, true); if (d) { S.draft = JSON.parse(d); restoreDraftInputs(); renderDraft(); } } catch {}
   takeHandoff();
@@ -626,10 +622,12 @@ function takeHandoff() {
   const head = [job.title && "Job title: " + job.title, job.org && "Employer: " + job.org, job.location && "Location: " + job.location, job.salary && "Salary: " + job.salary].filter(Boolean).join("\n");
   $("#jd").value = head + "\n\n" + (job.description || "").trim();
   S.jdFile = null; renderJdChip();
-  const note = $("#jobNote"); note.replaceChildren(
-    "Job boards only give a short preview of the description. For a much better letter, open the ",
-    h("a", { href: job.url, target: "_blank", rel: "noopener" }, "full listing"),
-    " and paste the whole job description and person specification above, or upload the PDF.");
+  const note = $("#jobNote"); note.replaceChildren(...(job.full
+    ? ["This is the full advert from Reed. If the ", h("a", { href: job.url, target: "_blank", rel: "noopener" }, "listing"),
+       " links to a separate job description or person specification, paste or upload that too."]
+    : ["Job boards only give a short preview of the description. For a much better letter, open the ",
+       h("a", { href: job.url, target: "_blank", rel: "noopener" }, "full listing"),
+       " and paste the whole job description and person specification above, or upload the PDF."]));
   show(note, true);
 }
 

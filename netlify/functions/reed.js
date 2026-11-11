@@ -2,6 +2,23 @@ const REED_API_KEY = '2b532591-eae3-4a57-8273-a22b5131202f';
 
 exports.handler = async function(event) {
   const params = event.queryStringParameters || {};
+
+  // Full advert for one job: Reed's official job details request (/api/1.0/jobs/{id})
+  if (params.jobId) {
+    const headers = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
+    if (!/^\d+$/.test(params.jobId)) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Bad job id' }) };
+    try {
+      const r = await fetch(`https://www.reed.co.uk/api/1.0/jobs/${params.jobId}`, {
+        headers: { 'Authorization': 'Basic ' + Buffer.from(REED_API_KEY + ':').toString('base64') }
+      });
+      const text = await r.text();
+      if (!r.ok) console.log('Reed details status:', r.status, text.slice(0, 200));
+      return { statusCode: r.status, headers, body: r.ok ? text : JSON.stringify({ error: 'Reed API error', status: r.status }) };
+    } catch (err) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+    }
+  }
+
   const keywords = params.keywords || 'project manager education';
   const location = params.location || 'Edinburgh';
   const distance = params.distance || '20';
