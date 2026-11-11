@@ -113,6 +113,24 @@
   .chip-remote { color: var(--green); font-weight: 500; }
   .chip-salary { color: var(--text); font-weight: 500; }
   .chip-date { color: var(--faint); }
+  .chip-nosal { color: var(--faint); font-style: italic; }
+  .chip-pt { color: #7c3aed; font-weight: 500; } html.dark .chip-pt { color: #c4b5fd; }
+  .chip-close { color: var(--muted); }
+  .chip-close-soon { color: #b45309; font-weight: 600; }
+  .chip-close-urgent { color: #dc2626; font-weight: 600; }
+  html.dark .chip-close-soon { color: #fbbf24; } html.dark .chip-close-urgent { color: #f87171; }
+  .fit-chip { font-weight: 600; padding: 1px 8px; border-radius: 20px; border: 1px solid transparent; }
+  .fit-strong { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
+  .fit-good { color: #1d4ed8; background: #eff4ff; border-color: #bfcffd; }
+  .fit-partial { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+  html.dark .fit-strong { color: #4ade80; background: #0f2318; border-color: #1a4030; }
+  html.dark .fit-good { color: #93b4fb; background: #1a2540; border-color: #2a3d6e; }
+  html.dark .fit-partial { color: #fbbf24; background: #1f1a0e; border-color: #4a3b12; }
+  .fit-detail { font-size: 12px; line-height: 1.9; margin-bottom: 8px; color: var(--muted); }
+  .fit-detail-label { font-weight: 600; color: var(--text); margin-right: 4px; }
+  .fit-yes, .fit-no { display: inline-block; margin-right: 8px; white-space: nowrap; }
+  .fit-yes { color: var(--green); } .fit-no { color: var(--faint); }
+  .nosal-toggle { display: flex; gap: 7px; align-items: center; font-size: 12px; color: var(--muted); margin-top: 8px; cursor: pointer; }
   .match-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
   .match-badge { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
   .badge-strong { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
@@ -245,6 +263,7 @@
           <option value="50000">£50,000+</option>
           <option value="55000">£55,000+</option>
         </select>
+        <label class="nosal-toggle"><input type="checkbox" id="include-nosal" onchange="try{localStorage.setItem('bubs_include_nosal',this.checked?'1':'0')}catch(e){}"> Include jobs with no salary listed</label>
       </div>
     </div>
 
@@ -341,17 +360,17 @@ function jobIsEdinburgh(j){return SCOTLAND.some(t=>(j.location||'').toLowerCase(
 function jobIsRemote(j){const t=((j.title||'')+' '+(j.description||'')+' '+(j.location||'')).toLowerCase();return REMOTE_T.some(r=>t.includes(r));}
 function detectTags(job){const t=((job.title||'')+' '+(job.description||'')+' '+(job.location||'')).toLowerCase();const found=new Map();for(const[kw,tag]of Object.entries(MATCH_TAGS))if(t.includes(kw)&&!found.has(tag.label))found.set(tag.label,tag);return Array.from(found.values()).slice(0,5);}
 function scoreJob(job){const t=((job.title||'')+' '+(job.description||'')).toLowerCase();let s=0;['project','safeguarding','senco','sen','inclusion','education','leadership','manager','coordinator','consultant','charity','third sector','wellbeing','pastoral'].forEach(k=>{if(t.includes(k))s++;});if(t.includes('safeguarding')||t.includes('senco')||t.includes('inclusion'))s+=3;if(t.includes('junior')||t.includes('entry level'))s+=1;return s;}
-function salaryNum(job){return job.salaryMin||(job.salary?parseInt((job.salary||'').replace(/[^0-9]/g,''))||0:0)||0;}
+function salaryNum(job){return actualPay(job)||0;} // actual yearly pay, allowing for part-time hours
 function salaryStr(job){if(job.salaryMin&&job.salaryMax)return`£${Math.round(job.salaryMin/1000)}k–£${Math.round(job.salaryMax/1000)}k`;if(job.salaryMin)return`From £${Math.round(job.salaryMin/1000)}k`;if(job.salary)return job.salary;return null;}
 function guessRole(job){const t=(job.title||'').toLowerCase();if(t.includes('safeguard')||t.includes('dsl'))return'safeguarding';if(t.includes('senco')||t.includes('sen ')||t.includes('inclusion')||t.includes('send'))return'senco';if(t.includes('project')||t.includes('programme'))return'project';if(t.includes('charity')||t.includes('voluntary')||t.includes('third sector'))return'charity';if(t.includes('learning manager')||t.includes('learning officer')||t.includes('l&d')||t.includes('learning and development')||t.includes('training manager')||t.includes('skills coach'))return'ld';if(t.includes('education')||t.includes('edtech')||t.includes('curriculum'))return'education';return'leadership';}
-function formatDate(str){if(!str)return null;const d=new Date(str);if(isNaN(d))return null;const now=new Date();const days=Math.floor((now-d)/86400000);if(days===0)return'Today';if(days===1)return'Yesterday';if(days<7)return`${days}d ago`;if(days<30)return`${Math.floor(days/7)}w ago`;return`${Math.floor(days/30)}mo ago`;}
+function formatDate(str){if(!str)return null;const d=parseUKDate(str);if(isNaN(d))return null;const now=new Date();const days=Math.floor((now-d)/86400000);if(days===0)return'Today';if(days===1)return'Yesterday';if(days<7)return`${days}d ago`;if(days<30)return`${Math.floor(days/7)}w ago`;return`${Math.floor(days/30)}mo ago`;}
 
 // --- API CALLS ---
 // Each one returns jobs tagged with _q (which search found them), so we can track which searches are worth running.
 const withRemote=q=>/remote/i.test(q)?q:q+' remote';
-async function adzunaOne(it,sal){const what=it.loc==='remote'?withRemote(it.q):it.q,where=it.loc==='remote'?'uk':'edinburgh';try{const p=new URLSearchParams({what,where,salary:sal});const r=await fetch(`${ADZUNA_PROXY}?${p}`);if(!r.ok){log(`Adzuna "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Adzuna "${what}" err: ${d.error}`,'error');return[];}log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',_q:it.key,title:j.title,org:j.company?.display_name||'',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created}));}catch(e){log(`Adzuna "${what}" err: ${e.message}`,'error');return[];}}
+async function adzunaOne(it,sal){const what=it.loc==='remote'?withRemote(it.q):it.q,where=it.loc==='remote'?'uk':'edinburgh';try{const p=new URLSearchParams({what,where,salary:sal});const r=await fetch(`${ADZUNA_PROXY}?${p}`);if(!r.ok){log(`Adzuna "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Adzuna "${what}" err: ${d.error}`,'error');return[];}log(`Adzuna "${what}" @ ${where} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'az-'+j.id,source:'adzuna',_q:it.key,title:j.title,org:j.company?.display_name||'',location:j.location?.display_name||'',description:j.description,salaryMin:j.salary_min,salaryMax:j.salary_max,url:j.redirect_url,created:j.created,_ptFlag:j.contract_time==='part_time'}));}catch(e){log(`Adzuna "${what}" err: ${e.message}`,'error');return[];}}
 // Remote: Reed has no remote filter, so put "remote" in the search words (previously it searched the whole UK and ~90% got thrown away)
-async function reedOne(it,sal){const remote=it.loc==='remote',what=remote?withRemote(it.q):it.q;try{const p=new URLSearchParams({keywords:what,minimumSalary:sal,...(remote?{remote:'true'}:{location:'Edinburgh',distance:'20'})});const r=await fetch(`${REED_PROXY}?${p}`);if(!r.ok){log(`Reed "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Reed "${what}" err: ${d.error}`,'error');return[];}log(`Reed "${what}"${remote?'':' @ Edinburgh'} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',_q:it.key,title:j.jobTitle,org:j.employerName||'',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,salaryMin:j.minimumSalary,url:j.jobUrl,created:j.date}));}catch(e){log(`Reed "${what}" err: ${e.message}`,'error');return[];}}
+async function reedOne(it,sal){const remote=it.loc==='remote',what=remote?withRemote(it.q):it.q;try{const p=new URLSearchParams({keywords:what,minimumSalary:sal,...(remote?{remote:'true'}:{location:'Edinburgh',distance:'20'})});const r=await fetch(`${REED_PROXY}?${p}`);if(!r.ok){log(`Reed "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Reed "${what}" err: ${d.error}`,'error');return[];}log(`Reed "${what}"${remote?'':' @ Edinburgh'} → ${d.results?.length??0}`,d.results?.length?'ok':'warn');return(d.results||[]).map(j=>({id:'reed-'+j.jobId,source:'reed',_q:it.key,title:j.jobTitle,org:j.employerName||'',location:j.locationName||'',description:j.jobDescription,salary:j.minimumSalary?`£${Math.round(j.minimumSalary/1000)}k${j.maximumSalary?'–£'+Math.round(j.maximumSalary/1000)+'k':'+'}`:null,salaryMin:j.minimumSalary,url:j.jobUrl,created:parseUKDate(j.date)?.toISOString()||null,closes:parseUKDate(j.expirationDate)?.toISOString()||null}));}catch(e){log(`Reed "${what}" err: ${e.message}`,'error');return[];}}
 async function joobleOne(it,sal){const remote=it.loc==='remote',what=remote?withRemote(it.q):it.q;try{const p=new URLSearchParams({keywords:what,location:remote?'':'Edinburgh',minimumSalary:sal||35000,remote:remote?'true':'false'});const r=await fetch(`${JOOBLE_PROXY}?${p}`);if(r.status===429){let detail='';try{detail=(await r.json()).detail||'';}catch(_){}const e=new Error('429');e.code=429;e.detail=String(detail).slice(0,150);throw e;}if(!r.ok){log(`Jooble "${what}" → ${r.status}`,'error');return[];}const d=await r.json();if(d.error){log(`Jooble "${what}" err: ${d.error}`,'error');return[];}const jobs=d.jobs||[];
   // Jooble returns 30 regardless of quality — pre-filter: at least one meaningful keyword must appear in title or snippet
   const kwWords=it.q.toLowerCase().replace(' remote','').split(' ').filter(w=>w.length>3);
@@ -359,7 +378,7 @@ async function joobleOne(it,sal){const remote=it.loc==='remote',what=remote?with
   log(`Jooble "${what}"${remote?'':' @ Edinburgh'} → ${jobs.length} (${relevant.length} relevant)`,relevant.length?'ok':'warn');
   return relevant.map(j=>{
     const cleanTitle=(j.title||'').replace(/\s*-\s*\d+_\d+\s*$/, '').replace(/\s*-\s*\d{5,}\s*$/, '').trim();
-    return {id:'jooble-'+(j.id||Math.random()),source:'jooble',_q:it.key,title:cleanTitle,org:j.company||'',location:j.location||'',description:j.snippet||'',salary:j.salary||null,url:j.link||'#',created:j.updated||null};
+    return {id:'jooble-'+(j.id||Math.random()),source:'jooble',_q:it.key,title:cleanTitle,org:j.company||'',location:j.location||'',description:j.snippet||'',salary:j.salary||null,_ptFlag:/part/i.test(j.type||''),url:j.link||'#',created:j.updated||null};
   });}catch(e){if(e.code===429)throw e;log(`Jooble "${what}" err: ${e.message}`,'error');return[];}}
 
 // --- SEARCH BUDGETS & MEMORY ---
@@ -426,11 +445,130 @@ async function runJooble(items,sal,onJobs,progress,concurrency=2,gapMs=500){
   if(stopped)progress.joobleTotal=progress.jooble;
 }
 
+// --- SALARY, CLOSING DATES & FIT (all free, no AI) ---
+// Reed sends dates as dd/mm/yyyy, which JavaScript misreads as mm/dd, so parse them properly.
+function parseUKDate(s){if(!s)return null;const m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s);if(m)return new Date(+m[3],+m[2]-1,+m[1],12,0);const d=new Date(s);return isNaN(d)?null:d;}
+const dateVal=s=>{const d=parseUKDate(s);return d?d.getTime():0;};
+// --- PAY: works out what a job would actually pay, allowing for part-time hours ---
+const FT_HOURS=37.5;
+// Read a pay figure from text: "£35k - £40k", "£16.50 per hour", "£180 a day". Returns the lower end and its basis.
+function parsePay(s){
+  if(!s)return null;const t=String(s).toLowerCase().replace(/,/g,'');
+  const m=t.match(/(\d+(?:\.\d+)?)\s*(k\b)?/);if(!m)return null;
+  const v=parseFloat(m[1])*(m[2]?1000:1);
+  if(/hour|\bhr\b|p\/h|\bph\b/.test(t))return{rate:v,basis:'hour'};
+  if(/day|daily/.test(t))return{rate:v,basis:'day'};
+  if(/week/.test(t))return{rate:v,basis:'week'};
+  if(/month/.test(t))return{rate:v,basis:'month'};
+  return v>=1000?{rate:v,basis:'year'}:null;
+}
+// Hours per week from the advert: "16 hours per week", "21 hrs pw", "3 days a week", "0.6 FTE"
+function findHours(t){
+  let m=t.match(/(\d{1,2}(?:\.\d+)?)\s*(?:hours|hrs|hr)\s*(?:per|a|each|\/|p\/?)\s*w(?:ee)?k/)||t.match(/(\d{1,2}(?:\.\d+)?)\s*(?:hours|hrs)\s*pw\b/);
+  if(m)return parseFloat(m[1]);
+  m=t.match(/(\d(?:\.\d)?)\s*days?\s*(?:per|a|each)\s*week/);if(m)return parseFloat(m[1])*7.5;
+  m=t.match(/(0?\.\d+)\s*fte\b/);if(m)return parseFloat(m[1])*FT_HOURS;
+  return null;
+}
+function payInfo(job){
+  if(job._pay!==undefined)return job._pay;
+  const text=((job.title||'')+' '+(job.description||'')+' '+(job.salary||'')).replace(/<[^>]+>/g,' ').toLowerCase();
+  // Pay as given
+  let pay=null;
+  if(job.salaryMin){pay=job.salaryMin<200?{rate:job.salaryMin,basis:'hour'}:job.salaryMin<1000?{rate:job.salaryMin,basis:'day'}:{rate:job.salaryMin,basis:'year'};}
+  else pay=parsePay(job.salary);
+  // Part-time?
+  const hours=findHours(text);
+  const saysPT=/part[- ]?time|\bp\/t\b|term[- ]time only|pro[- ]?rata/.test(text)&&!/full[- ]?time/.test(text);
+  const partTime=!!((hours&&hours<35)||saysPT||job._ptFlag);
+  const h=hours&&hours<35?hours:(partTime?null:FT_HOURS); // null = part-time but hours unknown
+  let fte=null,actual=null;
+  if(pay){
+    const perYearFT={hour:pay.rate*FT_HOURS*52,day:pay.rate*5*46,week:pay.rate*52,month:pay.rate*12,year:pay.rate}[pay.basis];
+    fte=Math.round(perYearFT);
+    if(h!=null)actual=Math.round(pay.basis==='hour'?pay.rate*h*52:pay.basis==='day'?pay.rate*(h/7.5)*46:perYearFT*h/FT_HOURS);
+  }
+  return (job._pay={pay,fte,actual,partTime,hours:h&&h<FT_HOURS?h:null});
+}
+// What she'd actually earn in a year (null if part-time with unknown hours, or no pay listed)
+function actualPay(job){return payInfo(job).actual;}
+function hasSalary(job){return actualPay(job)!=null;}
+// Extra pay text for the card when the headline salary isn't what she'd take home
+function payNote(job){
+  const p=payInfo(job);if(!p.pay)return null;
+  const k=v=>v>=10000?`£${(v/1000).toFixed(1).replace(/\.0$/,'')}k`:`£${v.toLocaleString()}`;
+  const rate=p.pay.basis==='hour'?`£${p.pay.rate.toFixed(2).replace(/\.00$/,'')}/hr`:p.pay.basis==='day'?`£${p.pay.rate}/day`:null;
+  if(p.partTime&&p.actual!=null)return `${rate||k(p.fte)+' FTE'} ≈ ${k(p.actual)} a year at ${p.hours} hrs/wk`;
+  if(p.partTime)return `${rate||k(p.fte)+' FTE'} · hours not stated`;
+  if(rate)return `${rate} ≈ ${k(p.actual)} a year full-time`;
+  return null;
+}
+function includeNoSalary(){const el=document.getElementById('include-nosal');return !!(el&&el.checked);}
+
+function closesInfo(j){
+  const d=parseUKDate(j.closes);if(!d)return null;
+  const today=new Date();today.setHours(0,0,0,0);
+  const days=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-today)/86400000);
+  if(days<0)return {expired:true};
+  const text=days===0?'Closes today':days===1?'Closes tomorrow':days<=13?`Closes in ${days} days`:`Closes ${d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`;
+  return {days,text,cls:days<=3?'chip-close-urgent':days<=7?'chip-close-soon':'chip-close'};
+}
+
+// "How well do I fit?": which of her skill areas the advert mentions, and how many of those
+// her cover letter library has paragraphs for. Areas she has no paragraphs on count as gaps.
+const FIT_AREAS=[
+  {label:'Safeguarding',re:/safeguard|child protection|\bdsl\b|welfare of/,tag:/safeguard/},
+  {label:'SEND & inclusion',re:/\bsend\b|\bsen\b|senco|special educational|inclusi|additional support needs|\basn\b|neurodiver|disabilit/,tag:/send|inclusion/},
+  {label:'Working with families',re:/famil|parents|carers/,tag:/famil/},
+  {label:'Multi-agency working',re:/multi-agency|multi agency|partner agencies|external agencies|health and social care|social work/,tag:/multi-agency/},
+  {label:'Training & CPD',re:/deliver(ing)? training|training (to|for|sessions|programme)|\bcpd\b|professional (learning|development)|workshops?|coaching|mentor|facilitat/,tag:/training|presenting/},
+  {label:'Leadership',re:/leadership|line manag|lead(ing)? (a|the) team|manag(e|ing) (a |the )?(team|staff)|supervis/,tag:/leadership|team culture/},
+  {label:'Stakeholders & partnerships',re:/stakeholder|partnership|liais|collaborat|relationship/,tag:/stakeholder|multi-agency/},
+  {label:'Projects & programmes',re:/project|programme|implementation|milestone/,tag:/project/},
+  {label:'Data & reporting',re:/\bdata\b|reporting|reports\b|monitor(ing)? and evaluat|\bimpact\b|analys|\bkpis?\b/,tag:/data/},
+  {label:'Admin & organisation',re:/administrat|organisation(al)? skills|schedul|diary|record keeping|coordinat/,tag:/admin|organisation/},
+  {label:'Early years & literacy',re:/early years|\beyfs\b|nursery|literacy|phonics|early reading/,tag:/early/},
+  {label:'Wellbeing & relational',re:/wellbeing|well-being|mental health|trauma|nurtur|pastoral|attendance/,tag:/relational|wellbeing|attendance/},
+  {label:'Speech & language',re:/speech|language development|communication needs|\bslcn\b/,tag:/speech|language/},
+  {label:'Policy & improvement',re:/policy|policies|strateg|improvement plan|quality assurance|compliance|inspection/,tag:/strategy|improvement|policy/},
+  {label:'IT & systems',re:/\bcrm\b|database|microsoft|office 365|excel|\bit systems\b|digital tools/,tag:/\bit\b|systems/},
+  // Areas her letters don't cover yet. If she adds paragraphs tagged with these, they start counting as covered.
+  {label:'Fundraising & bids',re:/fundrais|bid writing|grant (applications|funding)|donors?/,tag:/fundrais|bid|grant/},
+  {label:'Budgets & finance',re:/budget|financial management|\bfinance\b/,tag:/budget|financ/},
+  {label:'Marketing & social media',re:/marketing|social media|campaigns?\b/,tag:/marketing|social media/},
+  {label:'Sales & business development',re:/business development|\bsales\b|commercial|income generation/,tag:/sales|business dev|commercial/},
+  {label:'Events',re:/event (management|planning)|organis\w* events|events? coordinat/,tag:/event/},
+];
+// Her library's tags as of Nov 2026. The cover letter page refreshes this list on this device whenever it loads.
+const DEFAULT_FIT_TAGS=["Administration","Attendance & wellbeing","Career change & transferable skills","Career overview","Confidentiality & sensitive situations","Data & reporting","Early Years","Early reading & phonics","Flexibility & resilience","IT & systems","Motivation & fit","Multi-agency working","Organisation & deadlines","Own professional development","Presenting","Project leadership","Qualifications","Relational & trauma-informed practice","SEND & inclusion","Safeguarding & child protection","School improvement & strategy","Scotland & relocation","Senior leadership","Speech, language & communication","Stakeholder communication","Teaching & pedagogy","Team culture & interpersonal","Training others","Values & Church of England","Working with families"];
+function myFitTags(){let t=null;try{t=JSON.parse(localStorage.getItem('bubs_fit_tags')||'null');}catch(e){}return (t&&t.length?t:DEFAULT_FIT_TAGS).map(x=>x.toLowerCase());}
+function fitFor(job,tags){
+  const txt=((job.title||'')+' '+(job.description||'')).replace(/<[^>]+>/g,' ').toLowerCase();
+  const asked=FIT_AREAS.filter(a=>a.re.test(txt));
+  const have=asked.filter(a=>tags.some(t=>a.tag.test(t)));
+  return {asked:asked.map(a=>a.label),have:have.map(a=>a.label)};
+}
+function fitInfo(j){
+  const f=j._fit;if(!f||f.asked.length<2)return null; // too little in the advert to judge
+  const r=f.have.length/f.asked.length;
+  return {r,text:`${r>=0.8?'Strong':r>=0.5?'Good':'Partial'} fit · ${f.have.length} of ${f.asked.length}`,cls:r>=0.8?'fit-strong':r>=0.5?'fit-good':'fit-partial'};
+}
+// Stamp score, role, fit and drop expired / below-salary jobs. Used for fresh and saved results.
+function annotateAndFilter(jobs){
+  const tags=myFitTags(),min=+document.getElementById('salary-min').value||0,noSal=includeNoSalary();
+  return jobs.filter(j=>{
+    const c=closesInfo(j);if(c&&c.expired)return false;
+    j._pay=undefined; // recalculate
+    if(hasSalary(j)){if(salaryNum(j)<min*0.98)return false;} else if(!noSal)return false; // no salary, or part-time with hours not stated: only kept when the tick box is on
+    j._score=scoreJob(j);j._role=guessRole(j);j._fit=fitFor(j,tags);return true;
+  });
+}
+
 // --- SEARCH ---
 let searchMeta={salLabel:'',at:null,fromCache:false,running:false,progress:null,newCount:0};
 let rawJobs=[], seenBefore=new Set(), firstEverSearch=false, _renderTimer=null;
 
-function settingsKey(roles,locMode,salMin){return JSON.stringify([...roles].sort())+'|'+locMode+'|'+salMin;}
+function settingsKey(roles,locMode,salMin){return JSON.stringify([...roles].sort())+'|'+locMode+'|'+salMin+'|'+(includeNoSalary()?'nosal':'');}
 
 // Turn the raw results into the job lists: dedupe, sector + location filters, archive, scores, "new" flags
 function processRaw(locMode){
@@ -446,7 +584,8 @@ function processRaw(locMode){
   if(locMode==='edinburgh') jobs=jobs.filter(j=>jobIsEdinburgh(j));
   else if(locMode==='remote') jobs=jobs.filter(j=>jobIsRemote(j));
   else jobs=jobs.filter(j=>jobIsEdinburgh(j)||jobIsRemote(j));
-  jobs.forEach(j=>{j._score=scoreJob(j);j._role=guessRole(j);j._new=!firstEverSearch&&!seenBefore.has(j.id);});
+  jobs=annotateAndFilter(jobs); // salary, closing date, fit
+  jobs.forEach(j=>{j._new=!firstEverSearch&&!seenBefore.has(j.id);});
   const archivedIds=new Set(loadArchive());
   archived=jobs.filter(j=>archivedIds.has(j.id));
   allJobs=jobs.filter(j=>!archivedIds.has(j.id));
@@ -473,8 +612,9 @@ async function runSearch(force=false){
   if(!force&&cache&&cache.key===key&&localDay(cache.at)===localDay(Date.now())&&Date.now()-cache.at<CACHE_HOURS*3600000){
     document.getElementById('debug-panel').innerHTML='';
     const archivedIds=new Set(loadArchive());
-    archived=cache.jobs.filter(j=>archivedIds.has(j.id));
-    allJobs=cache.jobs.filter(j=>!archivedIds.has(j.id));
+    const fresh=annotateAndFilter(cache.jobs); // drops anything that has closed since
+    archived=fresh.filter(j=>archivedIds.has(j.id));
+    allJobs=fresh.filter(j=>!archivedIds.has(j.id));
     searchMeta={salLabel,at:cache.at,fromCache:true,running:false,progress:null,newCount:allJobs.filter(j=>j._new).length};
     log(`Showing saved results from ${new Date(cache.at).toLocaleTimeString()} (no requests used). Press Refresh for a new search.`,'ok');
     currentTab='active';render();return;
@@ -509,10 +649,12 @@ async function runSearch(force=false){
   searchMeta={salLabel,at:Date.now(),fromCache:false,running:true,progress,newCount:0};
   currentTab='active';
   const onJobs=jobs=>{rawJobs.push(...jobs);scheduleRender(locMode);};
+  // With "no salary listed" on, ask the boards for everything and filter by salary here (otherwise they drop unsalaried jobs)
+  const apiSal=includeNoSalary()?'0':salMin;
   await Promise.all([
-    runReed(reedItems,salMin,onJobs,progress),
-    runAdzuna(adzunaItems,salMin,onJobs,progress),
-    runJooble(joobleItems,salMin,onJobs,progress),
+    runReed(reedItems,apiSal,onJobs,progress),
+    runAdzuna(adzunaItems,apiSal,onJobs,progress),
+    runJooble(joobleItems,apiSal,onJobs,progress),
   ]);
   clearTimeout(_renderTimer);_renderTimer=null;
 
@@ -598,8 +740,10 @@ function getSorted(jobs){
   if(sort==='salary-high')j.sort((a,b)=>(salaryNum(b)||0)-(salaryNum(a)||0));
   else if(sort==='salary-low')j.sort((a,b)=>(salaryNum(a)||999999)-(salaryNum(b)||999999));
   else if(sort==='relevance')j.sort((a,b)=>b._score-a._score);
-  else if(sort==='new')j.sort((a,b)=>(b._new?1:0)-(a._new?1:0)||new Date(b.created||0)-new Date(a.created||0));
-  else j.sort((a,b)=>new Date(b.created||0)-new Date(a.created||0)); // default: recent
+  else if(sort==='new')j.sort((a,b)=>(b._new?1:0)-(a._new?1:0)||dateVal(b.created)-dateVal(a.created));
+  else if(sort==='closing')j.sort((a,b)=>(dateVal(a.closes)||9e15)-(dateVal(b.closes)||9e15));
+  else if(sort==='fit')j.sort((a,b)=>((fitInfo(b)||{r:-1}).r-(fitInfo(a)||{r:-1}).r)||((b._fit?b._fit.have.length:0)-(a._fit?a._fit.have.length:0)));
+  else j.sort((a,b)=>dateVal(b.created)-dateVal(a.created)); // default: recent
   return j;
 }
 
@@ -645,6 +789,8 @@ function renderActive(){
       <select class="sort-select" id="sort-select" onchange="render()">
         <option value="recent"${sortVal==='recent'?' selected':''}>Most recent</option>
         <option value="new"${sortVal==='new'?' selected':''}>New first</option>
+        <option value="fit"${sortVal==='fit'?' selected':''}>Best fit</option>
+        <option value="closing"${sortVal==='closing'?' selected':''}>Closing soonest</option>
         <option value="group"${sortVal==='group'?' selected':''}>Group by role type</option>
         <option value="relevance"${sortVal==='relevance'?' selected':''}>Best match</option>
         <option value="salary-high"${sortVal==='salary-high'?' selected':''}>Salary: high → low</option>
@@ -673,12 +819,14 @@ function renderArchived(){
 
 function cardHTML(j,idx,isArchived){
   const tags=detectTags(j);
-  const sal=salaryStr(j);
+  const pt=payInfo(j), note=payNote(j);
+  const sal=note||salaryStr(j);
   const remote=jobIsRemote(j);
   const best=j._score>=4&&!isArchived;
   const snip=(j.description||'').replace(/<[^>]+>/g,'').slice(0,280)+'…';
   const src=j.source==='adzuna'?'Adzuna':j.source==='reed'?'Reed':'Jooble';
   const dateStr=formatDate(j.created);
+  const closes=closesInfo(j), fit=isArchived?null:fitInfo(j);
 
   const actionBtn=isArchived
     ?`<button class="btn-restore" onclick="event.stopPropagation();restore('${j.id}')">↩ Restore</button>`
@@ -700,12 +848,17 @@ function cardHTML(j,idx,isArchived){
           ${remote?'Remote / WFH':j.location}
         </span>
         ${sal?`<span class="meta-chip chip-salary"><svg viewBox="0 0 12 12" fill="none"><rect x="1" y="2.5" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M1 5h10" stroke="currentColor" stroke-width="1"/></svg>${sal}</span>`:''}
+        ${!sal?'<span class="meta-chip chip-nosal">Salary not stated</span>':''}
+        ${pt.partTime?`<span class="meta-chip chip-pt">Part-time${pt.hours?` · ${pt.hours} hrs/wk`:''}</span>`:''}
+        ${closes&&!closes.expired?`<span class="meta-chip ${closes.cls}">${closes.text}</span>`:''}
+        ${fit?`<span class="meta-chip fit-chip ${fit.cls}" title="Areas in this advert that your cover letters cover">${fit.text}</span>`:''}
         ${dateStr?`<span class="meta-chip chip-date">${dateStr}</span>`:''}
       </div>
       ${tags.length?`<div class="match-badges">${tags.map(t=>`<span class="match-badge badge-${t.type}">${t.label}</span>`).join('')}</div>`:''}
       <button class="card-expand-btn">View details <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 4.5L6.5 8.5L10.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="card-detail">
+      ${fit?`<div class="fit-detail"><span class="fit-detail-label">What this advert asks for:</span> ${j._fit.asked.map(a=>j._fit.have.includes(a)?`<span class="fit-yes">✓ ${a}</span>`:`<span class="fit-no" title="None of your cover letter paragraphs cover this yet">✗ ${a}</span>`).join(' ')}</div>`:''}
       <p class="detail-snippet">${snip}</p>
       <a class="apply-link" href="${j.url}" target="_blank" rel="noopener">View full listing <svg viewBox="0 0 13 13" fill="none"><path d="M2.5 10.5L10.5 2.5M10.5 2.5H5.5M10.5 2.5V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       <button class="apply-link letter-link" onclick="event.stopPropagation();writeLetter('${j.id}')">✍️ Write cover letter</button>
@@ -776,7 +929,7 @@ function clearAll(){
   document.getElementById('debug-panel').innerHTML='';
 }
 
-window.addEventListener('DOMContentLoaded',()=>{initDarkMode();runSearch();});
+window.addEventListener('DOMContentLoaded',()=>{initDarkMode();try{document.getElementById('include-nosal').checked=localStorage.getItem('bubs_include_nosal')==='1';}catch(e){}runSearch();});
 </script>
 </body>
 </html>

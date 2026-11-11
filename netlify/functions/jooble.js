@@ -10,7 +10,7 @@ exports.handler = async function(event) {
   const body = {
     keywords: keywords,
     location: remote ? '' : location,
-    salary:   salary,
+    ...(salary>0?{salary}:{}), // 0 = no salary filter
     page:     1,
   };
 

@@ -552,8 +552,11 @@ function costUsd(u) {
   const m = MODELS[S.lib.settings.model];
   return ((u.input_tokens || 0) * m.i + (u.output_tokens || 0) * m.o + (u.cache_creation_input_tokens || 0) * m.cw + (u.cache_read_input_tokens || 0) * m.cr) / 1e6;
 }
+// The jobs page's "fit" badge uses this list of tags that have at least one paragraph
+function shareFitTags() { try { localStorage.setItem("bubs_fit_tags", JSON.stringify([...new Set(S.lib.items.flatMap(i => i.tags || []))])); } catch {} }
 async function saveLibrary() {
   S.lib.tags = allTags();
+  shareFitTags();
   _own = null; // library changed: rebuild the "your wording" check
   await api("library-put", { library: S.lib });
 }
@@ -607,6 +610,7 @@ $("#setupEmpty").addEventListener("click", async () => {
 
 function enterApp() {
   view("app");
+  shareFitTags();
   $("#libTabCount").textContent = S.lib.items.length;
   try { const d = store.get(DRAFT_KEY, true); if (d) { S.draft = JSON.parse(d); restoreDraftInputs(); renderDraft(); } } catch {}
   takeHandoff();

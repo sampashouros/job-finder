@@ -12,7 +12,7 @@ exports.handler = async function(event) {
     + `&results_per_page=50`  // max allowed; same request, 5x the jobs
     + `&what=${encodeURIComponent(what)}`
     + `&where=${encodeURIComponent(where)}`
-    + `&salary_min=${sal}`
+    + (sal==='0'?'':`&salary_min=${sal}`)  // 0 = no salary filter
     + `&distance=20`
     + `&content-type=application/json`;
 
