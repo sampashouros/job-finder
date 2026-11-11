@@ -111,6 +111,7 @@
   .badge.suggested { background: var(--amber-bg); color: var(--amber); border: 1px dashed var(--amber); }
   .aiblock { margin-top: 6px; padding: 8px 10px; border: 1px dashed var(--amber-border); border-radius: var(--rs); background: var(--amber-bg); }
   .aitext { font: 14px/1.55 var(--serif); color: var(--text); }
+  mark.slot { background: var(--accent-bg); color: var(--accent); border: 1px dashed var(--accent-border); border-radius: 3px; padding: 0 2px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 12.5px; }
   .gap .pri { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; }
   .curpara { font: 14px/1.55 var(--serif); color: var(--muted); max-height: 140px; overflow: auto; padding: 8px 10px; background: var(--bg); border-radius: var(--rs); }
   .optcard { border: 1px solid var(--border); border-radius: var(--r); padding: 10px 12px; }
@@ -677,10 +678,9 @@ const DRAFT_TOOL = {
         items: { type: "object", properties: {
           requirement: { type: "string" },
           priority: { type: "string", enum: ["essential", "desirable"] },
-          suggested_text: { type: "string", description: "A short first-person paragraph (2-4 sentences) the applicant could add, built from transferable experience in the library. If prompt_only, a question to the applicant instead." },
-          based_on: { type: "array", items: { type: "string" }, description: "Library ids the suggestion draws on" },
-          prompt_only: { type: "boolean", description: "True when the library has nothing transferable, so suggested_text is a question rather than a paragraph" },
-        }, required: ["requirement", "priority", "suggested_text", "based_on", "prompt_only"] },
+          suggested_text: { type: "string", description: "Always an example first-person paragraph (2-4 sentences) the applicant could adapt, never a question. Unknown specifics go in [square brackets]." },
+          based_on: { type: "array", items: { type: "string" }, description: "Library ids the suggestion draws on (may be empty)" },
+        }, required: ["requirement", "priority", "suggested_text", "based_on"] },
       },
     },
     required: ["role_title", "organisation", "requirements", "sections", "gaps"],
@@ -738,7 +738,7 @@ ${rules}
 ${format}
 
 GAPS (separate from the main output, and shown to the applicant clearly labelled as written by you)
-For each essential or desirable criterion the main output doesn't evidence, add a gap entry. In suggested_text, write a short first-person paragraph (2-4 sentences) they could add, in their plain, warm voice. Build it from transferable experience that is genuinely in their library (cite the ids in based_on) and explain how that experience applies to this criterion. The wording rules above do NOT apply here; you may write freely. You still must not invent specifics: no employers, roles, qualifications, numbers, named projects or events that aren't in the library. If the library has nothing transferable at all, set prompt_only to true and make suggested_text a question to the applicant (as "you") about what they could write.
+For each essential or desirable criterion the main output doesn't evidence, add a gap entry. In suggested_text, write a short first-person paragraph (2-4 sentences) they could add, in their plain, warm voice. Build it from transferable experience that is genuinely in their library (cite the ids in based_on) and explain how that experience applies to this criterion. The wording rules above do NOT apply here; you may write freely. Always give an example paragraph, never a question, even when the library has nothing directly relevant. Write it as if they do have the experience, so they can see what a good answer looks like and adapt it. Any specific you don't know from the library (an employer, course, qualification, system, number, length of time or project) goes in square-bracket placeholders for them to fill in or delete, e.g. "I have worked remotely before at [organisation / course], where I took part in regular online meetings with colleagues to share ideas and develop our practice." Never present an unknown specific as fact. Use real details from the library wherever they fit.
 
 Reply with JSON matching the required schema.`;
   return [libraryBlock(), { type: "text", text }];
@@ -902,7 +902,7 @@ function renderDraft() {
       h("div", { class: "row", style: "align-items:center;gap:6px" },
         h("span", { class: "count" + (over ? " over" : s.limit ? " ok" : ""), "data-count": si }, countLabel(si)),
         over ? h("button", { class: "btn small", onclick: () => fitSection(si) }, "Trim to fit") : null,
-        h("button", { class: "btn small", onclick: async () => { syncDraftFromDom(); await navigator.clipboard.writeText(sectionAnswer(si)); toast(`Answer ${si + 1} copied`); } }, "Copy answer"))) : null;
+        h("button", { class: "btn small", onclick: async () => { syncDraftFromDom(); await navigator.clipboard.writeText(sectionAnswer(si)); toast(`Answer ${si + 1} copied`); slotWarning(sectionAnswer(si)); } }, "Copy answer"))) : null;
     return h("div", { class: isQ ? "qsection stack" : "stack" },
       head,
       isLetter && si === 0 && d.addr ? h("div", { class: "letter-line" }, d.addr) : null,
@@ -955,10 +955,22 @@ function paraEl(p, si, pi) {
         h("button", { class: "btn small ghost", title: "Remove", "aria-label": "Remove paragraph", onclick: () => { syncDraftFromDom(); S.draft.sections[si].paragraphs.splice(pi, 1); renderDraft(); } }, "✕"))));
 }
 /* ---------- Gaps: Claude-written suggestions, kept apart from the draft ---------- */
+const PLACEHOLDER_RE = /\[[^\]\n]{1,80}\]/;
+function withPlaceholders(text) {
+  // Show [placeholders] highlighted so they're easy to spot
+  const frag = document.createDocumentFragment(), re = /\[[^\]\n]{1,80}\]/g;
+  let last = 0, m;
+  while ((m = re.exec(text))) { frag.append(text.slice(last, m.index), h("mark", { class: "slot" }, m[0])); last = m.index + m[0].length; }
+  frag.append(text.slice(last));
+  return frag;
+}
+// Warn when copying text that still has [placeholders] in it
+function slotWarning(text) { if (PLACEHOLDER_RE.test(text)) setTimeout(() => toast("Heads up: there are still [bracketed] bits to fill in"), 2500); }
 function gapEl(g) {
   const head = h("div", {}, h("b", {}, g.requirement), g.priority ? h("span", { class: "pri" }, " · " + g.priority) : null);
   const text = g.suggested_text || g.suggestion || "";
-  if (g.prompt_only || !text) return h("div", { class: "gap" }, head, h("div", { class: "hint" }, text));
+  if (!text) return h("div", { class: "gap" }, head);
+  const hasSlots = PLACEHOLDER_RE.test(text);
   const d = S.draft;
   let target = null;
   if (d.fmt === "questions" && d.sections.length > 1) {
@@ -973,7 +985,8 @@ function gapEl(g) {
       h("div", { class: "row", style: "align-items:center;gap:6px;margin-bottom:5px" },
         h("span", { class: "badge suggested" }, "Written by Claude"),
         ...(g.based_on || []).map(id => { const it = itemById(id); return h("span", { class: "chip", title: it ? it.text.slice(0, 200) + "…" : "" }, "from " + id); })),
-      h("div", { class: "aitext" }, text),
+      h("div", { class: "aitext" }, withPlaceholders(text)),
+      hasSlots ? h("div", { class: "hint", style: "margin-top:5px" }, "Fill in or delete the [bracketed] bits so it's true for you.") : null,
       h("div", { class: "row", style: "gap:6px;margin-top:7px;align-items:center" },
         h("button", { class: "btn small ghost", onclick: () => { navigator.clipboard.writeText(text); toast("Copied"); } }, "Copy"),
         target, addBtn)));
@@ -1373,7 +1386,7 @@ function closeDialog() { $("#dlg").close(); }
 $("#dlg").addEventListener("click", e => { if (e.target === $("#dlg")) closeDialog(); });
 
 const ACTIONS = {
-  "copy-letter": async () => { await navigator.clipboard.writeText(letterText()); toast("Copied"); },
+  "copy-letter": async () => { const t = letterText(); await navigator.clipboard.writeText(t); toast("Copied"); slotWarning(t); },
   "download-txt": () => { const d = S.draft; download(((d.role_title || "cover-letter") + (d.organisation ? " - " + d.organisation : "")).replace(/[\\/:*?"<>|]+/g, "").slice(0, 80) + ".txt", letterText(), "text/plain"); },
   "draft-to-library": () => {
     const d = S.draft; syncDraftFromDom();
