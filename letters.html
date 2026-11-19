@@ -135,6 +135,16 @@
   .qsection + .qsection { border-top: 1px solid var(--border); padding-top: 16px; }
   .qhead { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
   .qtitle { font-weight: 600; font-size: 14px; flex: 1 1 240px; }
+  .qasks { font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .qplan { font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 6px; padding: 6px 9px; background: var(--bg); border-radius: var(--rs); border-left: 3px solid var(--accent-border); }
+  .chip.req { color: var(--accent); border-color: var(--accent-border); background: var(--accent-bg); }
+  .chip.req.ess { font-weight: 600; }
+  .para .addr { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding: 0 12px 6px; }
+  .para.flash { animation: flash 1.6s ease; }
+  @keyframes flash { 0%, 40% { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); } 100% { box-shadow: none; } }
+  .reqs li.clickable { cursor: pointer; }
+  .reqs li.clickable:hover > div:first-child { color: var(--accent); }
+  .reqs .jdq { font-size: 11.5px; color: var(--muted); font-style: italic; margin-top: 2px; }
   .count { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; }
   .count.ok { color: var(--green); background: var(--green-bg); border-color: var(--green-border); }
   .count.over { color: var(--red); background: var(--red-bg); border-color: var(--red-border); }
@@ -658,13 +668,24 @@ const DRAFT_TOOL = {
       role_title: { type: "string", description: "Job title as advertised" },
       organisation: { type: "string", description: "Employer name, or empty if unknown" },
       requirements: {
-        type: "array", description: "What the employer is asking for, most important first (max ~14).",
+        type: "array", description: "What the employer is asking for, essential first (max ~14). Take them from the person specification / essential and desirable criteria if there is one, otherwise from the main duties.",
         items: { type: "object", properties: {
-          requirement: { type: "string", description: "Short paraphrase, under 12 words" },
+          id: { type: "string", description: "R1, R2, R3…" },
+          requirement: { type: "string", description: "Short label, under 10 words" },
+          jd_wording: { type: "string", description: "The employer's own words for this criterion, quoted from the job description (under 25 words)" },
           priority: { type: "string", enum: ["essential", "desirable"] },
           covered: { type: "boolean", description: "True if the output gives real evidence from the library" },
           library_ids: { type: "array", items: { type: "string" } },
-        }, required: ["requirement", "priority", "covered", "library_ids"] },
+        }, required: ["id", "requirement", "jd_wording", "priority", "covered", "library_ids"] },
+      },
+      plan: {
+        type: "array", description: "Decide this BEFORE writing: one entry per section (per question for application forms).",
+        items: { type: "object", properties: {
+          section: { type: "integer", description: "1-based section / question number" },
+          asks: { type: "string", description: "Under 15 words: what this question is really asking for" },
+          covers: { type: "array", items: { type: "string" }, description: "Requirement ids this section will evidence" },
+          approach: { type: "string", description: "One sentence for the applicant: how this answer is built and which of their examples it uses" },
+        }, required: ["section", "asks", "covers", "approach"] },
       },
       sections: {
         type: "array", description: "One section per question; a single section with an empty question for a cover letter or supporting statement.",
@@ -672,7 +693,8 @@ const DRAFT_TOOL = {
           question: { type: "string" },
           paragraphs: { type: "array", items: { type: "object", properties: {
             text: { type: "string" }, origin: ORIGIN, library_ids: { type: "array", items: { type: "string" } },
-          }, required: ["text", "origin", "library_ids"] } },
+            addresses: { type: "array", items: { type: "string" }, description: "Requirement ids this paragraph gives evidence for (empty for openings/closings that don't)" },
+          }, required: ["text", "origin", "library_ids", "addresses"] } },
         }, required: ["question", "paragraphs"] },
       },
       gaps: {
@@ -685,7 +707,7 @@ const DRAFT_TOOL = {
         }, required: ["requirement", "priority", "suggested_text", "based_on"] },
       },
     },
-    required: ["role_title", "organisation", "requirements", "sections", "gaps"],
+    required: ["role_title", "organisation", "requirements", "plan", "sections", "gaps"],
   },
 };
 
@@ -716,7 +738,20 @@ function draftSystem(o) {
   if (o.fmt === "questions") {
     format = `FORMAT: application form questions. Output one section per question, in this order, copying the question text into "question":
 ${o.questions.map((q, i) => `Q${i + 1}: "${q.q}" (${limitText(q)})`).join("\n")}
-Answer each question directly with the material most relevant to that question. Don't repeat the same example or sentence in two answers. Length limits are strict maximums: aim for 85 to 95% of each limit and never go over. Paragraph breaks count as 2 characters.`;
+
+HOW TO ANSWER FORM QUESTIONS
+Shortlisters score each answer against the person specification, so every answer must be clearly tied to this job's criteria.
+a) Plan first (the "plan" field). For each question, work out what it is really asking:
+   - "What experience / skills make you right for this role?", "How do you meet the person specification?" → evidence the essential criteria with concrete examples.
+   - "Why do you want this role / to work for us?" → motivation and fit with this organisation's purpose, service and client group from the job description, with only light evidence.
+   - "Supporting statement", "Anything else you'd like to add?" → the criteria not already covered in the other answers, plus motivation.
+   - A question about one area or "a time when…" → that area only, as one worked example: the situation, what they did, and the result.
+   Then share the requirements out between the questions so each criterion is evidenced once, in the answer where it fits best. Every essential criterion their library can evidence must be covered by some answer. A criterion only goes to gaps if nothing in the library evidences it.
+b) Open each answer by answering its question directly in the first sentence, in terms of this role and organisation. No generic openers.
+c) Each body paragraph evidences one or two criteria: lead with the criterion in the employer's own words from the job description so the shortlister can tick it off, then give the applicant's specific evidence. Put those requirement ids in "addresses". (In strict wording mode, don't add lead-in sentences: choose and order their sentences so the criterion is obvious.)
+d) Use the job description's own terms where they apply: the organisation's name, its service, client group, programmes and priorities.
+e) Size each answer to its limit: roughly one paragraph per 600 characters or 100 words. Length limits are strict maximums: aim for 85 to 95% of each limit and never go over. Paragraph breaks count as 2 characters.
+f) Don't repeat the same example or sentence in two answers.`;
   } else if (o.fmt === "statement") {
     format = `FORMAT: supporting statement, one section with an empty question. You may group content under short headings that mirror the person specification (each heading is its own paragraph with origin "heading"; headings may reuse the person specification's own wording). No greeting or sign-off. About ${o.words} words.`;
   } else {
@@ -733,7 +768,8 @@ STEPS
 5. Never invent experience, achievements, figures, qualifications, systems, quotes, or claims about the organisation.
 6. Use each story or example at most once in the whole output (e.g. the family they supported, the language-development checklists, the Little Wandle implementation).
 7. If a sentence names a past employer, programme or role in a way that only fits that old application, swap or remove the name, or skip the sentence.
-8. British English. List the library ids each paragraph draws on.
+8. British English. List the library ids each paragraph draws on, and the requirement ids it evidences in "addresses".
+9. Fill in "plan" before writing the sections, and follow it.
 
 ${rules}
 
@@ -826,9 +862,10 @@ async function generate(revision) {
     S.draft = { ...input, ...o, jd: $("#jd").value, costUsd: prev + costUsd(usage) };
     S.draft.sections = (S.draft.sections || []).map((s, i) => ({
       question: s.question || "",
+      plan: (S.draft.plan || []).find(pl => pl.section === i + 1) || null,
       limit: o.fmt === "questions" && o.questions[i] ? o.questions[i].limit : 0,
       unit: o.fmt === "questions" && o.questions[i] ? o.questions[i].unit : "words",
-      paragraphs: (s.paragraphs || []).map(p => ({ ...p, library_ids: p.library_ids || [] })),
+      paragraphs: (s.paragraphs || []).map(p => ({ ...p, library_ids: p.library_ids || [], addresses: p.addresses || [] })),
     }));
     if (revision) $("#revise").value = "";
     renderDraft();
@@ -899,8 +936,12 @@ function renderDraft() {
   const blocks = d.sections.map((s, si) => {
     const isQ = d.fmt === "questions";
     const over = s.limit && sectionCount(si) > s.limit;
+    const covers = sectionCovers(si);
     const head = isQ ? h("div", { class: "qhead" },
-      h("div", { class: "qtitle" }, `${si + 1}. ${s.question}`),
+      h("div", { class: "qtitle" }, `${si + 1}. ${s.question}`,
+        s.plan && s.plan.asks ? h("div", { class: "qasks" }, "Asking for: " + s.plan.asks) : null,
+        covers.length ? h("div", { class: "chips", style: "margin-top:6px" }, h("span", { class: "hint" }, "Covers:"), ...covers.map(reqChip)) : null,
+        s.plan && s.plan.approach ? h("div", { class: "qplan" }, s.plan.approach) : null),
       h("div", { class: "row", style: "align-items:center;gap:6px" },
         h("span", { class: "count" + (over ? " over" : s.limit ? " ok" : ""), "data-count": si }, countLabel(si)),
         over ? h("button", { class: "btn small", onclick: () => fitSection(si) }, "Trim to fit") : null,
@@ -913,7 +954,13 @@ function renderDraft() {
   });
   $("#sections").replaceChildren(...blocks);
   renderResMeta();
-  $("#reqList").replaceChildren(...(d.requirements || []).map(r => h("li", { class: r.covered ? "yes" : "no" }, h("div", {}, r.requirement), h("div", { class: "pri" }, r.priority))));
+  $("#reqList").replaceChildren(...(d.requirements || []).map(r => {
+    const where = whereCovered(r.id), covered = r.id && hasAddresses() ? where.length > 0 : r.covered;
+    return h("li", { class: (covered ? "yes" : "no") + (r.id ? " clickable" : ""), title: r.id ? "Show the paragraphs that evidence this" : "", onclick: () => r.id && flashReq(r.id) },
+      h("div", {}, r.requirement),
+      r.jd_wording ? h("div", { class: "jdq" }, "“" + r.jd_wording + "”") : null,
+      h("div", { class: "pri" }, r.priority + (where.length ? " · " + where.join(", ") : covered ? "" : " · not covered")));
+  }));
   $("#gapList").replaceChildren(...(d.gaps || []).map(gapEl));
   show("#gapCard", (d.gaps || []).length > 0);
   saveDraft();
@@ -948,7 +995,9 @@ function paraEl(p, si, pi) {
   txt.addEventListener("paste", e => { e.preventDefault(); document.execCommand("insertText", false, e.clipboardData.getData("text/plain")); });
   const label = { reused: "Your words", trimmed: "Trimmed", adapted: "Reworded", new: "New", heading: "Heading", suggested: "Written by Claude" }[p.origin] || p.origin;
   const chips = (p.library_ids || []).map(id => { const it = itemById(id); return h("button", { class: "chip", title: it ? sourceLabel(it.source) : "Not in library", onclick: () => showSource(id, si, pi) }, id + (it ? " · " + shortSource(it.source) : "")); });
-  return h("div", { class: "para", "data-si": si, "data-pi": pi }, txt,
+  const addr = (p.addresses || []).map(reqChip).filter(Boolean);
+  return h("div", { class: "para", "data-si": si, "data-pi": pi, "data-addr": (p.addresses || []).join(" ") }, txt,
+    addr.length ? h("div", { class: "addr" }, h("span", { class: "hint" }, "Evidences:"), ...addr) : null,
     h("div", { class: "meta" }, h("span", { class: "badge " + p.origin }, label), ...chips,
       h("span", { class: "sp" },
         p.origin !== "heading" ? h("button", { class: "btn small ghost", title: "Rewrite this paragraph or see alternatives", onclick: () => openRewrite(si, pi) }, "✎ Rewrite") : null,
@@ -956,6 +1005,38 @@ function paraEl(p, si, pi) {
         h("button", { class: "btn small ghost", title: "Move down", "aria-label": "Move down", onclick: () => movePara(si, pi, 1) }, "↓"),
         h("button", { class: "btn small ghost", title: "Remove", "aria-label": "Remove paragraph", onclick: () => { syncDraftFromDom(); S.draft.sections[si].paragraphs.splice(pi, 1); renderDraft(); } }, "✕"))));
 }
+/* ---------- Linking the draft to the job's criteria ---------- */
+function reqById(id) { return (S.draft.requirements || []).find(r => r.id === id); }
+function hasAddresses() { return S.draft.sections.some(s => s.paragraphs.some(p => (p.addresses || []).length)); }
+// Which criteria an answer evidences (from its paragraphs, falling back to the plan)
+function sectionCovers(si) {
+  const s = S.draft.sections[si], ids = new Set(s.paragraphs.flatMap(p => p.addresses || []));
+  if (!ids.size && s.plan) (s.plan.covers || []).forEach(id => ids.add(id));
+  return [...ids].filter(reqById);
+}
+// Where each criterion is evidenced: "Answer 2" for form questions, "para 3" otherwise
+function whereCovered(id) {
+  const out = [];
+  S.draft.sections.forEach((s, si) => s.paragraphs.forEach((p, pi) => {
+    if ((p.addresses || []).includes(id)) {
+      const label = S.draft.fmt === "questions" ? "Answer " + (si + 1) : "para " + (pi + 1);
+      if (!out.includes(label)) out.push(label);
+    }
+  }));
+  return out;
+}
+function reqChip(id) {
+  const r = reqById(id); if (!r) return null;
+  return h("button", { class: "chip req" + (r.priority === "essential" ? " ess" : ""), title: (r.jd_wording ? "“" + r.jd_wording + "”" : r.requirement) + " (" + r.priority + ")", onclick: () => flashReq(id) }, r.requirement);
+}
+// Scroll to and briefly highlight the paragraphs that evidence a criterion
+function flashReq(id) {
+  const els = $$("#sections .para").filter(el => (el.dataset.addr || "").split(" ").includes(id));
+  if (!els.length) return toast("No paragraph evidences this yet. See Gaps, or ask for it under \"Ask for changes\".");
+  els[0].scrollIntoView({ behavior: "smooth", block: "center" });
+  els.forEach(el => { el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); });
+}
+
 /* ---------- Gaps: Claude-written suggestions, kept apart from the draft ---------- */
 const PLACEHOLDER_RE = /\[[^\]\n]{1,80}\]/;
 function withPlaceholders(text) {
@@ -1013,6 +1094,7 @@ const REWRITE_TOOL = {
     origin: ORIGIN,
     library_ids: { type: "array", items: { type: "string" } },
     focus: { type: "string", description: "Under 12 words: what this option leads on, for the applicant, e.g. 'Stakeholder work with families and agencies'" },
+    addresses: { type: "array", items: { type: "string" }, description: "Requirement ids (R1, R2…) this option evidences" },
   }, required: ["text", "origin", "library_ids", "focus"] } } }, required: ["options"] },
 };
 function openRewrite(si, pi) {
@@ -1040,7 +1122,7 @@ Give exactly 3 distinct options to replace the paragraph they point to. Each opt
 ${wordingRules(d.wording || "light")}
 
 Reply with JSON matching the required schema.` }];
-      const reqs = (d.requirements || []).map(r => `- ${r.requirement} (${r.priority})`).join("\n");
+      const reqs = (d.requirements || []).map(r => `- ${r.id ? r.id + ": " : ""}${r.requirement} (${r.priority})${r.jd_wording ? ` — "${r.jd_wording}"` : ""}`).join("\n");
       const jd = (d.jd || "").slice(0, 8000);
       const user = `JOB: ${[d.role_title, d.organisation].filter(Boolean).join(" at ")}
 WHAT THE EMPLOYER IS ASKING FOR:
@@ -1068,7 +1150,7 @@ INSTRUCTION: ${ins.value.trim() || "(none: offer alternatives using different ma
             o.focus ? h("div", { class: "lbl", style: "margin-bottom:4px" }, o.focus) : null,
             h("div", { class: "letter-line", style: "font-size:15px" }, o.text),
             h("button", { class: "btn small primary", style: "margin-top:8px", onclick: () => {
-              Object.assign(p, { text: o.text, origin: o.origin, library_ids: o.library_ids || [] });
+              Object.assign(p, { text: o.text, origin: o.origin, library_ids: o.library_ids || [], addresses: o.addresses || p.addresses || [] });
               renderDraft(); closeDialog(); toast("Paragraph replaced");
             } }, "Use this"));
         }));
