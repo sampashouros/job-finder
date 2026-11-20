@@ -135,6 +135,8 @@
   .qsection + .qsection { border-top: 1px solid var(--border); padding-top: 16px; }
   .qhead { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
   .qtitle { font-weight: 600; font-size: 14px; flex: 1 1 240px; }
+  .civgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px 14px; }
+  .civbeh { display: flex; gap: 7px; align-items: center; font-size: 13px; cursor: pointer; }
   .qasks { font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 3px; }
   .qplan { font-weight: 400; font-size: 12px; color: var(--muted); margin-top: 6px; padding: 6px 9px; background: var(--bg); border-radius: var(--rs); border-left: 3px solid var(--accent-border); }
   .chip.req { color: var(--accent); border-color: var(--accent-border); background: var(--accent-bg); }
@@ -264,6 +266,7 @@
                 <option value="letter">Cover letter</option>
                 <option value="statement">Supporting statement</option>
                 <option value="questions">Application form questions</option>
+                <option value="civil">Civil Service behaviours</option>
               </select>
             </div>
             <div class="grow" id="lenWrap">
@@ -278,6 +281,35 @@
               <label class="lbl" for="addr">Greeting (optional)</label>
               <input type="text" id="addr" placeholder="Dear Hiring Manager,">
             </div>
+          </div>
+          <div id="civWrap" class="stack hidden">
+            <div class="row">
+              <div class="grow">
+                <label class="lbl" for="civGrade">Grade of the job</label>
+                <select id="civGrade">
+                  <option value="AA/AO">AA / AO</option>
+                  <option value="EO">EO</option>
+                  <option value="HEO" selected>HEO</option>
+                  <option value="SEO">SEO</option>
+                  <option value="Grade 7">Grade 7</option>
+                  <option value="Grade 6">Grade 6</option>
+                </select>
+              </div>
+              <div class="grow">
+                <label class="lbl" for="civLimit">Limit per behaviour</label>
+                <div class="row" style="flex-wrap:nowrap;gap:6px"><input type="number" id="civLimit" value="250" min="0" step="50" style="width:100px"><select id="civUnit" style="width:auto"><option value="words">words</option><option value="chars">characters</option></select></div>
+              </div>
+            </div>
+            <div>
+              <label class="lbl">Behaviours the advert asks for (tick the ones it lists)</label>
+              <div id="civBehaviours" class="civgrid"></div>
+            </div>
+            <label class="hint" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input type="checkbox" id="civStatement"> Also write a personal statement against the essential criteria, limit
+              <input type="number" id="civStLimit" value="750" min="0" step="50" style="width:90px">
+              <select id="civStUnit" style="width:auto"><option value="words">words</option><option value="chars">characters</option></select>
+            </label>
+            <p class="hint">Each behaviour gets one specific example from your letters, written as situation, task, action, result and marked against the official description for this grade. No example is used twice.</p>
           </div>
           <div id="qWrap" class="stack hidden">
             <div id="qList" class="stack"></div>
@@ -735,7 +767,28 @@ function draftSystem(o) {
   const rules = wordingRules(o.wording);
 
   let format;
-  if (o.fmt === "questions") {
+  if (o.fmt === "civil") {
+    const c = o.civil;
+    format = `FORMAT: UK Civil Service application (Success Profiles), grade ${c.grade}. Output one section per item below, in this order, copying the label into "question":
+${o.questions.map((q, i) => `Q${i + 1}: "${q.q}" (${limitText(q)})`).join("\n")}
+
+HOW CIVIL SERVICE BEHAVIOUR STATEMENTS ARE MARKED
+A name-blind sift panel scores each behaviour statement from 1 to 7 against that behaviour's official description at the advertised grade (below), NOT against the job description. Write to score highly:
+a) Plan first (the "plan" field): pick a DIFFERENT real example from the library for each behaviour, the one that best shows that behaviour's indicators at this grade. Never use the same example, story or sentence in two statements. Where one story is spread over several library paragraphs, combine them.
+b) Each statement is ONE specific example, in STAR order:
+   - Situation and Task, briefly (about 15-20% of the words): the context and what you were responsible for.
+   - Action, in detail (about 60-70%): what YOU did, step by step, the decisions you made and why, and how you involved or influenced others. Use "I", not "we", unless the library shows it was a team effort, in which case make your own part clear.
+   - Result (about 15%): the concrete outcome or impact, with evidence from the library where it exists, and what you learned if there's room.
+   2 to 4 short paragraphs. No bullet points.
+c) Show the indicators for this grade through what you did, and echo their key words naturally so the panel can see the match. Don't just claim the behaviour ("I am an excellent communicator").
+d) Restructuring their sentences into STAR order, and changing "we" to "I" where the library shows they personally did it, are allowed within the wording rules. Never invent actions, numbers or outcomes; if an example lacks a result, give the result the library does support.
+e) Behaviour limits are strict maximums (often 250 words, which is tight): aim for 90 to 98% and never go over. Paragraph breaks count as 2 characters.
+${c.statement ? `f) Personal statement: evidence the job description's essential criteria (and desirable ones if there is room), each paragraph leading with a criterion in the advert's own words. Don't reuse the behaviour examples as its main evidence. Open by saying why they want this role in this department/organisation.\n` : ""}
+REQUIREMENTS FOR THIS FORMAT: list each behaviour as a requirement (ids B1, B2… in the order above; requirement = the behaviour name; jd_wording = its key indicator at this grade; priority essential).${c.statement ? " Then list the job description's essential and desirable criteria with ids R1, R2…" : ""} In each paragraph's "addresses", use the behaviour id${c.statement ? " (or the R ids in the personal statement)" : ""}. If the library has no suitable example for a behaviour, still write the best statement you can from what is there and add a gap explaining what kind of example would score better.
+
+BEHAVIOUR DESCRIPTIONS AT THIS GRADE (official, GOV.UK Success Profiles)
+${civDescriptors(c)}`;
+  } else if (o.fmt === "questions") {
     format = `FORMAT: application form questions. Output one section per question, in this order, copying the question text into "question":
 ${o.questions.map((q, i) => `Q${i + 1}: "${q.q}" (${limitText(q)})`).join("\n")}
 
@@ -823,13 +876,82 @@ function readQuestions() {
 }
 function syncFormatUI() {
   const f = $("#fmt").value;
-  show("#addrWrap", f === "letter"); show("#lenWrap", f !== "questions"); show("#qWrap", f === "questions");
+  show("#addrWrap", f === "letter"); show("#lenWrap", !isQFmt(f)); show("#qWrap", f === "questions"); show("#civWrap", f === "civil");
   if (f === "questions" && !$$("#qList .qrow").length) setQuestions();
+  if (f === "civil" && !$$("#civBehaviours input").length) renderCivBehaviours();
 }
+// Formats answered as separate boxes, each with its own limit
+function isQFmt(f) { return f === "questions" || f === "civil"; }
 $("#fmt").addEventListener("change", syncFormatUI);
 $("#addQ").addEventListener("click", () => { $("#qList").append(qRow()); renumberQs(); });
 function readOptions() {
-  return { fmt: $("#fmt").value, words: $("#len").value, wording: $("#wording").value, questions: readQuestions(), addr: $("#addr").value.trim() };
+  const o = { fmt: $("#fmt").value, words: $("#len").value, wording: $("#wording").value, questions: readQuestions(), addr: $("#addr").value.trim() };
+  if (o.fmt === "civil") {
+    // Each ticked behaviour (and the optional personal statement) becomes its own answer box
+    const limit = parseInt($("#civLimit").value, 10) || 0, unit = $("#civUnit").value;
+    o.civil = { grade: $("#civGrade").value, behaviours: $$("#civBehaviours input:checked").map(c => c.value), limit, unit,
+      statement: $("#civStatement").checked, stLimit: parseInt($("#civStLimit").value, 10) || 0, stUnit: $("#civStUnit").value };
+    o.questions = o.civil.behaviours.map(b => ({ q: "Behaviour: " + b, limit, unit }));
+    if (o.civil.statement) o.questions.push({ q: "Personal statement", limit: o.civil.stLimit, unit: o.civil.stUnit });
+  }
+  return o;
+}
+
+/* ---------- Civil Service Success Profiles behaviours ----------
+   Official definitions and key indicators per level, from GOV.UK "Success profiles: Civil Service behaviours".
+   Level 2 = EO, Level 3 = HEO/SEO, Level 4 = Grade 7/6. AA/AO uses the overall definition only. */
+const CS_LEVEL = { "AA/AO": 1, "EO": 2, "HEO": 3, "SEO": 3, "Grade 7": 4, "Grade 6": 4 };
+const CS_BEHAVIOURS = {
+  "Seeing the Big Picture": { def: "Understand how your role fits with and supports organisational objectives.",
+    2: ["understand how your work and the work of your team supports wider objectives and meets the diverse needs of stakeholders", "focus on overall goals and not just specific tasks to meet priorities"],
+    3: ["understand the strategic drivers for your area of work", "align activities to contribute to wider organisational priorities"],
+    4: ["adopt a government wide perspective to ensure alignment of activity and policy", "ensure plans and activities in your area of work reflect wider strategic priorities"] },
+  "Changing and Improving": { def: "Seek out opportunities to create effective change and suggest innovative ideas for improvement.",
+    2: ["regularly review own and team's work and take the initiative to suggest ideas to make improvements", "look for ways to use technology to achieve efficient and effective results"],
+    3: ["work with others to identify areas for improvement and simplify processes to use fewer resources", "encourage ideas for change from a wide range of sources"],
+    4: ["encourage, recognise and share innovative ideas from a diverse range of colleagues and stakeholders", "identify early signs that things are going wrong and respond promptly"] },
+  "Making Effective Decisions": { def: "Use evidence and knowledge to support accurate, expert decisions and advice.",
+    2: ["take responsibility for making effective and fair decisions, in a timely manner", "explain how decisions have been reached in a clear and concise way, both verbally and in writing"],
+    3: ["invite challenge and where appropriate involve others in decision making", "present strong recommendations in a timely manner outlining the consideration of other options, costs, benefits and risks"],
+    4: ["find the best option by identifying positives, negatives, risks and implications", "make decisions confidently even when details are unclear or if they prove to be unpopular"] },
+  "Leadership": { def: "Show pride and passion for public service.",
+    2: ["show pride and passion for your work and positive, inclusive engagement with your team", "give praise and credit to colleagues and stakeholders where appropriate"],
+    3: ["take into account different individual needs, views, and ideas, championing inclusion and equality of opportunity for all", "recognise and praise the achievements of others to drive positivity within the team"],
+    4: ["promote diversity, inclusion and equality of opportunity, respecting difference and external experience", "inspire and motivate teams to be fully engaged in their work and dedicated to their role"] },
+  "Communicating and Influencing": { def: "Communicate purpose and direction with clarity, integrity and enthusiasm.",
+    2: ["communicate clearly and concisely both orally and in writing", "handle challenging conversations with confidence and sensitivity"],
+    3: ["communicate in a straightforward, honest and engaging manner", "encourage the use of different communication methods, including digital resources and highlight the benefits"],
+    4: ["explain complex issues in a way that is easy to understand", "deliver difficult messages with clarity and sensitivity, being persuasive when required"] },
+  "Working Together": { def: "Form effective partnerships and relationships with people both internally and externally.",
+    2: ["develop a range of contacts outside own team and identify opportunities to share knowledge, information and learning", "offer support and help to colleagues when in need, including consideration of your own and their wellbeing"],
+    3: ["encourage joined up team work within your own team and across other groups", "actively seek and consider input of people from diverse backgrounds and perspectives"],
+    4: ["actively build and maintain a network of colleagues and contacts to achieve progress on shared objectives", "create an inclusive working environment where all opinions and challenges are taken into account"] },
+  "Developing Self and Others": { def: "Focus on continuous learning and development for self, others and the organisation as a whole.",
+    2: ["set and consistently meet development objectives", "encourage and listen to developmental feedback from colleagues"],
+    3: ["identify capability gaps for yourself and your team", "take time to coach, mentor and develop other colleagues to support succession planning"],
+    4: ["prioritise and role-model continuous self-learning and development", "ensure that development opportunities are available for all individuals regardless of their background"] },
+  "Managing a Quality Service": { def: "Deliver service objectives with professional excellence, expertise and efficiency, taking account of diverse customer needs.",
+    2: ["work with customers to understand their needs and expectations", "deliver good customer service which balances quality and cost effectiveness"],
+    3: ["develop, implement, maintain and review systems and services to ensure delivery of professional excellence", "identify risks and resolve issues efficiently"],
+    4: ["demonstrate positive customer service by understanding the complexity and diversity of customer needs and expectations", "proactively manage risks and identify solutions"] },
+  "Delivering at Pace": { def: "Take responsibility for delivering timely and quality results with focus and drive.",
+    2: ["regularly review the success of activities in the team to identify barriers to progress or challenging objectives", "have a positive and focused attitude to achieving outcomes, despite any setbacks"],
+    3: ["promote a culture of following the appropriate procedures to ensure results are achieved on time", "act promptly to reassess workloads and priorities when there are conflicting demands"],
+    4: ["set out clear processes and standards for managing performance at all levels", "maintain your own levels of performance in challenging circumstances and encourage others to do the same"] },
+};
+function renderCivBehaviours(ticked) {
+  $("#civBehaviours").replaceChildren(...Object.entries(CS_BEHAVIOURS).map(([name, b]) => {
+    const cb = h("input", { type: "checkbox", value: name }); cb.checked = !!(ticked && ticked.includes(name));
+    return h("label", { class: "civbeh", title: b.def }, cb, " " + name);
+  }));
+}
+function civDescriptors(c) {
+  const lvl = CS_LEVEL[c.grade] || 3;
+  return c.behaviours.map(name => {
+    const b = CS_BEHAVIOURS[name]; if (!b) return "";
+    const pts = b[lvl] ? b[lvl].map(x => `   - ${x}`).join("\n") : "   (use the overall definition)";
+    return `- ${name}: "${b.def}"\n   Key indicators at ${c.grade} (Level ${lvl}), among others in the official framework:\n${pts}`;
+  }).join("\n");
 }
 
 /* ---------- Generate / revise ---------- */
@@ -846,6 +968,7 @@ async function generate(revision) {
   if (!S.lib.items.length) return err("#genErr", "The library is empty. Add some paragraphs in the Library tab first.");
   const o = readOptions();
   if (o.fmt === "questions" && !o.questions.length) return err("#genErr", "Paste at least one question from the application form.");
+  if (o.fmt === "civil" && !o.questions.length) return err("#genErr", "Tick the behaviours the advert asks for (or the personal statement).");
   let extra;
   if (revision) {
     syncDraftFromDom();
@@ -863,8 +986,8 @@ async function generate(revision) {
     S.draft.sections = (S.draft.sections || []).map((s, i) => ({
       question: s.question || "",
       plan: (S.draft.plan || []).find(pl => pl.section === i + 1) || null,
-      limit: o.fmt === "questions" && o.questions[i] ? o.questions[i].limit : 0,
-      unit: o.fmt === "questions" && o.questions[i] ? o.questions[i].unit : "words",
+      limit: isQFmt(o.fmt) && o.questions[i] ? o.questions[i].limit : 0,
+      unit: isQFmt(o.fmt) && o.questions[i] ? o.questions[i].unit : "words",
       paragraphs: (s.paragraphs || []).map(p => ({ ...p, library_ids: p.library_ids || [], addresses: p.addresses || [] })),
     }));
     if (revision) $("#revise").value = "";
@@ -918,6 +1041,11 @@ function restoreDraftInputs() {
   if (d.wording) $("#wording").value = d.wording;
   if (d.addr) $("#addr").value = d.addr;
   if (d.fmt === "questions") setQuestions(d.questions);
+  if (d.fmt === "civil" && d.civil) {
+    renderCivBehaviours(d.civil.behaviours);
+    $("#civGrade").value = d.civil.grade; $("#civLimit").value = d.civil.limit; $("#civUnit").value = d.civil.unit;
+    $("#civStatement").checked = d.civil.statement; $("#civStLimit").value = d.civil.stLimit; $("#civStUnit").value = d.civil.stUnit;
+  }
   syncFormatUI();
 }
 function sectionAnswer(si) { return S.draft.sections[si].paragraphs.map(p => p.text.trim()).join("\n\n"); }
@@ -931,10 +1059,10 @@ function renderDraft() {
   if (!d.sections && d.paragraphs) d.sections = [{ question: "", limit: 0, unit: "words", paragraphs: d.paragraphs }]; // older saved drafts
   show("#result"); show("#reqCard"); show("#saveBackCard"); show("#tipsCard", false);
   $("#resTitle").textContent = [d.role_title, d.organisation].filter(Boolean).join(" · ") || "Draft";
-  $("#copyAllBtn").textContent = d.fmt === "questions" ? "Copy all answers" : d.fmt === "statement" ? "Copy statement" : "Copy letter";
+  $("#copyAllBtn").textContent = isQFmt(d.fmt) ? "Copy all answers" : d.fmt === "statement" ? "Copy statement" : "Copy letter";
   const isLetter = d.fmt === "letter" || !d.fmt;
   const blocks = d.sections.map((s, si) => {
-    const isQ = d.fmt === "questions";
+    const isQ = isQFmt(d.fmt);
     const over = s.limit && sectionCount(si) > s.limit;
     const covers = sectionCovers(si);
     const head = isQ ? h("div", { class: "qhead" },
@@ -1019,7 +1147,7 @@ function whereCovered(id) {
   const out = [];
   S.draft.sections.forEach((s, si) => s.paragraphs.forEach((p, pi) => {
     if ((p.addresses || []).includes(id)) {
-      const label = S.draft.fmt === "questions" ? "Answer " + (si + 1) : "para " + (pi + 1);
+      const label = S.draft.fmt === "civil" ? s.question.replace(/^Behaviour: /, "") : S.draft.fmt === "questions" ? "Answer " + (si + 1) : "para " + (pi + 1);
       if (!out.includes(label)) out.push(label);
     }
   }));
@@ -1056,7 +1184,7 @@ function gapEl(g) {
   const hasSlots = PLACEHOLDER_RE.test(text);
   const d = S.draft;
   let target = null;
-  if (d.fmt === "questions" && d.sections.length > 1) {
+  if (isQFmt(d.fmt) && d.sections.length > 1) {
     target = h("select", { style: "width:auto;padding:3px 24px 3px 8px;font-size:12px", "aria-label": "Which answer" },
       ...d.sections.map((s, i) => h("option", { value: i }, "Answer " + (i + 1))));
   }
@@ -1183,7 +1311,7 @@ function showSource(id, si, pi) {
 function letterText() {
   syncDraftFromDom();
   const d = S.draft;
-  if (d.fmt === "questions") return d.sections.map((s, i) => `${i + 1}. ${s.question}\n\n${sectionAnswer(i)}`).join("\n\n\n");
+  if (isQFmt(d.fmt)) return d.sections.map((s, i) => `${i + 1}. ${s.question}\n\n${sectionAnswer(i)}`).join("\n\n\n");
   const out = [];
   if (d.fmt === "letter" && d.addr) out.push(d.addr);
   out.push(...d.sections.map((s, i) => sectionAnswer(i)));
